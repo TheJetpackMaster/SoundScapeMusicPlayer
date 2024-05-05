@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="deploymentTargetDropDown">
+    <value>
+      <entry key="ExampleInstrumentedTest">
+        <State />
+      </entry>
+      <entry key="ExampleStartupBenchmark">
+        <State>
+          <targetSelectedWithDropDown>
+            <Target>
+              <type value="QUICK_BOOT_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="C:\Users\Parvez Baloch\.android\avd\Pixel_8_Pro_API_31.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </targetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-04-03T15:38:40.065426600Z" />
+        </State>
+      </entry>
+      <entry key="ExampleStartupBenchmark (1)">
+        <State />
+      </entry>
+      <entry key="Generate Baseline Profile for app">
+        <State />
+      </entry>
+      <entry key="StartupBenchmarks">
+        <State />
+      </entry>
+      <entry key="app">
+        <State />
+      </entry>
+      <entry key="generate()">
+        <State />
+      </entry>
+    </value>
+  </component>
+</project>
