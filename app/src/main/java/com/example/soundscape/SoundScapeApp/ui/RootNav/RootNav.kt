@@ -3,6 +3,7 @@ package com.example.soundscape.SoundScapeApp.ui.RootNav
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +18,7 @@ import com.example.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.example.soundscape.SoundScapeApp.data.Audio
 import com.example.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.example.soundscape.SoundScapeApp.ui.MainScreen.MainScreen
+import com.example.soundscape.SoundScapeApp.ui.splashscreen.SplashScreen
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -39,7 +41,7 @@ fun RootNav(
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit
 ) {
-    NavHost(navController = navController, startDestination = ScreenRoute.MainScreen.route,
+    NavHost(navController = navController, startDestination = ScreenRoute.SplashScreen.route,
         popEnterTransition = {
             fadeIn(animationSpec = tween(250))
         },
@@ -53,7 +55,19 @@ fun RootNav(
             fadeOut(animationSpec = tween(250))
         }
     ) {
-        composable(ScreenRoute.MainScreen.route) {
+
+        composable(ScreenRoute.SplashScreen.route,
+            exitTransition = {
+                fadeOut(tween(350, easing = LinearEasing))
+            }) {
+            SplashScreen(navController = navController)
+        }
+
+        composable(ScreenRoute.MainScreen.route,
+            enterTransition = {
+                fadeIn(tween(350, easing = LinearEasing))
+            }
+            ) {
             MainScreen(
                 context = context,
                 onProgress = onProgress,

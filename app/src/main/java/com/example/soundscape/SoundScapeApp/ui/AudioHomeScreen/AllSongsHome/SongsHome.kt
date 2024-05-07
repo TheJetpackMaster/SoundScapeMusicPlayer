@@ -1,5 +1,6 @@
 package com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome
 
+import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
@@ -101,6 +102,7 @@ import coil.request.ImageRequest
 import com.example.soundscape.R
 import com.example.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.example.soundscape.SoundScapeApp.data.Audio
+import com.example.soundscape.SoundScapeApp.service.MusicService
 import com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.Albums.AlbumsScreen
 import com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.AllSongs
 import com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.Artists.ArtistsScreen
@@ -439,6 +441,7 @@ fun SongsHome(
 
                     //Main Playing bar with Progress and PlayPause
 //                    AnimatedVisibility(visible = !listState.isScrollInProgress,) {
+                    if(isMediaSessionServiceRunning(context)) {
                         MainPlayingBar(
                             navController = navController,
                             painter = painter,
@@ -449,6 +452,7 @@ fun SongsHome(
                             viewModel = viewModel,
                         )
 //                    }
+                    }
                 }
             }
         }
@@ -776,4 +780,16 @@ fun FastScrollButton(
             }
         }
     }
+}
+
+private fun isMediaSessionServiceRunning(context: Context): Boolean {
+    val serviceClass = MusicService::class.java
+    val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+    for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+        if (serviceClass.name == service.service.className) {
+            return true
+        }
+    }
+    return false
 }

@@ -73,13 +73,6 @@ fun SongItem(
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
 
-    val backGroundColor = animateColorAsState(
-        targetValue = if (isSelected) SoundScapeThemes.colorScheme.primary.copy(.9f)
-        else White90.copy(.02f),
-        label = "",
-        animationSpec = tween(500, easing = LinearOutSlowInEasing)
-    )
-
     Row(
         modifier = modifier
             .fillMaxHeight()
@@ -100,7 +93,7 @@ fun SongItem(
             )
             .clip(RoundedCornerShape(12.dp))
             .background(
-                backGroundColor.value
+                if(isSelected) SoundScapeThemes.colorScheme.primary else White90.copy(.02f)
             )
             .border(.1.dp, White90.copy(.15f), RoundedCornerShape(12.dp))
             .padding(

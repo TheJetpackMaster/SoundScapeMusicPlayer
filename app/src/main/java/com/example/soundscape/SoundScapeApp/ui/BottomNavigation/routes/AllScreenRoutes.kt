@@ -9,6 +9,8 @@ sealed class BottomNavScreenRoutes(val route: String, val icon: Int) {
 }
 
 sealed class ScreenRoute(val route:String){
+    data object SplashScreen:ScreenRoute(route = "splashScreen")
+
     data object MainScreen:ScreenRoute(route = "mainScreen")
     data object NowPlayingScreen:ScreenRoute(route = "nowPlayingScreen")
     data object PlaylistDetailScreen : ScreenRoute(route = "playlist_detail_screen")

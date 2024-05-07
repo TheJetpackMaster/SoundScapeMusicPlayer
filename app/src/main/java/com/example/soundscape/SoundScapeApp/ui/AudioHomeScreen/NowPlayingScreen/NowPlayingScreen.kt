@@ -1,8 +1,17 @@
 package com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
+import android.renderscript.Allocation
+import android.renderscript.Element
+import android.renderscript.RenderScript
+import android.renderscript.ScriptIntrinsicBlur
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -50,7 +59,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,10 +79,12 @@ import com.example.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.example.soundscape.SoundScapeApp.data.Audio
 import com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.CustomSongSlider
 import com.example.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.SongControlButtons
+import com.example.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
 import com.example.soundscape.ui.theme.BrightGray
 import com.example.soundscape.ui.theme.White50
 import com.example.soundscape.ui.theme.White90
 import java.io.FileNotFoundException
+import java.io.InputStream
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -197,24 +210,72 @@ fun NowPlayingScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(
-                    ImageRequest.Builder(context)
-                        .data(data = currentPlayingSong?.artwork)
-                        .apply(block = fun ImageRequest.Builder.() {
-                            error(R.drawable.sample)
-                        }
-                        ).build()
-                ),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(100.dp),
-                contentScale = ContentScale.Crop
-            )
+//            val uri = currentPlayingSong?.artwork?.toUri()
+//            val blurredBitmap = uri?.let {
+//                val contextNonNull = context ?: return@let null // Ensure context is not null
+//                BlurHelpers.blur(contextNonNull, it, radius = 25f)
+//            }
+//
+//            if (blurredBitmap != null) {
+//                Image(
+//                    bitmap = blurredBitmap.asImageBitmap(),
+//                    contentDescription = null,
+//                    modifier = Modifier.fillMaxSize(),
+//                    contentScale = ContentScale.FillBounds,
+//                )
+//            } else {
+//               Image(painter = painterResource(id = R.drawable.sample), contentDescription = null)
+//            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                val uri = currentPlayingSong?.artwork?.toUri()
+                val blurredBitmap = uri?.let {
+                    try {
+                        val contextNonNull =
+                            context ?: return@let null // Ensure context is not null
+                        BlurHelpers.blur(contextNonNull, it, radius = 25f)
+                    } catch (e: FileNotFoundException) {
+                        null // Return null if image loading fails
+                    }
+                }
+
+                if (blurredBitmap != null) {
+                    Image(
+                        bitmap = blurredBitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                } else {
+                    // Use default image when album art is not found or loading fails
+                    val blurredBitmaps =
+                        BlurHelper.blur(context, drawableResId = R.drawable.sample, 25f)
+                    Image(
+                        bitmap = blurredBitmaps.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                }
+            } else {
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        ImageRequest.Builder(context)
+                            .data(data = currentPlayingSong?.artwork)
+                            .apply(block = fun ImageRequest.Builder.() {
+                                error(R.drawable.sample)
+                            }
+                            ).build()
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(80.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
             Column(
                 modifier = Modifier
-                    .background(dominantColor.value.copy(.3f))
+                    .background(dominantColor.value.copy(.5f))
                     .padding(top = it.calculateTopPadding())
                     .padding(top = 0.dp, start = 18.dp, end = 18.dp, bottom = 32.dp)
                     .fillMaxSize(),
@@ -342,4 +403,55 @@ fun NowPlayingScreen(
     }
 }
 
+
+object BlurHelpers {
+
+    fun blur(context: Context, uri: Uri, radius: Float): Bitmap {
+        val drawable = uriToDrawable(context, uri)
+        return blurBitmap(context, drawable, radius)
+    }
+
+    private fun uriToDrawable(context: Context, uri: Uri): Drawable {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        return BitmapDrawable(context.resources, BitmapFactory.decodeStream(inputStream))
+    }
+
+    @Suppress("DEPRECATION")
+    private fun blurBitmap(context: Context, drawable: Drawable, radius: Float): Bitmap {
+        val bitmap = drawableToBitmap(drawable)
+        val inputBitmap =
+            Bitmap.createScaledBitmap(bitmap, bitmap.width / 8, bitmap.height / 8, false)
+        val outputBitmap = Bitmap.createBitmap(inputBitmap)
+
+        val rs = RenderScript.create(context)
+        val script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))
+        val allocationIn = Allocation.createFromBitmap(rs, inputBitmap)
+        val allocationOut = Allocation.createFromBitmap(rs, outputBitmap)
+
+        script.setRadius(radius.coerceAtMost(25f)) // Limit radius to avoid crashes
+        script.setInput(allocationIn)
+        script.forEach(allocationOut)
+
+        allocationOut.copyTo(outputBitmap)
+        rs.destroy()
+
+        return outputBitmap
+    }
+
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        if (drawable is BitmapDrawable) {
+            return drawable.bitmap
+        }
+
+        val width = drawable.intrinsicWidth
+        val height = drawable.intrinsicHeight
+
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+
+        return bitmap
+    }
+}
 

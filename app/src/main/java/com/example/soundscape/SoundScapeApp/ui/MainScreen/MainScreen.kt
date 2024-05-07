@@ -3,16 +3,23 @@
 package com.example.soundscape.SoundScapeApp.ui.MainScreen
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.BlurMaskFilter
+import android.graphics.BlurMaskFilter.Blur
+import android.graphics.Canvas
 import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.renderscript.Allocation
 import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicBlur
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -29,6 +36,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -39,6 +47,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -47,14 +56,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import coil.request.ImageRequest
+import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.example.soundscape.R
 import com.example.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.example.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
@@ -66,6 +80,8 @@ import com.example.soundscape.ui.theme.SoundScapeThemes
 import com.example.soundscape.ui.theme.Theme2Primary
 import com.example.soundscape.ui.theme.Theme2Secondary
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -116,7 +132,7 @@ fun MainScreen(
         modifier = Modifier
             .navigationBarsPadding(),
         bottomBar = {
-            if(showBottomBar){
+            if (showBottomBar) {
                 CustomBottomNav(navController = navController, context)
             }
         }
@@ -125,31 +141,35 @@ fun MainScreen(
             modifier = Modifier
         ) {
 
-//            val painter: Painter = rememberImagePainter(
-//                data = R.drawable.naturesbg,
-//                builder = {
-//
-//                }
-//            )
-//
+
+//            val blurredBitmap = BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
 //            Image(
-//                painter = painter,
+//                bitmap = blurredBitmap.asImageBitmap(),
 //                contentDescription = null,
 //                modifier = Modifier.fillMaxSize(),
-//                contentScale = ContentScale.FillBounds
+//                contentScale = ContentScale.FillBounds,
 //            )
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                val blurredBitmap =
+                    BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
+                Image(
+                    bitmap = blurredBitmap.asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                )
+            } else {
 //
-
-//            BlurredBackground()
-
-            GlideImage(
-                model = R.drawable.naturesbg,
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(40.dp),
-                contentScale = ContentScale.FillBounds
-            )
+                GlideImage(
+                    model = R.drawable.naturesbg,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(40.dp),
+                    contentScale = ContentScale.FillBounds,
+                )
+            }
 
             Column(
                 modifier = Modifier
@@ -189,48 +209,48 @@ fun MainScreen(
     }
 }
 
+object BlurHelper {
 
-//@Composable
-//fun BlurredBackground() {
-//    val context = LocalContext.current
-//    val blurredBitmap = remember {
-//        BitmapFactory.decodeResource(context.resources, R.drawable.naturesbg)
-//            .blur(context, 50f)
-//    }
-//
-//    Box(
-//        modifier = Modifier.fillMaxSize()
-//    ) {
-//        // Blurred background image
-//        Image(
-//            bitmap = blurredBitmap.asImageBitmap(),
-//            contentDescription = null,
-//            modifier = Modifier.fillMaxSize()
-//                .blur(40.dp),
-//            contentScale = ContentScale.FillBounds,
-//        )
-//
-//        // Content on top of the blurred background
-//        Column(
-//            modifier = Modifier.fillMaxSize()
-//        ) {
-//            // Add your content here
-//        }
-//    }
-//}
-//
-//fun Bitmap.blur(context: Context, radius: Float): Bitmap {
-//    val blurredBitmap = this.copy(this.config, true)
-//    val rs = RenderScript.create(context)
-//    val input = Allocation.createFromBitmap(rs, this, Allocation.MipmapControl.MIPMAP_FULL, Allocation.USAGE_SCRIPT)
-//    val output = Allocation.createTyped(rs, input.type)
-//    val script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))
-//
-//    script.setRadius(radius.coerceAtMost(25f)) // Limit radius to avoid crashes
-//    script.setInput(input)
-//    script.forEach(output)
-//    output.copyTo(blurredBitmap)
-//    rs.destroy()
-//
-//    return blurredBitmap
-//}
+    fun blur(context: Context, drawableResId: Int, radius: Float): Bitmap {
+        val drawable = ContextCompat.getDrawable(context, drawableResId)
+            ?: throw IllegalArgumentException("Drawable not found for resource ID $drawableResId")
+        return blurBitmap(context, drawable, radius)
+    }
+
+    private fun blurBitmap(context: Context, drawable: Drawable, radius: Float): Bitmap {
+        val bitmap = drawableToBitmap(drawable)
+        val inputBitmap =
+            Bitmap.createScaledBitmap(bitmap, bitmap.width / 8, bitmap.height / 8, false)
+        val outputBitmap = Bitmap.createBitmap(inputBitmap)
+
+        val rs = RenderScript.create(context)
+        val script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))
+        val allocationIn = Allocation.createFromBitmap(rs, inputBitmap)
+        val allocationOut = Allocation.createFromBitmap(rs, outputBitmap)
+
+        script.setRadius(radius.coerceAtMost(25f)) // Limit radius to avoid crashes
+        script.setInput(allocationIn)
+        script.forEach(allocationOut)
+
+        allocationOut.copyTo(outputBitmap)
+        rs.destroy()
+
+        return outputBitmap
+    }
+
+    private fun drawableToBitmap(drawable: Drawable): Bitmap {
+        if (drawable is BitmapDrawable) {
+            return drawable.bitmap
+        }
+
+        val width = drawable.intrinsicWidth
+        val height = drawable.intrinsicHeight
+
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+
+        return bitmap
+    }
+}
