@@ -37,7 +37,7 @@ fun SplashScreen(
 
     LaunchedEffect(key1 = true) {
         logoAnimate.value = true
-        delay(1100)
+        delay(500)
         navController.popBackStack()
         navController.navigate(ScreenRoute.MainScreen.route)
     }
@@ -46,7 +46,7 @@ fun SplashScreen(
         if (logoAnimate.value && !animationCompleted.value) {
             for (i in 0..100) {
                 progress.value = i / 100f
-                delay(9) // Adjust delay to change animation speed
+                delay(2) // Adjust delay to change animation speed
             }
             animationCompleted.value = true
         }
@@ -60,11 +60,11 @@ fun SplashScreen(
     ) {
         AnimatedVisibility(
             visible = logoAnimate.value,
-            enter = fadeIn(animationSpec = tween(500)) + scaleIn(
-                animationSpec = tween(500),
-                initialScale = .7f
+            enter = fadeIn(animationSpec = tween(250)) + scaleIn(
+                animationSpec = tween(250),
+                initialScale = .9f
             ),
-            exit = fadeOut(animationSpec = tween(500))
+            exit = fadeOut(animationSpec = tween(250))
         ) {
             Image(
                 painter = painterResource(id = R.drawable.sound_wave_music_logo),
@@ -72,7 +72,7 @@ fun SplashScreen(
             )
         }
         AnimatedVisibility(visible = logoAnimate.value,
-            enter = fadeIn(animationSpec = tween(400))
+            enter = fadeIn(animationSpec = tween(250))
         ) {
             LinearProgressIndicator(
                 strokeCap = StrokeCap.Round,

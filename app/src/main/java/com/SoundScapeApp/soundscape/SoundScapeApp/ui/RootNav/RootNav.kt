@@ -41,7 +41,7 @@ fun RootNav(
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit
 ) {
-    NavHost(navController = navController, startDestination = ScreenRoute.MainScreen.route,
+    NavHost(navController = navController, startDestination = ScreenRoute.SplashScreen.route,
         popEnterTransition = {
             fadeIn(animationSpec = tween(250))
         },
@@ -58,14 +58,14 @@ fun RootNav(
 
         composable(ScreenRoute.SplashScreen.route,
             exitTransition = {
-                fadeOut(tween(350, easing = LinearEasing))
+                fadeOut(tween(250, easing = LinearEasing))
             }) {
             SplashScreen(navController = navController)
         }
 
         composable(ScreenRoute.MainScreen.route,
             enterTransition = {
-                fadeIn(tween(250, easing = LinearEasing))
+                fadeIn(tween(350, easing = LinearEasing))
             }
             ) {
             MainScreen(
