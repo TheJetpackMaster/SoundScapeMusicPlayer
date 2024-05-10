@@ -1,0 +1,969 @@
+package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
+
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
+import androidx.lifecycle.viewmodel.compose.saveable
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.exoplayer.ExoPlayer
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+
+
+//private val audioDummy = Audio(
+//    uri = "".toUri(),
+//    displayName = "",
+//    id = 0L,
+//    artist = "",
+//    data = "",
+//    duration = 0,
+//    title = "",
+//    albumId = "",
+//    artwork = "",
+//    albumName = "",
+//)
+
+
+enum class SortType {
+    DATE_ADDED_DESC,
+    DATE_ADDED_ASC,
+    TITLE_ASC,
+    TITLE_DESC
+}
+
+enum class VideoSortType {
+    DATE_ADDED_DESC,
+    DATE_ADDED_ASC,
+    TITLE_ASC,
+    TITLE_DESC,
+    SIZE_DESC,
+    SIZE_ASC
+}
+
+
+@OptIn(SavedStateHandleSaveableApi::class)
+@HiltViewModel
+class AudioViewModel @Inject constructor(
+    private val audioServiceHandler: MusicServiceHandler,
+    private val repository: MusicRepository,
+    private val player: ExoPlayer,
+    private val sharedPreferencesHelper: SharedPreferencesHelper,
+    context: Context,
+    sharedPreferences: SharedPreferences,
+    audioStateHandle: SavedStateHandle,
+
+    ) : ViewModel() {
+
+
+    var duration by audioStateHandle.saveable { mutableStateOf(0L) }
+    var progress by audioStateHandle.saveable { mutableStateOf(0f) }
+
+    private val _songProgress = MutableStateFlow(0f)
+    val songProgress: StateFlow<Float> = _songProgress
+
+    private var progressString by audioStateHandle.saveable { mutableStateOf("00:00") }
+
+
+    var isPlying by audioStateHandle.saveable { mutableStateOf(false) }
+
+    //private val _isPlaying = MutableStateFlow<Boolean>(false)
+//    val isPlaying:StateFlow<Boolean> = _isPlaying
+    var currentSelectedAudio by audioStateHandle.saveable { mutableStateOf(0L) }
+
+    // audioList
+    // For AudioList
+    private val _audioList = MutableStateFlow(listOf<Audio>())
+    val audioList: StateFlow<List<Audio>> get() = _audioList
+
+    private val _scannedAudioList = MutableStateFlow(listOf<Audio>())
+    val scannedAudioList: StateFlow<List<Audio>> get() = _scannedAudioList
+
+    // Playlist Songs
+    private val _playListSongsList: MutableStateFlow<List<Audio>> = MutableStateFlow(emptyList())
+    private val playListSongsList: StateFlow<List<Audio>> = _playListSongsList.asStateFlow()
+
+    private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState.Initial)
+    val uiState: StateFlow<UIState> = _uiState.asStateFlow()
+
+    // SHOULD SET ITEMS AGAIN OR NOT TRACK
+    var setMediaItems by audioStateHandle.saveable { mutableStateOf(false) }
+    var setPlaylistMediaItems by audioStateHandle.saveable{ mutableStateOf(false) }
+    var setAlbumMediaItems by audioStateHandle.saveable{ mutableStateOf(false) }
+    var setArtistMediaItems by audioStateHandle.saveable{ mutableStateOf(false) }
+
+    //    PLAYLISTS PART
+    private val _playlists: MutableStateFlow<List<Playlist>> = MutableStateFlow(emptyList())
+    val playlists: StateFlow<List<Playlist>> get() = _playlists
+
+
+    //    OnPlaylistClicked
+    private val _currentPlaylistId = MutableStateFlow<Long?>(null)
+    val currentPlaylistId: StateFlow<Long?> = _currentPlaylistId
+
+    //    Last created playlist id
+    private val _currentCreatedPlaylistId = MutableStateFlow(0L)
+    private val currentCreatedPlaylistId: StateFlow<Long?> = _currentCreatedPlaylistId
+
+
+    //   Playing from current this playlist
+    private val _currentPlayingPlaylistId = MutableStateFlow<Long?>(null)
+    val currentPlayingPlaylistId: StateFlow<Long?> = _currentPlayingPlaylistId
+
+
+    private val _currentPlaylistName = MutableStateFlow<String?>(null)
+    val currentPlaylistName: StateFlow<String?> = _currentPlaylistName
+
+    //    On album Clicked
+    private val _currentAlbumId = MutableStateFlow<Long?>(null)
+    val currentAlbumId: StateFlow<Long?> = _currentAlbumId
+
+    //    on Artist Clicked
+    private val _currentArtist = MutableStateFlow<String?>(null)
+    val currentArtist: StateFlow<String?> = _currentArtist
+
+    //    Current Album songs
+    private val _currentAlbumSongs: MutableStateFlow<List<Long>> = MutableStateFlow(emptyList())
+    val currentAlbumSongs: StateFlow<List<Long>> = _currentAlbumSongs.asStateFlow()
+
+    //    CurrentPlayListItems
+    private val _currentPlaylistSongs = MutableStateFlow<List<Long>>(emptyList())
+    val currentPlaylistSongs: StateFlow<List<Long>> = _currentPlaylistSongs
+
+    //    Favorites songs
+    private val _favoritesSongs = MutableStateFlow<List<Long>>(emptyList())
+    val favoritesSongs: StateFlow<List<Long>> = _favoritesSongs
+
+    //    Current Artist Songs
+    private val _currentArtistSongs = MutableStateFlow<List<Long>>(emptyList())
+    val currentArtistSongs: StateFlow<List<Long>> = _currentArtistSongs
+
+
+
+    //    Check if app is already open
+    private val _isSearch = MutableStateFlow(false)
+    val isSearch: StateFlow<Boolean> = _isSearch
+
+
+    //    SortType
+    var currentSortType: SortType = getSortType()
+
+    // playlistSelection track
+    private val _isPlaylistSelected = MutableStateFlow(false)
+    val isPlaylistSelected: StateFlow<Boolean> = _isPlaylistSelected
+
+    //AllSongListSongSelectionTrack
+    // playlistSelection track
+    private val _isSongSelected = MutableStateFlow(false)
+    val isSongSelected: StateFlow<Boolean> = _isSongSelected
+
+
+    private val _scanSongLengthTime = MutableStateFlow(0L)
+    val scanSongLengthTime: StateFlow<Long> = _scanSongLengthTime
+
+
+    private val _currentTheme = MutableStateFlow(1)
+    val currentTheme: StateFlow<Int> = _currentTheme
+
+
+    //PERMISSIONS
+    val visiblePermissionDialogQueue = mutableStateListOf<String>()
+
+
+    init {
+//        loadAudioData()
+//        loadVideoData()
+//        setupAudioStateHandler()
+        viewModelScope.launch { loadPlaylists() }
+        getTheme()
+        getScanSongLengthTime()
+//        loadPlaylistAudioData()
+        getFavoritesSongs()
+//        getCurrentPlayingPlaylist()
+
+//        if (!player.playWhenReady) {
+//            createVideoMediaSession(context)
+//        }
+
+        duration = player.duration
+        player.shuffleModeEnabled = isShuffleEnabled()
+        currentSelectedAudio = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
+    }
+
+//    private val _audioData = MutableStateFlow<PagingData<Audio>>(PagingData.empty())
+//    val audioData: Flow<PagingData<Audio>> get() = _audioData
+
+    init {
+        viewModelScope.launch {
+            audioServiceHandler.audioState.collectLatest { mediaState ->
+                when (mediaState) {
+                    AudioState.Initial -> _uiState.value = UIState.Initial
+                    is AudioState.Buffering -> calculateProgressValue(mediaState.progress)
+                    is AudioState.Playing -> isPlying = player.isPlaying
+                    is AudioState.Progress -> calculateProgressValue(mediaState.progress)
+                    is AudioState.CurrentPlaying -> {
+//                        currentSelectedAudio = player.currentMediaItem?.mediaId!!.toLong()
+
+                    }
+
+                    is AudioState.Ready -> {
+                        duration = mediaState.duration
+                        _uiState.value = UIState.Ready
+                    }
+                }
+            }
+        }
+    }
+
+    //GRANT PERMISSIONS
+    fun dismissDialog() {
+        visiblePermissionDialogQueue.removeFirst()
+    }
+
+    fun onPermissionResult(
+        permission: String,
+        isGranted: Boolean
+    ) {
+        if (!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
+            visiblePermissionDialogQueue.add(permission)
+        }
+    }
+
+
+    // AUDIOS
+    fun sortAudioList(sortType: SortType) {
+        currentSortType = sortType
+        sharedPreferencesHelper.setCurrentSortType(sortType)
+
+        val sortedList = when (sortType) {
+            SortType.DATE_ADDED_ASC -> scannedAudioList.value.sortedBy { it.dateAdded }
+            SortType.DATE_ADDED_DESC -> scannedAudioList.value.sortedByDescending { it.dateAdded }
+            SortType.TITLE_ASC -> scannedAudioList.value.sortedBy { it.displayName }
+            SortType.TITLE_DESC -> scannedAudioList.value.sortedByDescending { it.displayName }
+        }
+        _scannedAudioList.value = sortedList
+    }
+
+
+    fun loadAudioData() {
+        viewModelScope.launch {
+            if (audioList.value.isEmpty()) {
+                val audio = repository.getAudioData()
+                _audioList.value = audio
+                Log.d("audioList", audioList.toString())
+
+
+                if (player.currentMediaItemIndex > 0) {
+                    currentSelectedAudio = player.currentMediaItem?.mediaId!!.toLong()
+                }
+                _playListSongsList.value =
+                    audioList.value.filter { audios -> audios.id in currentPlaylistSongs.value }
+                sortAudioList(currentSortType)
+            }
+            val length = scanSongLengthTime.value * 1000L
+            loadScannedAudioList(length)
+        }
+    }
+
+    private fun loadScannedAudioList(
+        scanLength: Long
+    ) {
+        if (audioList.value.isNotEmpty()) {
+            val audiosList = audioList.value.filter {
+                it.duration > scanLength
+            }
+            _scannedAudioList.value = audiosList
+            sortAudioList(currentSortType)
+        }
+    }
+
+    fun loadPlaylistAudioData() {
+        viewModelScope.launch {
+            val songs = audioList.value.filter { it.id in currentPlaylistSongs.value }
+            if (playListSongsList.value.isEmpty()) {
+                if (songs.isNotEmpty()) {
+                    _playListSongsList.value = songs
+                    Log.d("songs added", "added")
+                } else {
+                    Log.d("songs added", "empty or not found")
+                }
+            }
+        }
+    }
+
+    //    Load album songs
+    fun loadSongsForAlbum(albumId: Long) {
+        viewModelScope.launch {
+            val songsForAlbumIds =
+                scannedAudioList.value.filter { it.albumId.toLong() == albumId }.map { it.id }
+            _currentAlbumSongs.value = songsForAlbumIds
+        }
+    }
+
+    //    Load artist songs
+    fun loadSongsForArtist(artist: String) {
+        viewModelScope.launch {
+            val songsForArtist = scannedAudioList.value.filter { it.artist == artist }.map { it.id }
+            _currentArtistSongs.value = songsForArtist
+            Log.d("currentArtistSongs", currentArtistSongs.value.toString())
+        }
+    }
+
+    //        For All songs
+    fun setMediaItems(audioList: List<Audio>) {
+        if (audioList.isNotEmpty()) {
+            val mediaItems = audioList.map { audio ->
+                MediaItem.Builder()
+                    .setUri(audio.uri)
+                    .setMediaId(audio.id.toString())
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setArtist(audio.artist)
+                            .setAlbumArtist(audio.artist)
+                            .setDisplayTitle(audio.title)
+                            .setSubtitle(audio.displayName)
+                            .setArtworkUri(audio.artwork.toUri())
+                            .build()
+                    ).build()
+            }
+            audioServiceHandler.setMediaItemList(mediaItems)
+        }
+    }
+
+
+    //    Set single media item
+    fun setSingleMediaItem(audio: Audio) {
+        val mediaItem =
+            MediaItem.Builder()
+                .setUri(audio.uri)
+                .setMediaId(audio.id.toString())
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setAlbumArtist(audio.artist)
+                        .setDisplayTitle(audio.title)
+                        .setSubtitle(audio.displayName)
+                        .setArtworkUri(audio.artwork.toUri())
+                        .build()
+                ).build()
+
+        audioServiceHandler.setMediaItem(mediaItem)
+    }
+
+    fun setPlayListSongsList(songsList: List<Audio>) {
+        _playListSongsList.value = songsList
+    }
+
+    //    For Playlists songs
+    fun setPlaylistMediaItems(
+        currentPlaylistSongs: List<Long>
+    ) {
+        val playListSongs: List<Audio> = audioList.value.filter { audio ->
+            audio.id in currentPlaylistSongs
+        }
+        if (playListSongs.isNotEmpty()) {
+            val mediaItems = playListSongs.map { audio ->
+                MediaItem.Builder()
+                    .setUri(audio.uri)
+                    .setMediaId(audio.id.toString())
+                    .setMediaMetadata(
+                        MediaMetadata.Builder()
+                            .setAlbumArtist(audio.artist)
+                            .setDisplayTitle(audio.title)
+                            .setSubtitle(audio.displayName)
+                            .build()
+                    ).build()
+            }
+            audioServiceHandler.setMediaItemList(mediaItems)
+        }
+    }
+
+    private fun setupAudioStateHandler() = viewModelScope.launch {
+        audioServiceHandler.audioState.collectLatest { mediaState ->
+
+        }
+    }
+
+    fun play(index: Int) {
+        audioServiceHandler.play(index)
+    }
+
+    //    Playlists play
+    fun playFromPlaylist(index: Int) {
+        if (_currentPlaylistSongs.value.isNotEmpty()) {
+            audioServiceHandler.play(index)
+        }
+    }
+
+    //    Albums play
+    fun playFromAlbum(index: Int) {
+        if (currentAlbumSongs.value.isNotEmpty()) {
+            audioServiceHandler.play(index)
+        }
+    }
+
+    //    Artists Play
+    fun playFromArtist(index: Int) {
+        if (currentArtistSongs.value.isNotEmpty()) {
+            audioServiceHandler.play(index)
+        }
+    }
+
+    private fun calculateProgressValue(currentProgress: Long) {
+        progress =
+            if (currentProgress > 0) ((currentProgress.toFloat()) / duration.toFloat()) * 100f
+            else 0f
+        progressString = formatDuration(currentProgress)
+        _songProgress.value =
+            if (currentProgress > 0) ((currentProgress.toFloat()) / duration.toFloat()) * 100f
+            else 0f
+    }
+
+    fun onUiEvents(uiEvents: UIEvents) = viewModelScope.launch {
+        when (uiEvents) {
+            UIEvents.Backward -> audioServiceHandler.onPlayerEvents(PlayerEvent.Backward)
+            UIEvents.Forward -> audioServiceHandler.onPlayerEvents(PlayerEvent.Forward)
+            UIEvents.SeekPrevious -> audioServiceHandler.onPlayerEvents(PlayerEvent.SeekToPrevious)
+            UIEvents.SeekToNext -> audioServiceHandler.onPlayerEvents(PlayerEvent.SeekToNext)
+            is UIEvents.PlayPause -> audioServiceHandler.onPlayerEvents(PlayerEvent.PlayPause)
+            is UIEvents.SeekTo -> {
+                audioServiceHandler.onPlayerEvents(
+                    PlayerEvent.SeekTo,
+                    seekPosition = ((duration * uiEvents.position) / 100f).toLong()
+                )
+            }
+
+            is UIEvents.PlaySelectedAudio -> {
+                viewModelScope.launch {
+                    audioServiceHandler.play(uiEvents.index)
+                }
+            }
+
+            is UIEvents.SelectedAudioChange -> {
+            }
+
+            is UIEvents.UpdateProgress -> {
+                audioServiceHandler.onPlayerEvents(
+                    PlayerEvent.UpdateProgress(
+                        uiEvents.newProgress
+                    )
+                )
+                progress = uiEvents.newProgress
+                _songProgress.value = uiEvents.newProgress / 1000
+            }
+        }
+    }
+
+    fun onProgressSeek(progress: Float) {
+        val totalDuration = player.duration.toFloat()
+        if (totalDuration > 0) {
+            val targetPosition = (progress / 100f * totalDuration).toLong()
+            player.seekTo(targetPosition)
+        }
+    }
+
+
+    //    Shuffle Logic
+    private fun isShuffleEnabled(): Boolean {
+        return sharedPreferencesHelper.isShuffleEnabled()
+    }
+
+    private fun setShuffleEnabled(isShuffleEnabled: Boolean) {
+        sharedPreferencesHelper.setShuffleEnabled(isShuffleEnabled)
+    }
+
+    fun toggleShuffle() {
+        if (!isShuffleEnabled()) {
+            setShuffleEnabled(true)
+            player.shuffleModeEnabled = true
+        } else {
+            setShuffleEnabled(false)
+            player.shuffleModeEnabled = false
+        }
+    }
+
+    //    Repeat Logic
+    fun toggleRepeat() {
+        audioServiceHandler.toggleRepeat()
+
+    }
+
+    //    PLAYLISTS LOGICS
+    private suspend fun loadPlaylists() {
+        delay(1000)
+        _playlists.value = sharedPreferencesHelper.getPlaylists().toMutableList()
+
+        updatePlaylists()
+    }
+
+    //    Create a  playlist
+    fun saveNewPlaylist(newPlaylistName: String, songIds: List<Long> = emptyList()) {
+        val existingPlaylists = _playlists.value.toMutableList()
+        val newPlaylist = Playlist(
+            id = System.currentTimeMillis(),
+            name = newPlaylistName,
+            songIds = songIds
+        )
+        existingPlaylists.add(newPlaylist)
+
+        _currentCreatedPlaylistId.value = newPlaylist.id
+        Log.d("yesnewklsd", newPlaylist.id.toString())
+
+        sharedPreferencesHelper.savePlaylists(existingPlaylists)
+
+        _playlists.value = existingPlaylists
+    }
+
+
+    //    Edit playlist Name
+    fun editPlaylistName(playlistId: Long, newName: String) {
+        sharedPreferencesHelper.editPlaylistName(playlistId, newName)
+
+        // Update the UI by updating the playlists LiveData
+        val updatedPlaylists = _playlists.value.map { playlist ->
+            if (playlist.id == playlistId) {
+                Playlist(playlist.id, newName, playlist.songIds)
+            } else {
+                playlist
+            }
+        }
+        _playlists.value = updatedPlaylists
+    }
+
+
+    //  Clicked Playlist
+    fun onPlaylistClicked(playlistId: Long, playListName: String) {
+        _currentPlaylistId.value = playlistId
+        _currentPlaylistName.value = playListName
+//        viewModelScope.launch {
+//            loadSongsForCurrentPlaylist(playlistId)
+//        }
+    }
+
+    //    Clicked Favorites
+    fun onFavoritesClicked(playlistId: Long, playListName: String) {
+        _currentPlaylistId.value = playlistId
+        _currentPlaylistName.value = playListName
+        loadSongsForFavorites()
+    }
+
+    //    Check if playing from playList
+//    fun onPlayListPlay(playingFromPlayList: Boolean) {
+//        _isPlayingFromPlaylist.value = playingFromPlayList
+//    }
+
+//    fun onPlayAllPlay(playingFromAll: Boolean) {
+//        _isPlayingFromAll.value = playingFromAll
+//    }
+
+    //    SetMediaItemFlag
+    fun setMediaItemFlag(setMediaItem: Boolean) {
+        setMediaItems = setMediaItem
+    }
+
+    fun addSongToPlaylist(songIds: List<Long>, context: Context) {
+        val currentPlaylistId = _currentPlaylistId.value
+        if (currentPlaylistId != null) {
+            // Update the playlist in SharedPreferencesHelper
+            viewModelScope.launch {
+                sharedPreferencesHelper.addSongsToPlaylist(
+                    currentPlaylistId,
+                    songIds,
+                    context
+                )
+            }
+            // Update the current playlist songs
+            viewModelScope.launch {
+                val currentPlaylistSongs =
+                    sharedPreferencesHelper.getSongsByPlaylistId(currentPlaylistId)
+                _currentPlaylistSongs.value = currentPlaylistSongs
+            }
+
+            // Update the count of songs in the playlist in the ViewModel
+            val updatedPlaylist = _playlists.value.find { it.id == currentPlaylistId }
+            updatedPlaylist?.let {
+                val existingSongIds = it.songIds
+                val updatedSongIds = existingSongIds.toMutableList().apply {
+                    addAll(songIds.filter { songId -> !contains(songId) })
+                }
+                _playlists.value = _playlists.value.map { playlist ->
+                    if (playlist.id == currentPlaylistId) {
+                        Playlist(playlist.id, playlist.name, updatedSongIds)
+                    } else {
+                        playlist
+                    }
+                }
+            }
+        }
+    }
+
+    fun addSongToDifferentPlaylist(playlistId: Long, songIds: List<Long>, context: Context) {
+
+        viewModelScope.launch {
+            sharedPreferencesHelper.addSongsToPlaylist(playlistId, songIds, context = context)
+        }
+
+        val updatedPlaylist = _playlists.value.find { it.id == playlistId }
+        updatedPlaylist?.let {
+            val existingSongIds = it.songIds
+            val updatedSongIds = existingSongIds.toMutableList().apply {
+                addAll(songIds.filter { songId -> !contains(songId) })
+            }
+            _playlists.value = _playlists.value.map { playlist ->
+                if (playlist.id == playlistId) {
+                    Playlist(playlist.id, playlist.name, updatedSongIds)
+                } else {
+                    playlist
+                }
+            }
+        }
+    }
+
+    //    Create and Add song
+    fun createAndAddSongToPlaylist(songIds: List<Long>, context: Context) {
+        val playlistId = currentCreatedPlaylistId.value
+        viewModelScope.launch {
+            sharedPreferencesHelper.addSongsToPlaylist(playlistId!!, songIds, context = context)
+        }
+
+        val updatedPlaylist = _playlists.value.find { it.id == playlistId }
+        updatedPlaylist?.let {
+            val existingSongIds = it.songIds
+            val updatedSongIds = existingSongIds.toMutableList().apply {
+                addAll(songIds.filter { songId -> !contains(songId) })
+            }
+            _playlists.value = _playlists.value.map { playlist ->
+                if (playlist.id == playlistId) {
+                    Playlist(playlist.id, playlist.name, updatedSongIds)
+                } else {
+                    playlist
+                }
+            }
+        }
+    }
+
+
+    //   Load songs from playlist
+    suspend fun loadSongsForCurrentPlaylist(playlistId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val songs = sharedPreferencesHelper.getSongsByPlaylistId(playlistId)
+            _currentPlaylistSongs.value = songs
+        }
+    }
+//    suspend fun loadSongsForCurrentPlaylist(playlistId: Long) {
+//        val playlistSongs = sharedPreferencesHelper.getSongsByPlaylistId(playlistId) // Get all songs for the playlist
+//        val chunkSize = 100 // Define the size of each chunk
+//
+//        // Load data in chunks with a delay between each chunk
+//        playlistSongs.chunked(chunkSize).forEachIndexed { index, chunk ->
+//            // Simulate loading delay (you can replace this with your actual loading logic)
+//            delay(1000) // 1000 milliseconds delay between each chunk
+//
+//            // Update UI with the loaded chunk of data
+//            updateUIWithChunk(chunk)
+//
+//            // If it's the last chunk, notify that all data has been loaded
+//            if (index == playlistSongs.size / chunkSize) {
+//                notifyDataLoaded()
+//            }
+//        }
+//    }
+//
+//    fun updateUIWithChunk(chunk: List<Long>) {
+//        // Update UI with the loaded chunk of data
+//        _currentPlaylistSongs.value = chunk
+//    }
+//
+//    fun notifyDataLoaded() {
+//        // Notify that all data has been loaded
+//    }
+
+
+
+//    fun getAudioDataPaging(): Flow<PagingData<Audio>> {
+//        return repository.getAudioDataPaging().cachedIn(viewModelScope)
+//    }
+
+    fun deletePlaylist(playlistId: Long) {
+        sharedPreferencesHelper.deletePlaylist(playlistId)
+
+        if (_currentPlaylistId.value == playlistId) {
+            _currentPlaylistId.value = null
+            _currentPlaylistSongs.value = emptyList()
+        }
+
+        viewModelScope.launch {
+            _playlists.value = sharedPreferencesHelper.getPlaylists().toMutableList()
+
+        }
+    }
+
+    fun deletePlaylists(playlistIds: List<Long>) {
+        sharedPreferencesHelper.deletePlaylists(playlistIds)
+        val deletedCurrentPlaylist = _currentPlaylistId.value in playlistIds
+
+        if (deletedCurrentPlaylist) {
+            _currentPlaylistId.value = null
+            _currentPlaylistSongs.value = emptyList()
+        }
+
+        viewModelScope.launch {
+            _playlists.value = sharedPreferencesHelper.getPlaylists().toMutableList()
+        }
+    }
+
+    fun deleteSongFromPlaylist(songIds: List<Long>) {
+        val playlistId = currentPlaylistId.value ?: return
+
+        // Delete the songs from the shared preferences using the helper function
+        sharedPreferencesHelper.deleteSongsFromPlaylist(playlistId, songIds)
+
+        // Update the UI or any other necessary operations in the ViewModel
+        val updatedCurrentPlaylistSongs = _currentPlaylistSongs.value.toMutableList()
+        updatedCurrentPlaylistSongs.removeAll(songIds)
+        _currentPlaylistSongs.value = updatedCurrentPlaylistSongs.toList()
+
+        // Update the count of songs in the playlist
+        val updatedPlaylists = _playlists.value.map { playlist ->
+            if (playlist.id == playlistId) {
+                val updatedSongIds = playlist.songIds.toMutableList()
+                updatedSongIds.removeAll(songIds)
+                Playlist(playlist.id, playlist.name, updatedSongIds.toList())
+            } else {
+                playlist
+            }
+        }
+        _playlists.value = updatedPlaylists
+    }
+
+
+    //    Clear Whole PlayList
+    fun clearPlaylist(playlistId: Long) {
+        sharedPreferencesHelper.clearSongsFromPlaylist(playlistId)
+
+        // Update the UI or any other necessary operations in the ViewModel
+        val updatedCurrentPlaylistSongs = emptyList<Long>()
+        _currentPlaylistSongs.value = updatedCurrentPlaylistSongs
+
+        // Update the count of songs in the playlist
+        val updatedPlaylist = _playlists.value.find { it.id == playlistId }
+        updatedPlaylist?.let {
+            _playlists.value = _playlists.value.map { playlist ->
+                if (playlist.id == playlistId) {
+                    Playlist(playlist.id, playlist.name, emptyList())
+                } else {
+                    playlist
+                }
+            }
+        }
+    }
+
+    //    Favorites Playlist section
+    private fun addToFavorites(songId: Long) {
+        sharedPreferencesHelper.addToFavorites(songId)
+    }
+
+    // Function to remove a song from favorites
+    private fun removeFromFavorites(songId: Long) {
+        sharedPreferencesHelper.removeFromFavorites(songId)
+    }
+
+    fun loadSongsForFavorites() {
+        viewModelScope.launch {
+            val songs = getFavoriteSongs()
+            _currentPlaylistSongs.value = songs
+        }
+    }
+
+    fun getFavoritesSongs() {
+        val songs = getFavoriteSongs()
+        _favoritesSongs.value = songs
+    }
+
+    // Function to get the list of favorite songs
+    private fun getFavoriteSongs(): List<Long> {
+        return sharedPreferencesHelper.getFavoriteSongs()
+    }
+
+
+    fun toggleFavorite(songId: Long) {
+        val favoriteSongs = sharedPreferencesHelper.getFavoriteSongs()
+        if (favoriteSongs.contains(songId)) {
+            removeFromFavorites(songId)
+
+            // Remove the song from the current playlist
+            val updatedCurrentPlaylistSongs = _currentPlaylistSongs.value.toMutableList()
+            updatedCurrentPlaylistSongs.remove(songId)
+            _currentPlaylistSongs.value = updatedCurrentPlaylistSongs
+
+            // Update the favorites songs
+            val updatedFavoriteSongs = favoriteSongs.toMutableList()
+            updatedFavoriteSongs.remove(songId)
+            _favoritesSongs.value = updatedFavoriteSongs
+        } else {
+            addToFavorites(songId)
+        }
+    }
+
+
+    //    ALBUMS SECTIONS
+    fun albumClicked(albumId: Long) {
+        _currentAlbumId.value = albumId
+    }
+
+    //    Artist
+    fun artistClicked(artist: String) {
+        _currentArtist.value = artist
+    }
+
+    //    search
+    fun isAppSearch(isSearch: Boolean) {
+        _isSearch.value = isSearch
+    }
+
+    //    EXTRAS
+    private fun formatDuration(duration: Long): String {
+        val minute = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS)
+        val seconds = (minute) - minute * TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES)
+        return String.format("%02d:%02d", minute, seconds)
+    }
+
+    fun getSongImageUrl(songId: Long): String? {
+        val audioList = audioList // Assuming you have access to the audio list in your ViewModel
+
+        val song = audioList.value.firstOrNull { it.id == songId }
+
+        return song?.artwork
+    }
+
+
+    // Function to check and remove IDs from playlists that are not in the audio list
+    private fun removeExtraIdsFromPlaylists() {
+        val audioIds = audioList.value.map { it.id }
+        val playlists = _playlists.value
+
+        val extraIdsMap = mutableMapOf<Long, MutableList<Long>>()
+
+        playlists.forEach { playlist ->
+            val extraIds = playlist.songIds.filterNot { audioIds.contains(it) }
+            if (extraIds.isNotEmpty()) {
+                extraIdsMap[playlist.id] = extraIds.toMutableList()
+            }
+        }
+
+        extraIdsMap.forEach { (_, extraIds) ->
+            sharedPreferencesHelper.removeDeletedSongsFromPlaylists(extraIds)
+            _playlists.value = sharedPreferencesHelper.getPlaylists()
+        }
+    }
+
+    private fun removeExtraIdsFromFavorites() {
+
+        val audioIds = audioList.value.map { it.id }
+        val favoriteIds = _favoritesSongs.value
+
+        val extraIds = favoriteIds.filterNot { audioIds.contains(it) }
+
+
+        sharedPreferencesHelper.removeDeletedSongsFromFavorites(extraIds)
+
+        _favoritesSongs.value = getFavoriteSongs()
+
+    }
+
+    private fun updatePlaylists() {
+        removeExtraIdsFromPlaylists()
+        removeExtraIdsFromFavorites()
+        // You can add any other logic here if needed
+    }
+
+    fun setSortType(sortType: SortType) {
+        sharedPreferencesHelper.setCurrentSortType(sortType)
+    }
+
+    private fun getSortType(): SortType {
+        return sharedPreferencesHelper.getCurrentSortType()
+    }
+
+
+    //SELECTION SECTION
+    fun setIsPlaylistSelected(playlistSelected: Boolean) {
+        _isPlaylistSelected.value = playlistSelected
+    }
+
+    fun setIsSongSelected(songSelected: Boolean) {
+        _isSongSelected.value = songSelected
+    }
+
+
+    fun setScanSongLengthTime(scanLength: Long) {
+        sharedPreferencesHelper.setScanSongLengthTime(scanLength)
+        _scanSongLengthTime.value = scanLength
+
+        val length = scanLength * 1000
+        loadScannedAudioList(length)
+        setMediaItems = false
+    }
+
+    fun getScanSongLengthTime() {
+        _scanSongLengthTime.value = sharedPreferencesHelper.getScanSongLengthTime()
+    }
+
+    fun setTheme(chooseTheme: Int) {
+        sharedPreferencesHelper.setTheme(chooseTheme)
+        _currentTheme.value = chooseTheme
+    }
+
+    fun getTheme() {
+        _currentTheme.value = sharedPreferencesHelper.getTheme()
+    }
+
+    fun getCurrentPlayingSong():String?{
+        return sharedPreferencesHelper.getCurrentPlayingSong()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+    }
+}
+
+sealed class UIEvents {
+    data object PlayPause : UIEvents()
+    data class SelectedAudioChange(val songId: Long) : UIEvents()
+    data class SeekTo(val position: Float) : UIEvents()
+    data object SeekToNext : UIEvents()
+    data class PlaySelectedAudio(val index: Int) : UIEvents()
+    data object SeekPrevious : UIEvents()
+    data object Backward : UIEvents()
+    data object Forward : UIEvents()
+
+    data class UpdateProgress(val newProgress: Float) : UIEvents()
+}
+
+sealed class UIState {
+    data object Initial : UIState()
+    data object Ready : UIState()
+}
+
