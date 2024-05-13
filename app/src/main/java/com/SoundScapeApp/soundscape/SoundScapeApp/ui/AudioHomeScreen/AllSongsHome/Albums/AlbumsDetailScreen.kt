@@ -63,6 +63,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.AddSelectedSongsToPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.CreatePlaylistAndAddSong
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
@@ -313,7 +314,7 @@ fun AlbumsDetailScreen(
                         if (currentAlbumSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setPlaylistMediaItems(currentAlbumSongs)
+                            viewModel.setMediaItems(albumSongs)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -349,7 +350,7 @@ fun AlbumsDetailScreen(
                         if (currentAlbumSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setPlaylistMediaItems(currentAlbumSongs)
+                            viewModel.setMediaItems(albumSongs)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -398,14 +399,20 @@ fun AlbumsDetailScreen(
                                     !(selectedSongs[songId.id] ?: false)
                             } else {
                                 viewModel.setMediaItemFlag(false)
+                                val selectedAudio = albumSongs.firstOrNull { it.id == songId.id }
 
                                 if (!setMediaItems.value) {
-                                    viewModel.setPlaylistMediaItems(currentAlbumSongs)
-                                    viewModel.playFromAlbum(index)
+                                    viewModel.setMediaItems(albumSongs)
+                                    selectedAudio.let {
+                                        viewModel.setMediaItems(albumSongs)
+                                        viewModel.play(albumSongs.indexOf(selectedAudio))
+                                    }
+//                                    viewModel.playFromAlbum(index)
 
                                     startService(context)
                                 } else if (viewModel.currentSelectedAudio != songId.id) {
-                                    viewModel.playFromAlbum(index)
+//                                    viewModel.playFromAlbum(index)
+                                    viewModel.play(albumSongs.indexOf(selectedAudio))
                                 }
                                 setMediaItems.value = true
                                 navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -434,6 +441,7 @@ fun AlbumsDetailScreen(
                     onPlayClick = {
                         showSheet.value = false
                         viewModel.setSingleMediaItem(selectedSong!!)
+                        startService(context)
                     },
                     onAddToPlaylistClick = {
                         showSheet.value = false
@@ -502,9 +510,9 @@ private fun isMediaSessionServiceRunning(context: Context): Boolean {
     return false
 }
 
-private fun startService(context: Context) {
-    val intent = Intent(context, MusicService::class.java)
-    if (!isMediaSessionServiceRunning(context)) {
-        startForegroundService(context, intent)
-    }
-}
+//private fun startService(context: Context) {
+//    val intent = Intent(context, MusicService::class.java)
+//    if (!isMediaSessionServiceRunning(context)) {
+//        startForegroundService(context, intent)
+//    }
+//}

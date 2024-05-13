@@ -50,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -71,6 +72,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.SortType
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
@@ -101,9 +103,17 @@ fun PlayListDetailsScreen(
     val currentPlaylistId by viewModel.currentPlaylistId.collectAsState()
     val currentPlayingPlaylist by viewModel.currentPlayingPlaylistId.collectAsState()
 
+
     val playListSongs: List<Audio> = audioList.filter { audio ->
         audio.id in currentPlayListSongs
     }
+
+//    val playListSongs by remember {
+//        mutableStateOf(audioList.filter {
+//            it.id in currentPlayListSongs
+//        })
+//    }
+
 
     val setMediaItems = remember {
         mutableStateOf(false)
@@ -399,7 +409,7 @@ fun PlayListDetailsScreen(
                             if (currentPlayListSongs.isNotEmpty()) {
                                 viewModel.setMediaItemFlag(false)
 
-                                viewModel.setPlaylistMediaItems(currentPlayListSongs)
+                                viewModel.setMediaItems(playListSongs)
                                 viewModel.onUiEvents(UIEvents.PlayPause)
 
                                 startService(context)
@@ -439,7 +449,7 @@ fun PlayListDetailsScreen(
                             viewModel.setMediaItemFlag(false)
 
 
-                            viewModel.setPlaylistMediaItems(currentPlayListSongs)
+                            viewModel.setMediaItems(playListSongs)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -493,14 +503,21 @@ fun PlayListDetailsScreen(
                                     !(selectedSongs[song.id] ?: false)
                             } else {
                                 viewModel.setMediaItemFlag(false)
+                                val selectedAudio = playListSongs.firstOrNull { it.id == song.id }
 
                                 if (!setMediaItems.value) {
-                                    viewModel.setPlaylistMediaItems(currentPlayListSongs)
-                                    viewModel.playFromPlaylist(index)
+//                                        viewModel.setPlaylistMediaItems(currentPlayListSongs)
+//                                        viewModel.playFromPlaylist(index)
+                                    selectedAudio.let {
+                                        viewModel.setMediaItems(playListSongs)
+                                        viewModel.play(playListSongs.indexOf(selectedAudio))
+                                    }
 
                                     startService(context)
                                 } else if (viewModel.currentSelectedAudio != song.id) {
-                                    viewModel.playFromPlaylist(index)
+
+                                    viewModel.play(audioList.indexOf(selectedAudio))
+//                                        viewModel.playFromPlaylist(index)
                                 }
                                 setMediaItems.value = true
                                 navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -525,6 +542,7 @@ fun PlayListDetailsScreen(
                 }
             }
 
+
             if (showSheet.value) {
                 MainBottomSheet(
                     showSheet = showSheet,
@@ -537,6 +555,7 @@ fun PlayListDetailsScreen(
                     onPlayClick = {
                         showSheet.value = false
                         viewModel.setSingleMediaItem(selectedSong!!)
+                        startService(context)
                     },
                     onAddToPlaylistClick = {
                         showSheet.value = false
@@ -669,10 +688,11 @@ fun PlayListDetailsScreen(
                     }
                 )
             }
-            if(showSongDetailsDialog.value){
+            if (showSongDetailsDialog.value) {
                 ShowSongDetailsDialog(
                     selectedSong = selectedSong!!,
-                    showSongDetails = showSongDetailsDialog)
+                    showSongDetails = showSongDetailsDialog
+                )
             }
         }
     }
@@ -690,7 +710,7 @@ private fun isMediaSessionServiceRunning(context: Context): Boolean {
     return false
 }
 
-private fun startService(context: Context) {
+fun startService(context: Context) {
     val intent = Intent(context, MusicService::class.java)
     if (!isMediaSessionServiceRunning(context)) {
         startForegroundService(context, intent)

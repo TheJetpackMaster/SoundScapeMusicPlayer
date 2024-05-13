@@ -1,6 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.navGraph
 
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
@@ -51,7 +52,8 @@ fun BottomNavGraph(
     videoViewModel: VideoViewModel,
     onPipClick: () -> Unit,
     onVideoItemClick:(Int,Long)->Unit,
-    mediaSession: MediaSession
+    mediaSession: MediaSession,
+    onDeleteSong:(List<Uri>)->Unit
 ) {
     NavHost(navController = navController,
         startDestination = BottomNavScreenRoutes.SongsHome.route,
@@ -83,7 +85,8 @@ fun BottomNavGraph(
                 player = player,
                 viewModel = audioViewModel,
                 context = context,
-                mediaSession = mediaSession
+                mediaSession = mediaSession,
+                onSongDelete = onDeleteSong
             )
         }
 //        NowPlayingScreen

@@ -64,6 +64,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.AddSelectedSongsToPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.CreatePlaylistAndAddSong
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
@@ -323,7 +324,7 @@ fun ArtistsDetailScreen(
                         if (currentArtistSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setPlaylistMediaItems(currentArtistSongs)
+                            viewModel.setMediaItems(artistSongs)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -359,7 +360,7 @@ fun ArtistsDetailScreen(
                         if (currentArtistSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setPlaylistMediaItems(currentArtistSongs)
+                            viewModel.setMediaItems(artistSongs)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -409,16 +410,21 @@ fun ArtistsDetailScreen(
                                 selectedSongs[songId.id] =
                                     !(selectedSongs[songId.id] ?: false)
                             } else {
-
                                 viewModel.setMediaItemFlag(false)
+                                val selectedAudio = artistSongs.firstOrNull { it.id == songId.id }
 
                                 if (!setMediaItems.value) {
-                                    viewModel.setPlaylistMediaItems(currentArtistSongs)
-                                    viewModel.playFromArtist(index)
+//                                    viewModel.setPlaylistMediaItems(currentArtistSongs)
+//                                    viewModel.playFromArtist(index)
+                                    selectedAudio.let {
+                                        viewModel.setMediaItems(artistSongs)
+                                        viewModel.play(artistSongs.indexOf(selectedAudio))
+                                    }
 
                                     startService(context)
                                 } else if (viewModel.currentSelectedAudio != songId.id) {
-                                    viewModel.playFromArtist(index)
+//                                    viewModel.playFromArtist(index)
+                                    viewModel.play(audioList.indexOf(selectedAudio))
                                 }
                                 setMediaItems.value = true
                                 navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -447,6 +453,7 @@ fun ArtistsDetailScreen(
                     onPlayClick = {
                         showSheet.value = false
                         viewModel.setSingleMediaItem(selectedSong!!)
+                        startService(context)
                     },
                     onAddToPlaylistClick = {
                         showSheet.value = false
@@ -516,9 +523,9 @@ private fun isMediaSessionServiceRunning(context: Context): Boolean {
     return false
 }
 
-private fun startService(context: Context) {
-    val intent = Intent(context, MusicService::class.java)
-    if (!isMediaSessionServiceRunning(context)) {
-        startForegroundService(context, intent)
-    }
-}
+//private fun startService(context: Context) {
+//    val intent = Intent(context, MusicService::class.java)
+//    if (!isMediaSessionServiceRunning(context)) {
+//        startForegroundService(context, intent)
+//    }
+//}

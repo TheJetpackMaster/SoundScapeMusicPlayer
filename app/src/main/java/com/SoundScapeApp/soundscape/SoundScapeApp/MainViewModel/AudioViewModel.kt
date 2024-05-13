@@ -1,6 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
@@ -111,9 +112,7 @@ class AudioViewModel @Inject constructor(
 
     // SHOULD SET ITEMS AGAIN OR NOT TRACK
     var setMediaItems by audioStateHandle.saveable { mutableStateOf(false) }
-    var setPlaylistMediaItems by audioStateHandle.saveable{ mutableStateOf(false) }
-    var setAlbumMediaItems by audioStateHandle.saveable{ mutableStateOf(false) }
-    var setArtistMediaItems by audioStateHandle.saveable{ mutableStateOf(false) }
+
 
     //    PLAYLISTS PART
     private val _playlists: MutableStateFlow<List<Playlist>> = MutableStateFlow(emptyList())
@@ -200,7 +199,7 @@ class AudioViewModel @Inject constructor(
         viewModelScope.launch { loadPlaylists() }
         getTheme()
         getScanSongLengthTime()
-//        loadPlaylistAudioData()
+        loadPlaylistAudioData()
         getFavoritesSongs()
 //        getCurrentPlayingPlaylist()
 
@@ -225,7 +224,7 @@ class AudioViewModel @Inject constructor(
                     is AudioState.Playing -> isPlying = player.isPlaying
                     is AudioState.Progress -> calculateProgressValue(mediaState.progress)
                     is AudioState.CurrentPlaying -> {
-//                        currentSelectedAudio = player.currentMediaItem?.mediaId!!.toLong()
+                        currentSelectedAudio = player.currentMediaItem?.mediaId!!.toLong()
 
                     }
 
@@ -377,28 +376,28 @@ class AudioViewModel @Inject constructor(
     }
 
     //    For Playlists songs
-    fun setPlaylistMediaItems(
-        currentPlaylistSongs: List<Long>
-    ) {
-        val playListSongs: List<Audio> = audioList.value.filter { audio ->
-            audio.id in currentPlaylistSongs
-        }
-        if (playListSongs.isNotEmpty()) {
-            val mediaItems = playListSongs.map { audio ->
-                MediaItem.Builder()
-                    .setUri(audio.uri)
-                    .setMediaId(audio.id.toString())
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setAlbumArtist(audio.artist)
-                            .setDisplayTitle(audio.title)
-                            .setSubtitle(audio.displayName)
-                            .build()
-                    ).build()
-            }
-            audioServiceHandler.setMediaItemList(mediaItems)
-        }
-    }
+//    fun setPlaylistMediaItems(
+//        currentPlaylistSongs: List<Long>
+//    ) {
+//        val playListSongs: List<Audio> = audioList.value.filter { audio ->
+//            audio.id in currentPlaylistSongs
+//        }
+//        if (playListSongs.isNotEmpty()) {
+//            val mediaItems = playListSongs.map { audio ->
+//                MediaItem.Builder()
+//                    .setUri(audio.uri)
+//                    .setMediaId(audio.id.toString())
+//                    .setMediaMetadata(
+//                        MediaMetadata.Builder()
+//                            .setAlbumArtist(audio.artist)
+//                            .setDisplayTitle(audio.title)
+//                            .setSubtitle(audio.displayName)
+//                            .build()
+//                    ).build()
+//            }
+//            audioServiceHandler.setMediaItemList(mediaItems)
+//        }
+//    }
 
     private fun setupAudioStateHandler() = viewModelScope.launch {
         audioServiceHandler.audioState.collectLatest { mediaState ->
@@ -410,26 +409,26 @@ class AudioViewModel @Inject constructor(
         audioServiceHandler.play(index)
     }
 
-    //    Playlists play
-    fun playFromPlaylist(index: Int) {
-        if (_currentPlaylistSongs.value.isNotEmpty()) {
-            audioServiceHandler.play(index)
-        }
-    }
-
-    //    Albums play
-    fun playFromAlbum(index: Int) {
-        if (currentAlbumSongs.value.isNotEmpty()) {
-            audioServiceHandler.play(index)
-        }
-    }
-
-    //    Artists Play
-    fun playFromArtist(index: Int) {
-        if (currentArtistSongs.value.isNotEmpty()) {
-            audioServiceHandler.play(index)
-        }
-    }
+//    //    Playlists play
+//    fun playFromPlaylist(index: Int) {
+//        if (_currentPlaylistSongs.value.isNotEmpty()) {
+//            audioServiceHandler.play(index)
+//        }
+//    }
+//
+//    //    Albums play
+//    fun playFromAlbum(index: Int) {
+//        if (currentAlbumSongs.value.isNotEmpty()) {
+//            audioServiceHandler.play(index)
+//        }
+//    }
+//
+//    //    Artists Play
+//    fun playFromArtist(index: Int) {
+//        if (currentArtistSongs.value.isNotEmpty()) {
+//            audioServiceHandler.play(index)
+//        }
+//    }
 
     private fun calculateProgressValue(currentProgress: Long) {
         progress =
@@ -672,39 +671,7 @@ class AudioViewModel @Inject constructor(
             _currentPlaylistSongs.value = songs
         }
     }
-//    suspend fun loadSongsForCurrentPlaylist(playlistId: Long) {
-//        val playlistSongs = sharedPreferencesHelper.getSongsByPlaylistId(playlistId) // Get all songs for the playlist
-//        val chunkSize = 100 // Define the size of each chunk
-//
-//        // Load data in chunks with a delay between each chunk
-//        playlistSongs.chunked(chunkSize).forEachIndexed { index, chunk ->
-//            // Simulate loading delay (you can replace this with your actual loading logic)
-//            delay(1000) // 1000 milliseconds delay between each chunk
-//
-//            // Update UI with the loaded chunk of data
-//            updateUIWithChunk(chunk)
-//
-//            // If it's the last chunk, notify that all data has been loaded
-//            if (index == playlistSongs.size / chunkSize) {
-//                notifyDataLoaded()
-//            }
-//        }
-//    }
-//
-//    fun updateUIWithChunk(chunk: List<Long>) {
-//        // Update UI with the loaded chunk of data
-//        _currentPlaylistSongs.value = chunk
-//    }
-//
-//    fun notifyDataLoaded() {
-//        // Notify that all data has been loaded
-//    }
 
-
-
-//    fun getAudioDataPaging(): Flow<PagingData<Audio>> {
-//        return repository.getAudioDataPaging().cachedIn(viewModelScope)
-//    }
 
     fun deletePlaylist(playlistId: Long) {
         sharedPreferencesHelper.deletePlaylist(playlistId)
@@ -844,6 +811,7 @@ class AudioViewModel @Inject constructor(
     }
 
     //    EXTRAS
+    @SuppressLint("DefaultLocale")
     private fun formatDuration(duration: Long): String {
         val minute = TimeUnit.MINUTES.convert(duration, TimeUnit.MILLISECONDS)
         val seconds = (minute) - minute * TimeUnit.SECONDS.convert(1, TimeUnit.MINUTES)
@@ -852,12 +820,9 @@ class AudioViewModel @Inject constructor(
 
     fun getSongImageUrl(songId: Long): String? {
         val audioList = audioList // Assuming you have access to the audio list in your ViewModel
-
         val song = audioList.value.firstOrNull { it.id == songId }
-
         return song?.artwork
     }
-
 
     // Function to check and remove IDs from playlists that are not in the audio list
     private fun removeExtraIdsFromPlaylists() {

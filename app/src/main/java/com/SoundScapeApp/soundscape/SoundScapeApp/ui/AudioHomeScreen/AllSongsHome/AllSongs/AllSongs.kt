@@ -1,6 +1,8 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs
 
+import android.content.ContentResolver
 import android.content.Context
+import android.net.Uri
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -16,6 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -41,12 +48,14 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.AddSelectedSongsToPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.common.AudioListSorting
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.CreatePlaylistAndAddSong
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ShowSongDetailsDialog
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.SongItem
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
+import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 
 
@@ -63,9 +72,10 @@ fun AllSongs(
     selectedSongs: MutableMap<Long, Boolean>,
     confirmAddSong: MutableState<Boolean>,
     search: String,
-    onSelectAllSongsClicked: MutableState<Boolean>
+    onSelectAllSongsClicked: MutableState<Boolean>,
+    deleteSelectedSong: MutableState<Boolean>,
+    onSongDelete: (List<Uri>) -> Unit
 ) {
-
 
     val currentSortType = viewModel.currentSortType
     val audioList by viewModel.scannedAudioList.collectAsState()
@@ -128,13 +138,31 @@ fun AllSongs(
     }
 
 
+
     LaunchedEffect(onSelectAllSongsClicked.value) {
         if (onSelectAllSongsClicked.value) {
             filteredAudioList.forEach { song ->
                 selectedSongs[song.id] = true
             }
         }
+    }
 
+
+    LaunchedEffect(deleteSelectedSong.value) {
+        if (deleteSelectedSong.value) {
+            val selectedSongsList = selectedSongs
+                .filter { it.value } // Filter out only the selected songs
+                .map { it.key } // Extract the IDs of the selected songs
+
+            val selectedSongURIs = filteredAudioList
+                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                .map { song -> song.uri } // Map each song to its URI
+
+            onSongDelete(selectedSongURIs)
+            deleteSelectedSong.value = false
+            selectedSongs.clear()
+            viewModel.setIsSongSelected(false)
+        }
     }
 
     Column(
@@ -181,7 +209,6 @@ fun AllSongs(
                             tint = White90
                         )
                     }
-
                 }
             }
 
@@ -228,6 +255,7 @@ fun AllSongs(
             }
         }
 
+
         if (showSheet.value) {
             MainBottomSheet(
                 showSheet = showSheet,
@@ -241,6 +269,7 @@ fun AllSongs(
                     showSheet.value = false
                     viewModel.setSingleMediaItem(selectedSong!!)
                     viewModel.setMediaItemFlag(false)
+                    startService(context)
 //                    viewModel.setMediaItems(filteredAudioList)
 //                    onItemClick(0, selectedSong!!.id)
 //                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -304,5 +333,72 @@ fun AllSongs(
                 showSongDetails = showSongDetailsDialog
             )
         }
+
+//        if (deleteSelectedSong.value) {
+//            AlertDialog(
+//                containerColor = SoundScapeThemes.colorScheme.secondary,
+//                onDismissRequest = {
+//                    selectedSongs.clear()
+//                    deleteSelectedSong.value = false
+//                    viewModel.setIsSongSelected(false)
+//                },
+//                title = {
+//                    Text(
+//                        text = "Delete Song",
+//                        color = White90
+//                    )
+//                },
+//                text = {
+//                    Text(
+//                        text = "delete",
+//                        color = White50
+//                    )
+//                },
+//                confirmButton = {
+//                    Button(
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color.Transparent
+//                        ),
+//                        onClick = {
+//                            val selectedSongsList = selectedSongs
+//                                .filter { it.value } // Filter out only the selected songs
+//                                .map { it.key } // Extract the IDs of the selected songs
+//
+//                            val selectedSongURIs = filteredAudioList
+//                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+//                                .map { song -> song.uri } // Map each song to its URI
+//
+//                            onSongDelete(selectedSongURIs)
+//                            deleteSelectedSong.value = false
+//                            selectedSongs.clear()
+//                            viewModel.setIsSongSelected(false)
+//
+//                        })
+//                    {
+//                        Text(
+//                            text = "Remove",
+//                            color = White90
+//                        )
+//                    }
+//                },
+//                dismissButton = {
+//                    Button(
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color.Transparent
+//                        ),
+//                        onClick = {
+//                            deleteSelectedSong.value = false
+//                            selectedSongs.clear()
+//                            viewModel.setIsSongSelected(false)
+//                        })
+//                    {
+//                        Text(
+//                            text = "Cancel",
+//                            color = White90
+//                        )
+//                    }
+//                }
+//            )
+//        }
     }
 }

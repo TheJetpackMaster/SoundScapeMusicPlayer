@@ -247,10 +247,10 @@ fun AddSelectedSongsToPlaylist(
                                 showAddPlaylistDialog.value = false
                                 confirmAddSong.value = false
                                 selectedPlaylists.clear()
+                                selectedSongs.clear()
                                 isAllSongsSelected.value = false
                                 viewModel.setIsSongSelected(false)
                                 enableButton.value = selectedPlaylists.any { it.value }
-
                             })
                         {
                             Text(
@@ -291,10 +291,10 @@ fun AddSelectedSongsToPlaylist(
                                     }
                                 }
                                 selectedPlaylists.clear()
-                                selectedSongs.clear()
                                 enableButton.value = selectedPlaylists.any { it.value }
                                 showAddPlaylistDialog.value = false
                                 confirmAddSong.value = false
+                                selectedSongs.clear()
                                 viewModel.setIsSongSelected(false)
                                 isAllSongsSelected.value = false
                             })

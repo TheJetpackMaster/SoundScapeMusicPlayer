@@ -31,7 +31,7 @@ class NotificationAdapter(
     }
 
     override fun getCurrentContentText(player: Player): CharSequence =
-        player.mediaMetadata.displayTitle ?: "Unknown"
+        player.mediaMetadata.title ?: "Unknown"
 
     override fun getCurrentLargeIcon(
         player: Player,

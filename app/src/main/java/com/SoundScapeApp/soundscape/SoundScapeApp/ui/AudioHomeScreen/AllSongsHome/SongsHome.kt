@@ -2,6 +2,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHo
 
 import android.app.ActivityManager
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -117,7 +118,8 @@ fun SongsHome(
     player: ExoPlayer,
     viewModel: AudioViewModel,
     context: Context,
-    mediaSession: MediaSession
+    mediaSession: MediaSession,
+    onSongDelete:(List<Uri>)->Unit
 ) {
 
     val currentSong = viewModel.getCurrentPlayingSong()
@@ -222,6 +224,7 @@ fun SongsHome(
 
     val selectAllSongsClicked = remember { mutableStateOf(false) }
     val selectAllPlaylistsClicked = remember { mutableStateOf(false) }
+    val deleteSongsClicked = remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -251,7 +254,11 @@ fun SongsHome(
                     confirmAddSong.value = true
                 },
                 onSelectAllSongs = { selectAllSongsClicked.value = true },
-                onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true }
+                onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true },
+                onSongDelete = {
+                    deleteSongsClicked.value = true
+                },
+                navController = navController
             )
         })
     { innerPadding ->
@@ -334,7 +341,9 @@ fun SongsHome(
                                 selectedSongs = selectedSongs,
                                 confirmAddSong = confirmAddSong,
                                 search = search,
-                                onSelectAllSongsClicked = selectAllSongsClicked
+                                onSelectAllSongsClicked = selectAllSongsClicked,
+                                deleteSelectedSong = deleteSongsClicked,
+                                onSongDelete = onSongDelete
 
                             )
                             clearLists(
@@ -413,9 +422,10 @@ fun SongsHome(
                     modifier = Modifier
                         .align(alignment = Alignment.BottomCenter)
                         .padding(
-                            bottom = if(showBottomBar) 8.dp else 72.dp,
+                            bottom = if (showBottomBar) 8.dp else 72.dp,
                             start = 18.dp,
-                            end = 18.dp)
+                            end = 18.dp
+                        )
                 ) {
 
                     FastScrollButton(

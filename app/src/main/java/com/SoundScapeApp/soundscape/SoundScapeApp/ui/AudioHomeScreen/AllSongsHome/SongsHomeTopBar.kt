@@ -44,6 +44,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
@@ -60,8 +63,10 @@ fun SongsHomeTopAppBar(
     onSelectAllSongs: () -> Unit = {},
     onSelectAllPlaylist: () -> Unit = {},
     onAddSong: () -> Unit = {},
+    onSongDelete: () -> Unit,
     isPlaylistSelected: Boolean,
     isSongSelected: Boolean,
+    navController: NavController
 ) {
 
     var search by remember {
@@ -69,6 +74,7 @@ fun SongsHomeTopAppBar(
     }
 
     val showAllSongDropDown = remember { mutableStateOf(false) }
+    val showMoreDropDown = remember { mutableStateOf(false) }
     val showAllPlaylistDropDown = remember { mutableStateOf(false) }
 
 
@@ -178,13 +184,50 @@ fun SongsHomeTopAppBar(
             },
             actions = {
                 if (!search) {
-                    IconButton(onClick = { })
+                    IconButton(onClick = {
+                        showMoreDropDown.value = true
+                    })
                     {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = null,
                             tint = White90
                         )
+
+                        DropdownMenu(
+                            expanded = showMoreDropDown.value,
+                            onDismissRequest = {
+                            showMoreDropDown.value = false },
+                            modifier = Modifier.background(SoundScapeThemes.colorScheme.primary)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Settings",
+                                        color = White90,
+                                        style = SoundScapeThemes.typography.bodyMedium
+                                    )
+                                },
+                                onClick = {
+                                    showMoreDropDown.value = false
+                                    navController.navigate(BottomNavScreenRoutes.Settings.route)
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Themes",
+                                        color = White90,
+                                        style = SoundScapeThemes.typography.bodyMedium
+                                    )
+                                },
+                                onClick = {
+                                    showMoreDropDown.value = false
+                                    navController.navigate(ScreenRoute.ThemeSettings.route)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -275,6 +318,15 @@ fun SongsHomeTopAppBar(
 
                 },
                 actions = {
+                    IconButton(onClick = onSongDelete)
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = White90.copy(.9f)
+                        )
+                    }
+
                     IconButton(onClick = onAddSong)
                     {
                         Icon(

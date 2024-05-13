@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.renderscript.Allocation
 import android.renderscript.Element
@@ -68,7 +69,8 @@ fun MainScreen(
     videoViewModel: VideoViewModel,
     mediaSession: MediaSession,
     onPipClick: () -> Unit,
-    onVideoItemClick: (Int, Long) -> Unit
+    onVideoItemClick: (Int, Long) -> Unit,
+    onDeleteSong:(List<Uri>)->Unit
 ) {
 
     val systemUiController = rememberSystemUiController()
@@ -167,7 +169,8 @@ fun MainScreen(
                     videoViewModel = videoViewModel,
                     onPipClick = onPipClick,
                     onVideoItemClick = onVideoItemClick,
-                    mediaSession = mediaSession
+                    mediaSession = mediaSession,
+                    onDeleteSong = onDeleteSong
                 )
             }
         }

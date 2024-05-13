@@ -1,6 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav
 
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.LinearEasing
@@ -39,7 +40,8 @@ fun RootNav(
     videoViewModel: VideoViewModel,
     mediaSession: MediaSession,
     onPipClick: () -> Unit,
-    onVideoItemClick: (Int, Long) -> Unit
+    onVideoItemClick: (Int, Long) -> Unit,
+    onDeleteSong:(List<Uri>)->Unit
 ) {
     NavHost(navController = navController, startDestination = ScreenRoute.SplashScreen.route,
         popEnterTransition = {
@@ -84,7 +86,8 @@ fun RootNav(
                 videoViewModel = videoViewModel,
                 mediaSession = mediaSession,
                 onPipClick = onPipClick,
-                onVideoItemClick = onVideoItemClick
+                onVideoItemClick = onVideoItemClick,
+                onDeleteSong = onDeleteSong
             )
         }
     }

@@ -4,18 +4,24 @@ import android.Manifest
 import android.Manifest.permission
 import android.app.ActivityManager
 import android.app.PictureInPictureParams
+import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Rational
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
@@ -27,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -53,6 +60,9 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.openAppSettings
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -76,13 +86,23 @@ class MainActivity : ComponentActivity() {
         permission.READ_MEDIA_AUDIO
     )
 
+    private lateinit var permissionRequestLauncher:ActivityResultLauncher<Array<String>>
+    private lateinit var intentSenderLauncher:ActivityResultLauncher<IntentSenderRequest>
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()){
+            if(it.resultCode == RESULT_OK){
+                Toast.makeText(this,"Deleted",Toast.LENGTH_SHORT).show()
+//                audioViewModel.loadAudioData()
 
-//        installSplashScreen()
+            }else{
+                Toast.makeText(this,"not Deleted",Toast.LENGTH_SHORT).show()
+            }
+        }
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
@@ -103,6 +123,15 @@ class MainActivity : ComponentActivity() {
                     onResult = { isGranted ->
                         audioViewModel.onPermissionResult(
                             permission = permission.READ_EXTERNAL_STORAGE,
+                            isGranted = isGranted
+                        )
+                    }
+                )
+                val externalWritePermissionResultLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = { isGranted ->
+                        audioViewModel.onPermissionResult(
+                            permission = permission.WRITE_EXTERNAL_STORAGE,
                             isGranted = isGranted
                         )
                     }
@@ -137,6 +166,10 @@ class MainActivity : ComponentActivity() {
                                 externalPermissionResultLauncher.launch(
                                     permission.READ_EXTERNAL_STORAGE
                                 )
+                                externalWritePermissionResultLauncher.launch(
+                                    permission.WRITE_EXTERNAL_STORAGE
+                                )
+
                             }
                         } else if (event == Lifecycle.Event.ON_RESUME) {
                             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
@@ -184,6 +217,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                val scope = rememberCoroutineScope()
                 dialogQueue.reversed()
                     .forEach { permission ->
                         PermissionDialog(
@@ -278,6 +312,11 @@ class MainActivity : ComponentActivity() {
                         onPipClick = {
                             enterPiPMode()
                         },
+                        onDeleteSong = {uri->
+                            scope.launch {
+                                deleteSongFromExternalStorage(uri)
+                            }
+                        },
                         onVideoItemClick = { _, id ->
                             val selectedVideo = videoList.firstOrNull { it.id == id }
                             selectedVideo?.let {
@@ -321,6 +360,35 @@ class MainActivity : ComponentActivity() {
         this.enterPictureInPictureMode(params)
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
     }
+
+
+    private suspend fun deleteSongFromExternalStorage(songUri:List<Uri>){
+        withContext(Dispatchers.IO){
+            try {
+                songUri.forEach {
+                    contentResolver.delete(it,null,null)
+                }
+
+            }catch (e:SecurityException){
+                val intentSender = when{
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R->{
+                        MediaStore.createDeleteRequest(contentResolver, songUri).intentSender
+                    }
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q->{
+                        val recoverAbleSecurityException = e as? RecoverableSecurityException
+                        recoverAbleSecurityException?.userAction?.actionIntent?.intentSender
+                    }
+                    else-> null
+                }
+                intentSender?.let{sender->
+                    intentSenderLauncher.launch(
+                        IntentSenderRequest.Builder(sender).build()
+                    )
+                }
+            }
+        }
+    }
+
 
     @Deprecated("Deprecated in Java")
     override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
