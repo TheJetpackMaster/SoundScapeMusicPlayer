@@ -5,7 +5,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -192,6 +194,14 @@ class AudioViewModel @Inject constructor(
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
 
 
+    // SELECTED FOR DELETION
+    private val _selectedSongs = MutableStateFlow<List<Long>>(emptyList())
+    val selectedSongs: StateFlow<List<Long>> = _selectedSongs
+
+    private val _isDeletingSong = MutableStateFlow(false)
+    val isDeletingSong: StateFlow<Boolean> = _isDeletingSong
+
+
     init {
 //        loadAudioData()
 //        loadVideoData()
@@ -201,11 +211,6 @@ class AudioViewModel @Inject constructor(
         getScanSongLengthTime()
         loadPlaylistAudioData()
         getFavoritesSongs()
-//        getCurrentPlayingPlaylist()
-
-//        if (!player.playWhenReady) {
-//            createVideoMediaSession(context)
-//        }
 
         duration = player.duration
         player.shuffleModeEnabled = isShuffleEnabled()
@@ -224,7 +229,16 @@ class AudioViewModel @Inject constructor(
                     is AudioState.Playing -> isPlying = player.isPlaying
                     is AudioState.Progress -> calculateProgressValue(mediaState.progress)
                     is AudioState.CurrentPlaying -> {
-                        currentSelectedAudio = player.currentMediaItem?.mediaId!!.toLong()
+
+                        val mediaId = player.currentMediaItem?.mediaId
+                        currentSelectedAudio = if (mediaId != null) {
+                            mediaId.toLong()
+                        } else {
+                            // Handle the case when mediaId is null
+                            // For example, you can assign a default value or throw an exception
+                            // Default value example: 0L
+                            0L
+                        }
 
                     }
 
@@ -260,8 +274,8 @@ class AudioViewModel @Inject constructor(
         val sortedList = when (sortType) {
             SortType.DATE_ADDED_ASC -> scannedAudioList.value.sortedBy { it.dateAdded }
             SortType.DATE_ADDED_DESC -> scannedAudioList.value.sortedByDescending { it.dateAdded }
-            SortType.TITLE_ASC -> scannedAudioList.value.sortedBy { it.displayName }
-            SortType.TITLE_DESC -> scannedAudioList.value.sortedByDescending { it.displayName }
+            SortType.TITLE_ASC -> scannedAudioList.value.sortedBy { it.title }
+            SortType.TITLE_DESC -> scannedAudioList.value.sortedByDescending { it.title }
         }
         _scannedAudioList.value = sortedList
     }
@@ -272,8 +286,6 @@ class AudioViewModel @Inject constructor(
             if (audioList.value.isEmpty()) {
                 val audio = repository.getAudioData()
                 _audioList.value = audio
-                Log.d("audioList", audioList.toString())
-
 
                 if (player.currentMediaItemIndex > 0) {
                     currentSelectedAudio = player.currentMediaItem?.mediaId!!.toLong()
@@ -826,7 +838,7 @@ class AudioViewModel @Inject constructor(
 
     // Function to check and remove IDs from playlists that are not in the audio list
     private fun removeExtraIdsFromPlaylists() {
-        val audioIds = audioList.value.map { it.id }
+        val audioIds = scannedAudioList.value.map { it.id }
         val playlists = _playlists.value
 
         val extraIdsMap = mutableMapOf<Long, MutableList<Long>>()
@@ -846,7 +858,7 @@ class AudioViewModel @Inject constructor(
 
     private fun removeExtraIdsFromFavorites() {
 
-        val audioIds = audioList.value.map { it.id }
+        val audioIds = scannedAudioList.value.map { it.id }
         val favoriteIds = _favoritesSongs.value
 
         val extraIds = favoriteIds.filterNot { audioIds.contains(it) }
@@ -908,6 +920,33 @@ class AudioViewModel @Inject constructor(
     fun getCurrentPlayingSong():String?{
         return sharedPreferencesHelper.getCurrentPlayingSong()
     }
+
+    fun setSelectedSongs(selectedSongs:List<Long>){
+        _selectedSongs.value = selectedSongs
+    }
+
+    fun setIsDeletingSongs(deletingSongs:Boolean){
+        _isDeletingSong.value = deletingSongs
+    }
+
+
+    fun reloadSongs(selectedSongIds:List<Long>) {
+        viewModelScope.launch {
+            val filteredSongs = scannedAudioList.value.filter { song ->
+                song.id !in selectedSongIds // Filter out songs whose IDs are in selectedSongIds
+            }
+            _audioList.value = filteredSongs
+            _scannedAudioList.value = filteredSongs // Update all songs list
+
+            if(currentPlaylistId.value != null) {
+                loadSongsForCurrentPlaylist(currentPlaylistId.value!!)
+            }
+            updatePlaylists()
+        }
+    }
+
+
+
 
     override fun onCleared() {
         super.onCleared()

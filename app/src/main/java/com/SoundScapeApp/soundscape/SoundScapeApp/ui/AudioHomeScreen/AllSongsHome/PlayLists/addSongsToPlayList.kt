@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -112,6 +113,18 @@ fun AddSongsToPlaylist(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent
                 ),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.popBackStack()
+                    })
+                    {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = null,
+                            tint = White90
+                        )
+                    }
+                },
                 title = {
                     if (showSearch.value) {
                         Box {
@@ -333,7 +346,7 @@ fun AddSongsToPlaylist(
                             val selectedSongsList = selectedSongs
                                 .filter { it.value }
                                 .map { it.key }
-                            Log.d("sele",selectedSongsList.toString())
+                            Log.d("sele", selectedSongsList.toString())
                             viewModel.addSongToPlaylist(selectedSongsList, context)
                             navController.popBackStack()
                         },

@@ -31,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,6 +43,7 @@ import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -86,6 +88,8 @@ class MainActivity : ComponentActivity() {
         permission.READ_MEDIA_AUDIO
     )
 
+
+    //For deleting songs and videos
     private lateinit var permissionRequestLauncher:ActivityResultLauncher<Array<String>>
     private lateinit var intentSenderLauncher:ActivityResultLauncher<IntentSenderRequest>
 
@@ -96,11 +100,37 @@ class MainActivity : ComponentActivity() {
 
         intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()){
             if(it.resultCode == RESULT_OK){
-                Toast.makeText(this,"Deleted",Toast.LENGTH_SHORT).show()
-//                audioViewModel.loadAudioData()
+
+                if(audioViewModel.isDeletingSong.value) {
+                    Toast.makeText(
+                        this,
+                        "${audioViewModel.selectedSongs.value.size} songs Deleted",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    audioViewModel.setMediaItemFlag(false)
+                    audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
+                    audioViewModel.setSelectedSongs(emptyList())
+                    audioViewModel.setIsDeletingSongs(false)
+
+
+                }else{
+                    Toast.makeText(
+                        this,
+                        "${videoViewModel.selectedVideos.value.size} videos Deleted",
+                        Toast.LENGTH_SHORT
+                    ).show()
+//                    videoViewModel.setMediaItemFlag(false)
+                    videoViewModel.reloadVideos(videoViewModel.selectedVideos.value)
+                    videoViewModel.setSelectedVideos(emptyList())
+                }
 
             }else{
-                Toast.makeText(this,"not Deleted",Toast.LENGTH_SHORT).show()
+                if(audioViewModel.isDeletingSong.value) {
+                    audioViewModel.setSelectedSongs(emptyList())
+                    audioViewModel.setIsDeletingSongs(false)
+                }else{
+                    videoViewModel.setSelectedVideos(emptyList())
+                }
             }
         }
 
@@ -109,6 +139,7 @@ class MainActivity : ComponentActivity() {
                 Color.TRANSPARENT, Color.TRANSPARENT
             )
         )
+
         setContent {
             val currentTheme by audioViewModel.currentTheme.collectAsState()
 
@@ -209,7 +240,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
                     lifeCycleOwner.lifecycle.addObserver(observer)
 
                     onDispose {
@@ -217,7 +247,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val scope = rememberCoroutineScope()
+
                 dialogQueue.reversed()
                     .forEach { permission ->
                         PermissionDialog(
@@ -267,6 +297,7 @@ class MainActivity : ComponentActivity() {
                     val audioList by audioViewModel.scannedAudioList.collectAsState()
                     val videoList by videoViewModel.scannedVideoList.collectAsState()
 
+
                     RootNav(
                         navController = navController,
                         context = this,
@@ -313,14 +344,20 @@ class MainActivity : ComponentActivity() {
                             enterPiPMode()
                         },
                         onDeleteSong = {uri->
-                            scope.launch {
+                            lifecycleScope.launch {
                                 deleteSongFromExternalStorage(uri)
                             }
+                            audioViewModel.setIsDeletingSongs(true)
                         },
                         onVideoItemClick = { _, id ->
                             val selectedVideo = videoList.firstOrNull { it.id == id }
                             selectedVideo?.let {
                                 videoViewModel.setVideoMediaItemAndPlay(selectedVideo)
+                            }
+                        },
+                        onVideoDelete = {videoUri->
+                            lifecycleScope.launch {
+                                deleteSongFromExternalStorage(videoUri)
                             }
                         }
                     )

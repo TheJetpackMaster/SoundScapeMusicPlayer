@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.service
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -42,6 +43,17 @@ class MusicNotificationManager @Inject constructor(
         getMainActivityIntent(context),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
+
+    val stopIntent = Intent(context, MusicService::class.java).apply {
+        action = "STOP_MUSIC_SERVICE"
+    }
+    val stopPendingIntent = PendingIntent.getService(
+        context,
+        0,
+        stopIntent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
 
 
     init {
@@ -89,13 +101,13 @@ class MusicNotificationManager @Inject constructor(
 //            )
             .setChannelImportance(NotificationUtil.IMPORTANCE_HIGH)
             .setNotificationListener(object : PlayerNotificationManager.NotificationListener {
-                override fun onNotificationPosted(
-                    notificationId: Int,
-                    notification: Notification,
-                    ongoing: Boolean
-                ) {
-                    mediaSessionService.startForeground(NOTIFICATION_ID, notification)
-                }
+//                override fun onNotificationPosted(
+//                    notificationId: Int,
+//                    notification: Notification,
+//                    ongoing: Boolean
+//                ) {
+//                    mediaSessionService.startForeground(NOTIFICATION_ID, notification)
+//                }
 
                 override fun onNotificationCancelled(
                     notificationId: Int,
@@ -108,6 +120,10 @@ class MusicNotificationManager @Inject constructor(
                             mediaSessionService.stopSelf()
                             mediaSessionService.stopForeground(notificationId)
                             mediaSession.release()
+                            notificationManager.deleteNotificationChannel(NOTIFICATION_CHANNEL_ID)
+
+                            val stopServiceIntent = Intent(context, MusicService::class.java)
+                            context.stopService(stopServiceIntent)
                         }
                     }
                 }

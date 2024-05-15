@@ -2,18 +2,23 @@ package com.SoundScapeApp.soundscape.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import com.SoundScapeApp.soundscape.MainActivity
 
 private val Theme1ColorScheme = SoundScapeColorScheme(
@@ -220,7 +225,7 @@ fun SoundScapeThemes(
     activity: Activity = LocalContext.current as MainActivity,
     content: @Composable () -> Unit
 ) {
-    val window = calculateWindowSizeClass(activity = activity)
+    val windows = calculateWindowSizeClass(activity = activity)
     val config = LocalConfiguration.current
 
     val colorScheme = when (themeChoice) {
@@ -241,7 +246,7 @@ fun SoundScapeThemes(
     }
     val rippleIndication = rememberRipple()
 
-    val typography = when (window.widthSizeClass) {
+    val typography = when (windows.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
             if (config.screenWidthDp <= 360) {
                 SmallTypography
@@ -257,6 +262,8 @@ fun SoundScapeThemes(
         else -> {
             LargeTypography // Default typography for other size classes
         }
+
+
     }
 
     CompositionLocalProvider(
@@ -265,6 +272,17 @@ fun SoundScapeThemes(
         LocalIndication provides rippleIndication,
         content = content
     )
+
+    val darkTheme = isSystemInDarkTheme()
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = Color.Transparent.toArgb()
+            window.navigationBarColor = Color.Transparent.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars
+        }
+    }
 }
 
 object SoundScapeThemes {

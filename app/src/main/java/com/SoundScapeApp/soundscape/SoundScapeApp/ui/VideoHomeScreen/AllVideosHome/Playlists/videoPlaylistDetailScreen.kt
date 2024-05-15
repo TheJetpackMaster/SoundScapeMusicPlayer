@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
@@ -36,6 +37,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -75,6 +78,7 @@ import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.AllVideos.formatVideoDuration
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
@@ -152,6 +156,7 @@ fun VideoPlaylistDetailScreen(
     var showAddVideosToPlaylistDialog by remember {
         mutableStateOf(false)
     }
+    var showMoreDetailDropDown by remember{ mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -175,7 +180,7 @@ fun VideoPlaylistDetailScreen(
                         })
                         {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                imageVector = Icons.Default.ArrowBack,
                                 contentDescription = null,
                                 tint = White90
                             )
@@ -217,6 +222,54 @@ fun VideoPlaylistDetailScreen(
                             )
                         }
 
+                    }else{
+                        IconButton(onClick = {
+                            showMoreDetailDropDown = true
+                        })
+                        {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null,
+                                tint = White90
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showMoreDetailDropDown,
+                            onDismissRequest = {
+                                showMoreDetailDropDown = false },
+                            modifier = Modifier.background(SoundScapeThemes.colorScheme.primary)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Add Videos",
+                                        color = White90,
+                                        style = SoundScapeThemes.typography.bodyMedium
+                                    )
+                                },
+                                onClick = {
+                                    showMoreDetailDropDown = false
+
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Delete Playlist",
+                                        color = White90,
+                                        style = SoundScapeThemes.typography.bodyMedium
+                                    )
+                                },
+                                onClick = {
+                                    showMoreDetailDropDown = false
+                                    viewModel.deleteVideoPlaylist(currentPlaylistId!!)
+                                    navController.popBackStack()
+
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -226,11 +279,14 @@ fun VideoPlaylistDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .padding(bottom = 16.dp)
+                .padding(top = 12.dp)
         ) {
             if (playlistVideos.isEmpty()) {
                 // Display a message or handle UI for empty folder
-                Text(text = "Playlist Is empty", color = White90)
+                Text(
+                    text = "Playlist Is empty",
+                    color = White90,
+                    modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(2.dp)

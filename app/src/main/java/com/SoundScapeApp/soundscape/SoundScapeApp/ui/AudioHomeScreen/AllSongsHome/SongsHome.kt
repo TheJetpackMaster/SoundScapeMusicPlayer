@@ -64,6 +64,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -224,7 +225,10 @@ fun SongsHome(
 
     val selectAllSongsClicked = remember { mutableStateOf(false) }
     val selectAllPlaylistsClicked = remember { mutableStateOf(false) }
+
     val deleteSongsClicked = remember { mutableStateOf(false) }
+    val selectedSongsCount = remember{ mutableStateOf(0) }
+    val selectedSongIds = remember { mutableStateListOf<Long>() }
 
 
     Scaffold(
@@ -247,18 +251,23 @@ fun SongsHome(
                 },
                 onSongClear = {
                     selectedSongs.clear()
+                    selectedSongsCount.value = 0
+                    selectedSongIds.clear()
                     viewModel.setIsSongSelected(false)
                     selectAllSongsClicked.value = false
                 },
                 onAddSong = {
                     confirmAddSong.value = true
                 },
-                onSelectAllSongs = { selectAllSongsClicked.value = true },
+                onSelectAllSongs = {
+                    selectAllSongsClicked.value = true },
                 onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true },
                 onSongDelete = {
                     deleteSongsClicked.value = true
+                    viewModel.setSelectedSongs(selectedSongIds.toMutableList())
                 },
-                navController = navController
+                navController = navController,
+                selectedSongsCount = selectedSongsCount
             )
         })
     { innerPadding ->
@@ -276,7 +285,7 @@ fun SongsHome(
 
             TabRow(
                 containerColor = Color.Transparent,
-                selectedTabIndex = (state),
+                selectedTabIndex = state,
                 indicator = indicator,
                 divider = {
                     HorizontalDivider(
@@ -343,7 +352,9 @@ fun SongsHome(
                                 search = search,
                                 onSelectAllSongsClicked = selectAllSongsClicked,
                                 deleteSelectedSong = deleteSongsClicked,
-                                onSongDelete = onSongDelete
+                                onSongDelete = onSongDelete,
+                                selectedSongsCount = selectedSongsCount,
+                                selectedSongsIds = selectedSongIds
 
                             )
                             clearLists(

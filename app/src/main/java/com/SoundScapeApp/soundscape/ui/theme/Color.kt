@@ -23,7 +23,10 @@ val BrightGray = Color(0XFF737E89)
 val White90 = Color(0XFFF9F8FF)
 val White50 = Color(0x80F9F8FF)
 
+
+//MY COLORS
 val playingSongBg = Color(0xFFDB5A17)
+val NavigationBarColor = Color(0xFF18031B)
 
 
 //THEME ONE

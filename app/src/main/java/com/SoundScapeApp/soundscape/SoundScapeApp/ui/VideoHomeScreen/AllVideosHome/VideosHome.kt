@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome
 
+import android.net.Uri
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -30,6 +31,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,7 +56,8 @@ import kotlinx.coroutines.launch
 fun VideosHome(
     navController: NavController,
     viewModel: VideoViewModel,
-    onVideoItemClick: (Int, Long) -> Unit
+    onVideoItemClick: (Int, Long) -> Unit,
+    onVideoDelete:(List<Uri>)->Unit
 ) {
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -149,6 +152,10 @@ fun VideosHome(
     val selectAllPlaylistsClicked = remember { mutableStateOf(false) }
     val selectAllMoviesClicked = remember { mutableStateOf(false) }
 
+    val deleteVideosClicked = remember { mutableStateOf(false) }
+    val selectedVideoIds = remember { mutableStateListOf<Long>() }
+    val selectedVideosCount = remember { mutableStateOf(0) }
+
 
 
     Scaffold(
@@ -188,10 +195,16 @@ fun VideosHome(
                 onMovieAdd = {
                     confirmAddMovie.value = true
                 },
+                onVideoDelete = {
+                    deleteVideosClicked.value = true
+                    viewModel.setSelectedVideos(selectedVideoIds.toMutableList())
+                },
                 onSelectAllVideos = { selectAllVideosClicked.value = true },
                 onSelectAllMovies = { selectAllMoviesClicked.value = true },
-                onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true }
-            )
+                onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true },
+                selectedVideosCount = selectedVideosCount,
+
+                )
         })
     { innerPadding ->
         Column(
@@ -218,7 +231,8 @@ fun VideosHome(
             ) {
                 tabs.forEachIndexed { index, title ->
                     val textColor by animateColorAsState(
-                        if (state == index) Color.White else White90.copy(.6f), label = "")
+                        if (state == index) Color.White else White90.copy(.6f), label = ""
+                    )
 
                     Tab(
                         selected = selectedTabIndex == index,
@@ -227,7 +241,7 @@ fun VideosHome(
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(
                                     page = index,
-                                    animationSpec =  spring(stiffness = Spring.StiffnessLow)
+                                    animationSpec = spring(stiffness = Spring.StiffnessLow)
                                 )
                             }
                         },
@@ -245,8 +259,8 @@ fun VideosHome(
             // Content for each tab using Pager
             Box {
                 HorizontalPager(
-                   flingBehavior = flingBehavior(
-                       snapPositionalThreshold = .1f,
+                    flingBehavior = flingBehavior(
+                        snapPositionalThreshold = .1f,
                         state = pagerState,
                         lowVelocityAnimationSpec = LowVelocityAnimationSpec,
                         highVelocityAnimationSpec = rememberSplineBasedDecay(),
@@ -267,7 +281,12 @@ fun VideosHome(
                                 confirmAddVideo = confirmAddVideo,
                                 search = search,
                                 onVideoItemClick = onVideoItemClick,
-                                onSelectAllVideosClicked = selectAllVideosClicked
+                                onSelectAllVideosClicked = selectAllVideosClicked,
+                                onVideoDelete = onVideoDelete,
+                                selectedVideosCount = selectedVideosCount,
+                                selectedVideosIds = selectedVideoIds,
+                                deleteSelectedVideo = deleteVideosClicked
+
                             )
                             clearVideoLists(
                                 selectedPlaylists = selectedPlaylists,

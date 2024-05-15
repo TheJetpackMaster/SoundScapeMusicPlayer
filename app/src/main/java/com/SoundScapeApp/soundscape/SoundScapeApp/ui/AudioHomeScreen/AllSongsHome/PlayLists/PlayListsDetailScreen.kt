@@ -234,7 +234,7 @@ fun PlayListDetailsScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = null,
-                                tint = BrightGray
+                                tint = White90
                             )
                         }
                     }

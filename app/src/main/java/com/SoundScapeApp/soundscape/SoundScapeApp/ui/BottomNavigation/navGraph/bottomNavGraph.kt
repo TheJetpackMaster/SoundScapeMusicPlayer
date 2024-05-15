@@ -53,7 +53,8 @@ fun BottomNavGraph(
     onPipClick: () -> Unit,
     onVideoItemClick:(Int,Long)->Unit,
     mediaSession: MediaSession,
-    onDeleteSong:(List<Uri>)->Unit
+    onDeleteSong:(List<Uri>)->Unit,
+    onVideoDelete:(List<Uri>)->Unit
 ) {
     NavHost(navController = navController,
         startDestination = BottomNavScreenRoutes.SongsHome.route,
@@ -171,7 +172,8 @@ fun BottomNavGraph(
             VideosHome(
                 navController = navController,
                 videoViewModel,
-                onVideoItemClick = onVideoItemClick
+                onVideoItemClick = onVideoItemClick,
+                onVideoDelete = onVideoDelete
             )
         }
 

@@ -288,7 +288,7 @@ class SharedPreferencesHelper @Inject constructor(
     }
 
     fun getCurrentSortType(): SortType {
-        val defaultSortType = SortType.DATE_ADDED_DESC // Set default sort type here
+        val defaultSortType = SortType.TITLE_DESC // Set default sort type here
         val sortTypeName = sharedPreferences.getString(SORT_TYPE_KEY, defaultSortType.name)
         return SortType.valueOf(sortTypeName ?: defaultSortType.name)
     }

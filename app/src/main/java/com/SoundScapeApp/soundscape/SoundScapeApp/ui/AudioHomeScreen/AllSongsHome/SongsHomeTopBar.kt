@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +42,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -66,7 +66,8 @@ fun SongsHomeTopAppBar(
     onSongDelete: () -> Unit,
     isPlaylistSelected: Boolean,
     isSongSelected: Boolean,
-    navController: NavController
+    navController: NavController,
+    selectedSongsCount:MutableState<Int>
 ) {
 
     var search by remember {
@@ -313,9 +314,10 @@ fun SongsHomeTopAppBar(
                                 tint = White90.copy(.9f)
                             )
                         }
-
+                        Text(text = selectedSongsCount.value.toString(),
+                            style = SoundScapeThemes.typography.titleLarge,
+                            color = White90)
                     }
-
                 },
                 actions = {
                     IconButton(onClick = onSongDelete)

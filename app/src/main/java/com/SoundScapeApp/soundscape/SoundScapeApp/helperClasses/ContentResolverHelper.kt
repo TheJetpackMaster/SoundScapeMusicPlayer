@@ -51,8 +51,8 @@ constructor(@ApplicationContext val context: Context) {
     private val selectionArgAudio = arrayOf("1")
     private val selectionArgVideo = arrayOf("video/mp4")
 
-    private val audioSortOrder = "${MediaStore.Audio.AudioColumns.DATE_ADDED} DESC"
-    private val videoSortOrder = "${MediaStore.Video.VideoColumns.SIZE} DESC"
+    private val audioSortOrder = "${MediaStore.Audio.AudioColumns.TITLE} DESC"
+    private val videoSortOrder = "${MediaStore.Video.VideoColumns.DATE_ADDED} DESC"
 
 
 //    @WorkerThread

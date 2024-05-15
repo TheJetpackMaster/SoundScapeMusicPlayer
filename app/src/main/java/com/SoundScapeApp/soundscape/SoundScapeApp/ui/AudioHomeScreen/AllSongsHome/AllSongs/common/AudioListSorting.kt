@@ -32,7 +32,8 @@ import com.SoundScapeApp.soundscape.ui.theme.White90
 fun AudioListSorting(
     showSort: MutableState<Boolean>,
     viewModel: AudioViewModel,
-    currentSortType: SortType
+    currentSortType: SortType,
+    onSortClick:()->Unit
 
 ) {
 
@@ -62,6 +63,7 @@ fun AudioListSorting(
                                 viewModel.sortAudioList(SortType.DATE_ADDED_DESC)
                                 viewModel.setSortType(SortType.DATE_ADDED_DESC)
                                 viewModel.setMediaItemFlag(false)
+                                onSortClick()
                             }
                         }
                     )
@@ -96,6 +98,7 @@ fun AudioListSorting(
                                 viewModel.sortAudioList(SortType.DATE_ADDED_ASC)
                                 viewModel.setSortType(SortType.DATE_ADDED_ASC)
                                 viewModel.setMediaItemFlag(false)
+                                onSortClick()
                             }
                         }
                     )
@@ -130,6 +133,7 @@ fun AudioListSorting(
                                 viewModel.sortAudioList(SortType.TITLE_DESC)
                                 viewModel.setSortType(SortType.TITLE_DESC)
                                 viewModel.setMediaItemFlag(false)
+                                onSortClick()
                             }
                         }
                     )
@@ -164,6 +168,7 @@ fun AudioListSorting(
                                 viewModel.sortAudioList(SortType.TITLE_ASC)
                                 viewModel.setSortType(SortType.TITLE_ASC)
                                 viewModel.setMediaItemFlag(false)
+                                onSortClick()
                             }
                         }
                     )

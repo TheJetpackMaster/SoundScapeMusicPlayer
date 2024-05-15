@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,7 +64,9 @@ fun VideosHomeTopBar(
     onMovieAdd:()->Unit = {},
     onSelectAllVideos: () -> Unit = {},
     onSelectAllPlaylist: () -> Unit = {},
-    onSelectAllMovies:()->Unit = {}
+    onSelectAllMovies:()->Unit = {},
+    onVideoDelete:()->Unit,
+    selectedVideosCount: MutableState<Int>
 ) {
 
     var search by remember {
@@ -263,8 +266,20 @@ fun VideosHomeTopBar(
                             tint = White90.copy(.9f)
                         )
                     }
+                    Text(text = selectedVideosCount.value.toString(),
+                        style = SoundScapeThemes.typography.titleLarge,
+                        color = White90)
                 },
                 actions = {
+                    IconButton(onClick = onVideoDelete)
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = White90.copy(.9f)
+                        )
+                    }
+
                     IconButton(onClick = onAddVideo)
                     {
                         Icon(

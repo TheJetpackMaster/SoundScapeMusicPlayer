@@ -2,6 +2,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosH
 
 import Video
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.key
 import androidx.compose.foundation.BorderStroke
@@ -71,6 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -78,6 +80,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoSortType
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.toggleSongSelection
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
@@ -97,7 +100,11 @@ fun AllVideos(
     confirmAddVideo: MutableState<Boolean>,
     viewModel: VideoViewModel,
     onVideoItemClick: (Int, Long) -> Unit,
-    onSelectAllVideosClicked:MutableState<Boolean>
+    onSelectAllVideosClicked:MutableState<Boolean>,
+    deleteSelectedVideo: MutableState<Boolean>,
+    onVideoDelete: (List<Uri>) -> Unit,
+    selectedVideosCount: MutableState<Int>,
+    selectedVideosIds:MutableList<Long>
 ) {
 
     val videosList by viewModel.scannedVideoList.collectAsState()
@@ -152,24 +159,52 @@ fun AllVideos(
 
     val isSearch = viewModel.isVideoSearch.collectAsState()
 
-    val filteredVideoList = remember(search, videosList) {
-        if (search.isNotBlank()) {
-            viewModel.isAppVideoSearch(true)
-            videosList.filter { video ->
-                video.displayName.contains(search, ignoreCase = true)
-            }
-        } else {
-            viewModel.isAppVideoSearch(false)
-            videosList
-        }
-    }
+//    val filteredVideoList = remember(search, videosList) {
+//        if (search.isNotBlank()) {
+//            viewModel.isAppVideoSearch(true)
+//            videosList.filter { video ->
+//                video.displayName.contains(search, ignoreCase = true)
+//            }
+//        } else {
+//            viewModel.isAppVideoSearch(false)
+//            videosList
+//        }
+//    }
 
+
+    val filteredVideoList = if (search.isNotBlank()) {
+        viewModel.isAppVideoSearch(true)
+        videosList.filter { video ->
+            video.displayName.contains(search, ignoreCase = true)
+        }
+    } else {
+        viewModel.isAppVideoSearch(false)
+        videosList
+    }
 
     LaunchedEffect(onSelectAllVideosClicked.value){
         if(onSelectAllVideosClicked.value){
             filteredVideoList.forEach { video->
                 selectedVideos[video.id] = true
             }
+        }
+    }
+
+    LaunchedEffect(deleteSelectedVideo.value) {
+        if (deleteSelectedVideo.value) {
+            val selectedVideosList = selectedVideos
+                .filter { it.value } // Filter out only the selected songs
+                .map { it.key } // Extract the IDs of the selected songs
+
+            val selectedVideoURIs = filteredVideoList
+                .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                .map { video -> video.uri.toUri() } // Map each song to its URI
+
+            onVideoDelete(selectedVideoURIs)
+            deleteSelectedVideo.value = false
+            selectedVideos.clear()
+            selectedVideosIds.clear()
+            viewModel.setIsVideoSelected(false)
         }
     }
 
@@ -241,8 +276,11 @@ fun AllVideos(
                                                 }) {
                                                 selectedVideos[video.id] =
                                                     !(selectedVideos[video.id] ?: false)
+
+                                                viewModel.setIsVideoSelected(selectedVideos.any { it.value })
+                                                selectedVideosCount.value = selectedVideos.count { it.value }
+                                                toggleSongSelection(video.id,selectedVideosIds)
                                             }
-                                            viewModel.setIsVideoSelected(selectedVideos.any { it.value })
                                         },
                                         onTap = {
                                             if (selectedVideos.any {
@@ -252,6 +290,9 @@ fun AllVideos(
                                                     !(selectedVideos[video.id] ?: false)
 
                                                 viewModel.setIsVideoSelected(selectedVideos.any { it.value })
+                                                selectedVideosCount.value = selectedVideos.count { it.value }
+                                                toggleSongSelection(video.id,selectedVideosIds)
+
                                             } else {
                                                 if (!isSearch.value) {
                                                     // Logic for playing video from the original list
@@ -295,7 +336,8 @@ fun AllVideos(
 
 
                                 GlideImage(
-                                    model = video.thumbnail, contentDescription = null,
+                                    model = video.thumbnail,
+                                    contentDescription = null,
                                     modifier = Modifier
                                         .width(125.dp)
                                         .fillMaxHeight()
@@ -1163,5 +1205,13 @@ fun formatVideoDuration(durationInMillis: Long): String {
 //            })
 //    }
 //}
+
+private fun toggleVideoSelection(videoId: Long,selectedVideoIds:MutableList<Long>) {
+    if (selectedVideoIds.contains(videoId)) {
+        selectedVideoIds.remove(videoId)
+    } else {
+        selectedVideoIds.add(videoId)
+    }
+}
 
 

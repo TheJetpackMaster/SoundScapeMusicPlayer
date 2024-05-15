@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.navGraph.BottomNavGraph
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.ui.theme.NavigationBarColor
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
@@ -70,7 +72,8 @@ fun MainScreen(
     mediaSession: MediaSession,
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit,
-    onDeleteSong:(List<Uri>)->Unit
+    onDeleteSong:(List<Uri>)->Unit,
+    onVideoDelete:(List<Uri>)->Unit
 ) {
 
     val systemUiController = rememberSystemUiController()
@@ -97,7 +100,9 @@ fun MainScreen(
 
     Scaffold(
         modifier = Modifier
+            .background(color = NavigationBarColor)
             .navigationBarsPadding(),
+        containerColor = Color.Transparent,
         bottomBar = {
             if (showBottomBar) {
                 CustomBottomNav(navController = navController, context)
@@ -170,7 +175,8 @@ fun MainScreen(
                     onPipClick = onPipClick,
                     onVideoItemClick = onVideoItemClick,
                     mediaSession = mediaSession,
-                    onDeleteSong = onDeleteSong
+                    onDeleteSong = onDeleteSong,
+                    onVideoDelete = onVideoDelete
                 )
             }
         }

@@ -74,7 +74,9 @@ fun AllSongs(
     search: String,
     onSelectAllSongsClicked: MutableState<Boolean>,
     deleteSelectedSong: MutableState<Boolean>,
-    onSongDelete: (List<Uri>) -> Unit
+    onSongDelete: (List<Uri>) -> Unit,
+    selectedSongsCount: MutableState<Int>,
+    selectedSongsIds:MutableList<Long>
 ) {
 
     val currentSortType = viewModel.currentSortType
@@ -84,6 +86,7 @@ fun AllSongs(
     val showSheet = remember {
         mutableStateOf(false)
     }
+
     val sheetState = rememberModalBottomSheetState()
 
     val showSort = remember {
@@ -124,25 +127,37 @@ fun AllSongs(
     val maxVisiblePlaylists = 4
 
 
-    val filteredAudioList = remember(search, audioList) {
-        if (search.isNotBlank()) {
-            viewModel.isAppSearch(true)
-            audioList.filter { audio ->
-                audio.title.contains(search, ignoreCase = true) ||
-                        audio.artist.contains(search, ignoreCase = true)
-            }
-        } else {
-            viewModel.isAppSearch(false)
-            audioList
-        }
-    }
+//    val filteredAudioList = remember(search, audioList) {
+//        if (search.isNotBlank()) {
+//            viewModel.isAppSearch(true)
+//            audioList.filter { audio ->
+//                audio.title.contains(search, ignoreCase = true) ||
+//                        audio.artist.contains(search, ignoreCase = true)
+//            }
+//        } else {
+//            viewModel.isAppSearch(false)
+//            audioList
+//        }
+//    }
 
+    val filteredAudioList = if (search.isNotBlank()) {
+        viewModel.isAppSearch(true)
+        audioList.filter { audio ->
+            audio.title.contains(search, ignoreCase = true) ||
+                    audio.artist.contains(search, ignoreCase = true)
+        }
+    } else {
+        viewModel.isAppSearch(false)
+        audioList
+    }
 
 
     LaunchedEffect(onSelectAllSongsClicked.value) {
         if (onSelectAllSongsClicked.value) {
             filteredAudioList.forEach { song ->
                 selectedSongs[song.id] = true
+                selectedSongsCount.value = selectedSongs.count { it.value }
+                onSelectAllSongsClicked.value = false
             }
         }
     }
@@ -161,6 +176,7 @@ fun AllSongs(
             onSongDelete(selectedSongURIs)
             deleteSelectedSong.value = false
             selectedSongs.clear()
+            selectedSongsIds.clear()
             viewModel.setIsSongSelected(false)
         }
     }
@@ -175,83 +191,91 @@ fun AllSongs(
 
         ) {
 
-        LazyColumn(
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 8.dp, end = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+        key(audioList,search) {
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 8.dp, end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
 
-                    Text(
-                        text = "Total Songs: ${filteredAudioList.size}",
-                        color = White90,
-                        style = SoundScapeThemes.typography.bodySmall
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    IconButton(
-                        modifier = Modifier.size(24.dp),
-                        onClick = {
-                            showSort.value = true
-                        })
-                    {
-                        Icon(
-                            painter = painterResource(id = R.drawable.sorting),
-                            contentDescription = "all songs list sorting button",
-                            modifier = Modifier.size(24.dp),
-                            tint = White90
+                        Text(
+                            text = "Total Songs: ${filteredAudioList.size}",
+                            color = White90,
+                            style = SoundScapeThemes.typography.bodySmall
                         )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        IconButton(
+                            modifier = Modifier.size(24.dp),
+                            onClick = {
+                                showSort.value = true
+                            })
+                        {
+                            Icon(
+                                painter = painterResource(id = R.drawable.sorting),
+                                contentDescription = "all songs list sorting button",
+                                modifier = Modifier.size(24.dp),
+                                tint = White90
+                            )
+                        }
                     }
                 }
-            }
 
-            items(items = filteredAudioList, key = { it.id }) { song ->
-                SongItem(
-                    key = song.id, // Provide a unique key for each song
-                    isSelected = selectedSongs[song.id] ?: false,
-                    selectedSongs = selectedSongs,
-                    song = song,
-                    onLongPress = {
-                        if (!selectedSongs.any { it.value }) {
-                            selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
-                        }
-                        viewModel.setIsSongSelected(selectedSongs.any { it.value })
-                    },
-                    onTap = {
-                        if (selectedSongs.any { it.value }) {
-                            selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
-                        } else {
-                            onItemClick(0, song.id)
-                            navController.navigate(ScreenRoute.NowPlayingScreen.route)
-                        }
-                        viewModel.setIsSongSelected(selectedSongs.any { it.value })
-                    },
-                    context = context,
-                    onIconClick = {
-                        showSheet.value = true
-                        selectedSong = song
-                        current.longValue = song.id
-                    },
-                    isPlaying = viewModel.currentSelectedAudio == song.id,
-                    modifier = Modifier
-                        .animateItemPlacement(
-                            animationSpec = spring(
-                                Spring.DampingRatioLowBouncy,
-                                Spring.StiffnessLow
+                items(items = filteredAudioList) { song ->
+                    SongItem(
+                        key = song.id, // Provide a unique key for each song
+                        isSelected = selectedSongs[song.id] ?: false,
+                        selectedSongs = selectedSongs,
+                        song = song,
+                        onLongPress = {
+                            if (!selectedSongs.any { it.value }) {
+                                selectedSongs.clear()
+                                selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
+                                selectedSongsCount.value = selectedSongs.size
+                                viewModel.setIsSongSelected(selectedSongs.any { it.value })
+                                toggleSongSelection(song.id,selectedSongsIds)
+                            }
+                        },
+                        onTap = {
+                            if (selectedSongs.any { it.value }) {
+                                selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
+                                selectedSongsCount.value = selectedSongs.count { it.value }
+                                viewModel.setIsSongSelected(selectedSongs.any { it.value })
+                                toggleSongSelection(song.id,selectedSongsIds)
+                            } else {
+                                onItemClick(0, song.id)
+                                navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                            }
+                        },
+                        context = context,
+                        onIconClick = {
+                            showSheet.value = true
+                            selectedSong = song
+                            current.longValue = song.id
+                        },
+                        isPlaying = viewModel.currentSelectedAudio == song.id,
+                        modifier = Modifier
+                            .animateItemPlacement(
+                                animationSpec = spring(
+                                    Spring.DampingRatioLowBouncy,
+                                    Spring.StiffnessLow
+                                )
                             )
-                        )
 
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.height(74.dp))
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(74.dp))
+                }
             }
         }
 
@@ -323,7 +347,11 @@ fun AllSongs(
             AudioListSorting(
                 showSort = showSort,
                 viewModel = viewModel,
-                currentSortType = currentSortType
+                currentSortType = currentSortType,
+                onSortClick = {
+                    selectedSongs.clear()
+                    selectedSongsIds.clear()
+                }
             )
         }
 
@@ -333,72 +361,13 @@ fun AllSongs(
                 showSongDetails = showSongDetailsDialog
             )
         }
+    }
+}
 
-//        if (deleteSelectedSong.value) {
-//            AlertDialog(
-//                containerColor = SoundScapeThemes.colorScheme.secondary,
-//                onDismissRequest = {
-//                    selectedSongs.clear()
-//                    deleteSelectedSong.value = false
-//                    viewModel.setIsSongSelected(false)
-//                },
-//                title = {
-//                    Text(
-//                        text = "Delete Song",
-//                        color = White90
-//                    )
-//                },
-//                text = {
-//                    Text(
-//                        text = "delete",
-//                        color = White50
-//                    )
-//                },
-//                confirmButton = {
-//                    Button(
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color.Transparent
-//                        ),
-//                        onClick = {
-//                            val selectedSongsList = selectedSongs
-//                                .filter { it.value } // Filter out only the selected songs
-//                                .map { it.key } // Extract the IDs of the selected songs
-//
-//                            val selectedSongURIs = filteredAudioList
-//                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
-//                                .map { song -> song.uri } // Map each song to its URI
-//
-//                            onSongDelete(selectedSongURIs)
-//                            deleteSelectedSong.value = false
-//                            selectedSongs.clear()
-//                            viewModel.setIsSongSelected(false)
-//
-//                        })
-//                    {
-//                        Text(
-//                            text = "Remove",
-//                            color = White90
-//                        )
-//                    }
-//                },
-//                dismissButton = {
-//                    Button(
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color.Transparent
-//                        ),
-//                        onClick = {
-//                            deleteSelectedSong.value = false
-//                            selectedSongs.clear()
-//                            viewModel.setIsSongSelected(false)
-//                        })
-//                    {
-//                        Text(
-//                            text = "Cancel",
-//                            color = White90
-//                        )
-//                    }
-//                }
-//            )
-//        }
+fun toggleSongSelection(songId: Long,selectedSongIds:MutableList<Long>) {
+    if (selectedSongIds.contains(songId)) {
+        selectedSongIds.remove(songId)
+    } else {
+        selectedSongIds.add(songId)
     }
 }

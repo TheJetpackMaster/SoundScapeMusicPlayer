@@ -203,6 +203,12 @@ class VideoViewModel @Inject constructor(
     private val _isMovieSelected = MutableStateFlow(false)
     val isMovieSelected: StateFlow<Boolean> = _isMovieSelected
 
+
+
+    // SELECTED FOR DELeTION
+    private val _selectedVideos = MutableStateFlow<List<Long>>(emptyList())
+    val selectedVideos: StateFlow<List<Long>> = _selectedVideos
+
     init {
         loadVideoPlaylists()
         getSeekForwardTime()
@@ -943,6 +949,25 @@ class VideoViewModel @Inject constructor(
     private fun getAutoPopupEnabled() {
         _autoPopupEnabled.value = videoPlaylistManager.getAutoPopupEnabled()
     }
+
+    fun setSelectedVideos(selectedVideos:List<Long>){
+        _selectedVideos.value = selectedVideos
+    }
+    // DELETION
+    fun reloadVideos(selectedVideoIds:List<Long>) {
+        viewModelScope.launch {
+            val filteredSongs = scannedVideoList.value.filter { song ->
+                song.id !in selectedVideoIds // Filter out songs whose IDs are in selectedSongIds
+            }
+            _videoList.value = filteredSongs
+            _scannedVideoList.value = filteredSongs // Update all songs list
+
+            if(currentVideoPlaylistId.value != null) {
+                loadVideosForCurrentPlaylist(currentVideoPlaylistId.value!!)
+            }
+        }
+    }
+
 
     override fun onCleared() {
         super.onCleared()

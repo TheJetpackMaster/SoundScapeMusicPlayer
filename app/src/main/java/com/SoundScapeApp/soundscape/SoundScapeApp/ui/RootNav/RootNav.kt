@@ -41,7 +41,8 @@ fun RootNav(
     mediaSession: MediaSession,
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit,
-    onDeleteSong:(List<Uri>)->Unit
+    onDeleteSong:(List<Uri>)->Unit,
+    onVideoDelete:(List<Uri>)->Unit
 ) {
     NavHost(navController = navController, startDestination = ScreenRoute.SplashScreen.route,
         popEnterTransition = {
@@ -87,7 +88,8 @@ fun RootNav(
                 mediaSession = mediaSession,
                 onPipClick = onPipClick,
                 onVideoItemClick = onVideoItemClick,
-                onDeleteSong = onDeleteSong
+                onDeleteSong = onDeleteSong,
+                onVideoDelete = onVideoDelete
             )
         }
     }
