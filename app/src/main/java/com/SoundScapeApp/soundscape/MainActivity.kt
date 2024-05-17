@@ -5,8 +5,10 @@ import android.Manifest.permission
 import android.app.ActivityManager
 import android.app.PictureInPictureParams
 import android.app.RecoverableSecurityException
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -97,7 +99,12 @@ class MainActivity : ComponentActivity() {
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //FOR CLOSING APP
+//        val filter = IntentFilter("com.SoundScapeApp.soundscape.FINISH_ACTIVITY")
+//        registerReceiver(finishActivityReceiver, filter, RECEIVER_EXPORTED)
 
+
+        // DELETING MEDIA ITEMS
         intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()){
             if(it.resultCode == RESULT_OK){
 
@@ -316,7 +323,7 @@ class MainActivity : ComponentActivity() {
                             selectedAudio?.let {
                                 if (!audioViewModel.isSearch.value) {
                                     if (!audioViewModel.setMediaItems) {
-                                        audioViewModel.setMediaItems(audioList)
+                                        audioViewModel.setMediaItems(audioList,this)
                                         audioViewModel.play(audioList.indexOf(selectedAudio))
                                         audioViewModel.setMediaItemFlag(true)
                                         player.repeatMode = Player.REPEAT_MODE_ALL
@@ -366,6 +373,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+//    private val finishActivityReceiver = object : BroadcastReceiver() {
+//        override fun onReceive(context: Context, intent: Intent) {
+//            // Finish the activity when the broadcast is received
+//            finish()
+//        }
+//    }
+
     private fun isMediaSessionServiceRunning(context: Context): Boolean {
         val serviceClass = MusicService::class.java
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -383,7 +397,7 @@ class MainActivity : ComponentActivity() {
         if (!isMediaSessionServiceRunning(this)) {
             startForegroundService(intent)
         } else {
-//            startService(intent)
+            startService(intent)
         }
     }
 
@@ -404,6 +418,19 @@ class MainActivity : ComponentActivity() {
             try {
                 songUri.forEach {
                     contentResolver.delete(it,null,null)
+                }
+
+                if(audioViewModel.isDeletingSong.value) {
+                    audioViewModel.setMediaItemFlag(false)
+                    audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
+                    audioViewModel.setSelectedSongs(emptyList())
+                    audioViewModel.setIsDeletingSongs(false)
+
+
+                }else{
+//                    videoViewModel.setMediaItemFlag(false)
+                    videoViewModel.reloadVideos(videoViewModel.selectedVideos.value)
+                    videoViewModel.setSelectedVideos(emptyList())
                 }
 
             }catch (e:SecurityException){
@@ -457,11 +484,17 @@ class MainActivity : ComponentActivity() {
                 currentMediaPosition
             )
         }
+//        videoViewModel.destroyVideoMediaSession()
     }
 
 
     override fun onResume() {
         super.onResume()
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+//        unregisterReceiver(finishActivityReceiver)
     }
 }

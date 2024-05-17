@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHo
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -55,6 +56,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.SongItem
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
+import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 
@@ -76,7 +78,7 @@ fun AllSongs(
     deleteSelectedSong: MutableState<Boolean>,
     onSongDelete: (List<Uri>) -> Unit,
     selectedSongsCount: MutableState<Int>,
-    selectedSongsIds:MutableList<Long>
+    selectedSongsIds: MutableList<Long>
 ) {
 
     val currentSortType = viewModel.currentSortType
@@ -151,6 +153,8 @@ fun AllSongs(
         audioList
     }
 
+    val showDeleteDialog = remember { mutableStateOf(false) }
+
 
     LaunchedEffect(onSelectAllSongsClicked.value) {
         if (onSelectAllSongsClicked.value) {
@@ -165,19 +169,25 @@ fun AllSongs(
 
     LaunchedEffect(deleteSelectedSong.value) {
         if (deleteSelectedSong.value) {
-            val selectedSongsList = selectedSongs
-                .filter { it.value } // Filter out only the selected songs
-                .map { it.key } // Extract the IDs of the selected songs
 
-            val selectedSongURIs = filteredAudioList
-                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
-                .map { song -> song.uri } // Map each song to its URI
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                showDeleteDialog.value = true
+                deleteSelectedSong.value = false
+            } else {
+                val selectedSongsList = selectedSongs
+                    .filter { it.value } // Filter out only the selected songs
+                    .map { it.key } // Extract the IDs of the selected songs
 
-            onSongDelete(selectedSongURIs)
-            deleteSelectedSong.value = false
-            selectedSongs.clear()
-            selectedSongsIds.clear()
-            viewModel.setIsSongSelected(false)
+                val selectedSongURIs = filteredAudioList
+                    .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                    .map { song -> song.uri } // Map each song to its URI
+
+                onSongDelete(selectedSongURIs)
+                deleteSelectedSong.value = false
+                selectedSongs.clear()
+                selectedSongsIds.clear()
+                viewModel.setIsSongSelected(false)
+            }
         }
     }
 
@@ -191,7 +201,7 @@ fun AllSongs(
 
         ) {
 
-        key(audioList,search) {
+        key(audioList, search) {
             LazyColumn(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(0.dp),
@@ -241,7 +251,7 @@ fun AllSongs(
                                 selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
                                 selectedSongsCount.value = selectedSongs.size
                                 viewModel.setIsSongSelected(selectedSongs.any { it.value })
-                                toggleSongSelection(song.id,selectedSongsIds)
+                                toggleSongSelection(song.id, selectedSongsIds)
                             }
                         },
                         onTap = {
@@ -249,7 +259,7 @@ fun AllSongs(
                                 selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
                                 selectedSongsCount.value = selectedSongs.count { it.value }
                                 viewModel.setIsSongSelected(selectedSongs.any { it.value })
-                                toggleSongSelection(song.id,selectedSongsIds)
+                                toggleSongSelection(song.id, selectedSongsIds)
                             } else {
                                 onItemClick(0, song.id)
                                 navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -361,10 +371,75 @@ fun AllSongs(
                 showSongDetails = showSongDetailsDialog
             )
         }
+
+        if (showDeleteDialog.value) {
+            AlertDialog(
+                containerColor = Theme2Primary,
+                onDismissRequest = {
+                    showDeleteDialog.value = false
+                },
+                title = {
+                    Text(
+                        text = "Delete Songs",
+                        color = White90
+                    )
+                },
+                text = {
+                    Text(
+                        text = "${selectedSongsIds.size} will be deleted",
+                        color = White50
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        ),
+                        onClick = {
+                            val selectedSongsList = selectedSongs
+                                .filter { it.value } // Filter out only the selected songs
+                                .map { it.key } // Extract the IDs of the selected songs
+
+                            val selectedSongURIs = filteredAudioList
+                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                                .map { song -> song.uri } // Map each song to its URI
+
+
+                            onSongDelete(selectedSongURIs)
+                            deleteSelectedSong.value = false
+                            selectedSongs.clear()
+                            selectedSongsIds.clear()
+                            viewModel.setIsSongSelected(false)
+                            showDeleteDialog.value = false
+                        })
+                    {
+                        Text(
+                            text = "Delete",
+                            color = White90
+                        )
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        ),
+                        onClick = {
+                            showDeleteDialog.value = false
+                        })
+                    {
+                        Text(
+                            text = "Cancel",
+                            color = White90
+                        )
+                    }
+                }
+            )
+        }
     }
 }
 
-fun toggleSongSelection(songId: Long,selectedSongIds:MutableList<Long>) {
+fun toggleSongSelection(songId: Long, selectedSongIds: MutableList<Long>) {
     if (selectedSongIds.contains(songId)) {
         selectedSongIds.remove(songId)
     } else {

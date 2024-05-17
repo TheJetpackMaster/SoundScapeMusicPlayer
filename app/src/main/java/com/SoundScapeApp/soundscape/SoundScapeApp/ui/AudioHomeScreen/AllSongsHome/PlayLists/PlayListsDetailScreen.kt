@@ -409,7 +409,7 @@ fun PlayListDetailsScreen(
                             if (currentPlayListSongs.isNotEmpty()) {
                                 viewModel.setMediaItemFlag(false)
 
-                                viewModel.setMediaItems(playListSongs)
+                                viewModel.setMediaItems(playListSongs,context)
                                 viewModel.onUiEvents(UIEvents.PlayPause)
 
                                 startService(context)
@@ -449,7 +449,7 @@ fun PlayListDetailsScreen(
                             viewModel.setMediaItemFlag(false)
 
 
-                            viewModel.setMediaItems(playListSongs)
+                            viewModel.setMediaItems(playListSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -509,7 +509,7 @@ fun PlayListDetailsScreen(
 //                                        viewModel.setPlaylistMediaItems(currentPlayListSongs)
 //                                        viewModel.playFromPlaylist(index)
                                     selectedAudio.let {
-                                        viewModel.setMediaItems(playListSongs)
+                                        viewModel.setMediaItems(playListSongs,context)
                                         viewModel.play(playListSongs.indexOf(selectedAudio))
                                     }
 
@@ -713,6 +713,8 @@ private fun isMediaSessionServiceRunning(context: Context): Boolean {
 fun startService(context: Context) {
     val intent = Intent(context, MusicService::class.java)
     if (!isMediaSessionServiceRunning(context)) {
-        startForegroundService(context, intent)
+        startForegroundService(context,intent)
+    }else{
+        startService(context)
     }
 }

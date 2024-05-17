@@ -451,7 +451,7 @@ fun SongsHome(
 
                     //Main Playing bar with Progress and PlayPause
 //                    AnimatedVisibility(visible = !listState.isScrollInProgress,) {
-                    if(isMediaSessionServiceRunning(context)) {
+                    if(player.playWhenReady) {
                         MainPlayingBar(
                             navController = navController,
                             painter = painter,

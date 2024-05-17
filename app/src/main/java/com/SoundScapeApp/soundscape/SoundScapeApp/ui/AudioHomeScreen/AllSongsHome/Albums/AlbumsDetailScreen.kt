@@ -314,7 +314,7 @@ fun AlbumsDetailScreen(
                         if (currentAlbumSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setMediaItems(albumSongs)
+                            viewModel.setMediaItems(albumSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -350,7 +350,7 @@ fun AlbumsDetailScreen(
                         if (currentAlbumSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setMediaItems(albumSongs)
+                            viewModel.setMediaItems(albumSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -402,9 +402,9 @@ fun AlbumsDetailScreen(
                                 val selectedAudio = albumSongs.firstOrNull { it.id == songId.id }
 
                                 if (!setMediaItems.value) {
-                                    viewModel.setMediaItems(albumSongs)
+                                    viewModel.setMediaItems(albumSongs,context)
                                     selectedAudio.let {
-                                        viewModel.setMediaItems(albumSongs)
+                                        viewModel.setMediaItems(albumSongs,context)
                                         viewModel.play(albumSongs.indexOf(selectedAudio))
                                     }
 //                                    viewModel.playFromAlbum(index)

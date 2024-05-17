@@ -17,7 +17,10 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DefaultDataSourceFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
@@ -161,7 +164,6 @@ class AudioViewModel @Inject constructor(
     //    Current Artist Songs
     private val _currentArtistSongs = MutableStateFlow<List<Long>>(emptyList())
     val currentArtistSongs: StateFlow<List<Long>> = _currentArtistSongs
-
 
 
     //    Check if app is already open
@@ -344,7 +346,7 @@ class AudioViewModel @Inject constructor(
     }
 
     //        For All songs
-    fun setMediaItems(audioList: List<Audio>) {
+    fun setMediaItems(audioList: List<Audio>,context: Context) {
         if (audioList.isNotEmpty()) {
             val mediaItems = audioList.map { audio ->
                 MediaItem.Builder()
@@ -363,6 +365,36 @@ class AudioViewModel @Inject constructor(
             audioServiceHandler.setMediaItemList(mediaItems)
         }
     }
+
+//    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+//    fun setMediaItems(audioList: List<Audio>, context: Context) {
+//        if (audioList.isNotEmpty()) {
+//            val mediaItems = audioList.map { audio ->
+//                MediaItem.Builder()
+//                    .setUri(audio.uri)
+//                    .setMediaId(audio.id.toString())
+//                    .setMediaMetadata(
+//                        MediaMetadata.Builder()
+//                            .setArtist(audio.artist)
+//                            .setAlbumArtist(audio.artist)
+//                            .setDisplayTitle(audio.title)
+//                            .setSubtitle(audio.displayName)
+//                            .setArtworkUri(audio.artwork.toUri())
+//                            .build()
+//                    ).build()
+//            }
+//
+//            val dataSourceFactory = DefaultDataSourceFactory(context, null)
+//
+//            // Create MediaSources for the MediaItems using your DataSourceFactory
+//            val mediaSources = mediaItems.map { mediaItem ->
+//                ProgressiveMediaSource.Factory(dataSourceFactory)
+//                    .createMediaSource(mediaItem)
+//            }
+//            player.prepare()
+//            player.setMediaSources(mediaSources)
+//        }
+//    }
 
 
     //    Set single media item
@@ -917,20 +949,20 @@ class AudioViewModel @Inject constructor(
         _currentTheme.value = sharedPreferencesHelper.getTheme()
     }
 
-    fun getCurrentPlayingSong():String?{
+    fun getCurrentPlayingSong(): String? {
         return sharedPreferencesHelper.getCurrentPlayingSong()
     }
 
-    fun setSelectedSongs(selectedSongs:List<Long>){
+    fun setSelectedSongs(selectedSongs: List<Long>) {
         _selectedSongs.value = selectedSongs
     }
 
-    fun setIsDeletingSongs(deletingSongs:Boolean){
+    fun setIsDeletingSongs(deletingSongs: Boolean) {
         _isDeletingSong.value = deletingSongs
     }
 
 
-    fun reloadSongs(selectedSongIds:List<Long>) {
+    fun reloadSongs(selectedSongIds: List<Long>) {
         viewModelScope.launch {
             val filteredSongs = scannedAudioList.value.filter { song ->
                 song.id !in selectedSongIds // Filter out songs whose IDs are in selectedSongIds
@@ -938,14 +970,12 @@ class AudioViewModel @Inject constructor(
             _audioList.value = filteredSongs
             _scannedAudioList.value = filteredSongs // Update all songs list
 
-            if(currentPlaylistId.value != null) {
+            if (currentPlaylistId.value != null) {
                 loadSongsForCurrentPlaylist(currentPlaylistId.value!!)
             }
             updatePlaylists()
         }
     }
-
-
 
 
     override fun onCleared() {

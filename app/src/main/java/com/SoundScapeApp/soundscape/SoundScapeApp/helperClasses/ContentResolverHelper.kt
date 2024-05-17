@@ -46,25 +46,35 @@ constructor(@ApplicationContext val context: Context) {
         MediaStore.Video.VideoColumns.SIZE,
         MediaStore.Video.VideoColumns.BUCKET_DISPLAY_NAME)
 
-    private val audioSelectionClause: String = "${MediaStore.Audio.AudioColumns.IS_MUSIC} = ?"
-    private val videoSelectionClause: String = "${MediaStore.Video.VideoColumns.MIME_TYPE} =?"
-    private val selectionArgAudio = arrayOf("1")
-    private val selectionArgVideo = arrayOf("video/mp4")
+
+    private val supportedAudioMimeTypes = arrayOf(
+        "audio/mpeg",    // MP3
+        "audio/mp3",     // MP3
+        "audio/mp4",     // M4A
+        "audio/flac"     // FLAC
+        // Add more supported audio MIME types as needed
+    )
+
+    private val supportedVideoMimeTypes = arrayOf(
+        "video/mp4",     // MP4
+        "video/mpeg",    // MPEG
+        "video/3gpp",    // 3GP
+        "video/x-matroska"     // MKV
+        // Add more supported video MIME types as needed
+    )
+
+
+    private val audioSelectionClause = "${MediaStore.Audio.AudioColumns.IS_MUSIC} = ? AND ${MediaStore.Audio.AudioColumns.MIME_TYPE} IN (${supportedAudioMimeTypes.joinToString(",") { "?" }})"
+    private val audioSelectionArgs = arrayOf("1") + supportedAudioMimeTypes
+
+    // Filter selection clause for video based on MIME types
+    private val videoSelectionClause = "${MediaStore.Video.VideoColumns.MIME_TYPE} IN (${supportedVideoMimeTypes.joinToString(",") { "?" }})"
+    private val videoSelectionArgs = supportedVideoMimeTypes
 
     private val audioSortOrder = "${MediaStore.Audio.AudioColumns.TITLE} DESC"
     private val videoSortOrder = "${MediaStore.Video.VideoColumns.DATE_ADDED} DESC"
 
 
-//    @WorkerThread
-//    fun getAudioData(): MutableList<Audio> {
-//        return getAudioCursorData()
-//    }
-//
-//    @RequiresApi(Build.VERSION_CODES.Q)
-//    @WorkerThread
-//    fun getVideoData(): MutableList<Video> {
-//        return getVideoCursorData()
-//    }
 
     @WorkerThread
     suspend fun getAudioData(): MutableList<Audio> {
@@ -90,7 +100,7 @@ constructor(@ApplicationContext val context: Context) {
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             audioProjection,
             audioSelectionClause,
-            selectionArgAudio,
+            audioSelectionArgs,
             audioSortOrder
         )
 
@@ -119,13 +129,13 @@ constructor(@ApplicationContext val context: Context) {
                     Log.e("Cursor", "getCursorData: Cursor is Empty")
                 } else {
                     while (cursor.moveToNext()) {
-                        val displayName = getString(displayNameColumn)
+                        val displayName = getString(displayNameColumn) ?:"Unknown"
                         val id = getLong(idColumn)
-                        val artist = getString(artistColumn)
-                        val data = getString(dataColumn)
-                        val duration = getInt(durationColumn)
-                        val title = getString(titleColumn)
-                        val albumId = getString(albumIdColumn)
+                        val artist = getString(artistColumn) ?:"Unknown"
+                        val data = getString(dataColumn) ?:"Unknown"
+                        val duration = getInt(durationColumn) ?:0
+                        val title = getString(titleColumn) ?:"Unknown"
+                        val albumId = getString(albumIdColumn) ?:"Unknown"
                         val uri = ContentUris.withAppendedId(
                             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                             id
@@ -163,8 +173,8 @@ constructor(@ApplicationContext val context: Context) {
         mCursor = context.contentResolver.query(
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
             videoProjection,
-            null,
-            null,
+            videoSelectionClause,
+            videoSelectionArgs,
             videoSortOrder
         )
 
@@ -183,13 +193,13 @@ constructor(@ApplicationContext val context: Context) {
                 cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.SIZE)
 
             while (cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val data = cursor.getString(dataColumn)
-                val displayName = cursor.getString(displayNameColumn)
+                val id = cursor.getLong(idColumn) ?: 0L
+                val data = cursor.getString(dataColumn)?:"Unknown"
+                val displayName = cursor.getString(displayNameColumn) ?:"Unknown"
                 val duration = cursor.getInt(durationColumn)
-                val dateAdded = cursor.getString(dateAddedColumn)
+                val dateAdded = cursor.getString(dateAddedColumn) ?:"Unknown"
                 val bucketName = cursor.getString(bucketColumn)?:"Unknown"
-                val sizeBytes = cursor.getLong(sizeColumn)
+                val sizeBytes = cursor.getLong(sizeColumn) ?: 0
                 val sizeMB = String.format("%.2f", sizeBytes / (1000.0 * 1000.0))
                 val uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
 
@@ -199,7 +209,7 @@ constructor(@ApplicationContext val context: Context) {
                     id = id,
                     dateAdded = dateAdded,
                     duration = duration,
-                    bucketName = bucketName?:"Unknown",
+                    bucketName = bucketName,
                     sizeMB = sizeMB,
                     thumbnail = data
                 )

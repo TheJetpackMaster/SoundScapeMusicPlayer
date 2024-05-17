@@ -45,7 +45,7 @@ fun CustomSongSlider(
 
     LaunchedEffect(viewModel.progress,player.duration) {
         songProgress.floatValue =
-            (player.currentPosition.toFloat() / player.duration.toFloat()) * 100f
+            ((player.currentPosition.toFloat() / player.duration.toFloat()) * 100f)
         songProgressString.longValue = player.currentPosition
 //        repeatMode.intValue = player.repeatMode
 //        shuffleMode.value = player.shuffleModeEnabled

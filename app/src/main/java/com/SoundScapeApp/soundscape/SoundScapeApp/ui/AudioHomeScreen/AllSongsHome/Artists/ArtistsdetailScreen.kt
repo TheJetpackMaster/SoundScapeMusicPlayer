@@ -324,7 +324,7 @@ fun ArtistsDetailScreen(
                         if (currentArtistSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setMediaItems(artistSongs)
+                            viewModel.setMediaItems(artistSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -360,7 +360,7 @@ fun ArtistsDetailScreen(
                         if (currentArtistSongs.isNotEmpty()) {
                             viewModel.setMediaItemFlag(false)
 
-                            viewModel.setMediaItems(artistSongs)
+                            viewModel.setMediaItems(artistSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -417,7 +417,7 @@ fun ArtistsDetailScreen(
 //                                    viewModel.setPlaylistMediaItems(currentArtistSongs)
 //                                    viewModel.playFromArtist(index)
                                     selectedAudio.let {
-                                        viewModel.setMediaItems(artistSongs)
+                                        viewModel.setMediaItems(artistSongs,context)
                                         viewModel.play(artistSongs.indexOf(selectedAudio))
                                     }
 

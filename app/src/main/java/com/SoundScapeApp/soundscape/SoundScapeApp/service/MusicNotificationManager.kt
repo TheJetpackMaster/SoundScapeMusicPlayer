@@ -1,6 +1,5 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.service
 
-import android.app.Activity
 import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -11,6 +10,7 @@ import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.media3.common.Player
 import androidx.media3.common.util.NotificationUtil
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -21,7 +21,9 @@ import com.SoundScapeApp.soundscape.MainActivity
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
+import okhttp3.internal.notify
 import javax.inject.Inject
+import kotlin.system.exitProcess
 
 
 private const val NOTIFICATION_ID = 101
@@ -34,7 +36,7 @@ class MusicNotificationManager @Inject constructor(
     private val sharedPreferencesHelper: SharedPreferencesHelper
 
     ) {
-    private val notificationManager: NotificationManagerCompat =
+    val notificationManager: NotificationManagerCompat =
         NotificationManagerCompat.from(context)
 
     private val contentIntent = PendingIntent.getActivity(
@@ -43,17 +45,6 @@ class MusicNotificationManager @Inject constructor(
         getMainActivityIntent(context),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
-
-    val stopIntent = Intent(context, MusicService::class.java).apply {
-        action = "STOP_MUSIC_SERVICE"
-    }
-    val stopPendingIntent = PendingIntent.getService(
-        context,
-        0,
-        stopIntent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-
 
 
     init {
@@ -64,7 +55,7 @@ class MusicNotificationManager @Inject constructor(
     fun startNotificationService(
         mediaSessionService: MediaSessionService,
         mediaSession: MediaSession
-    ){
+    ) {
         buildNotification(mediaSession, mediaSessionService)
         startForeGroundNotificationService(mediaSessionService)
     }
@@ -87,6 +78,7 @@ class MusicNotificationManager @Inject constructor(
             NOTIFICATION_ID,
             NOTIFICATION_CHANNEL_ID
         )
+            .setCustomActionReceiver(MyCustomActionReceiver(mediaSessionService))
             .setMediaDescriptionAdapter(
                 NotificationAdapter(
                     context = context,
@@ -96,34 +88,30 @@ class MusicNotificationManager @Inject constructor(
             .setSmallIconResourceId(
                 R.drawable.musicnote
             )
-//            .setStopActionIconResourceId(
-//                R.drawable.baseline_close_24
-//            )
             .setChannelImportance(NotificationUtil.IMPORTANCE_HIGH)
             .setNotificationListener(object : PlayerNotificationManager.NotificationListener {
-//                override fun onNotificationPosted(
-//                    notificationId: Int,
-//                    notification: Notification,
-//                    ongoing: Boolean
-//                ) {
-//                    mediaSessionService.startForeground(NOTIFICATION_ID, notification)
-//                }
+                override fun onNotificationPosted(
+                    notificationId: Int,
+                    notification: Notification,
+                    ongoing: Boolean
+                ) {
+                    if(!exoPlayer.isPlaying){
+                        notificationManager.cancel(notificationId)
+                    }else{
+                        mediaSessionService.startForeground(NOTIFICATION_ID, notification)
+                    }
+
+                }
 
                 override fun onNotificationCancelled(
                     notificationId: Int,
                     dismissedByUser: Boolean
                 ) {
                     if (dismissedByUser) {
-                        // Check if the app is in the foreground and the media is playing
                         if (!exoPlayer.isPlaying && !isAppInForeground(context)) {
                             notificationManager.cancel(NOTIFICATION_ID)
                             mediaSessionService.stopSelf()
                             mediaSessionService.stopForeground(notificationId)
-                            mediaSession.release()
-                            notificationManager.deleteNotificationChannel(NOTIFICATION_CHANNEL_ID)
-
-                            val stopServiceIntent = Intent(context, MusicService::class.java)
-                            context.stopService(stopServiceIntent)
                         }
                     }
                 }
@@ -135,7 +123,6 @@ class MusicNotificationManager @Inject constructor(
                 it.setUsePreviousActionInCompactView(true)
                 it.setUseFastForwardAction(false)
 //                it.setUseStopAction(true)
-                it.setShowPlayButtonIfPlaybackIsSuppressed(false)
                 it.setUseRewindAction(false)
                 it.setPriority(NotificationCompat.PRIORITY_LOW)
                 it.setPlayer(exoPlayer)
@@ -174,5 +161,55 @@ class MusicNotificationManager @Inject constructor(
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         return intent
+    }
+
+
+    @UnstableApi
+    inner class MyCustomActionReceiver(private val mediaSessionService: MediaSessionService) :
+        PlayerNotificationManager.CustomActionReceiver {
+
+        private val stopIntent = Intent(context, MusicService::class.java).apply {
+            action = "STOP_MUSIC_SERVICE" // Custom action for stopping the service
+        }
+
+        private val stopPendingIntent = PendingIntent.getService(
+            context,
+            0,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        override fun createCustomActions(
+            context: Context,
+            instanceId: Int
+        ): MutableMap<String, NotificationCompat.Action> {
+            val customActions = mutableMapOf<String, NotificationCompat.Action>()
+
+            // Add your custom action here
+            val stopAction = NotificationCompat.Action.Builder(
+                R.drawable.baseline_close_24,
+                "stop_app",
+                stopPendingIntent
+            ).build()
+            customActions["stop_app"] = stopAction // Adjusted action key
+
+            return customActions
+        }
+
+        override fun getCustomActions(player: Player): MutableList<String> {
+            // Return a list of custom action keys
+            return mutableListOf("stop_app") // Adjusted action key
+        }
+
+        override fun onCustomAction(player: Player, action: String, intent: Intent) {
+            if (action == "stop_app") {
+
+                // Handle stop action her
+                // Remove the notification
+                notificationManager.cancel(NOTIFICATION_ID)
+                notificationManager.deleteNotificationChannel(NOTIFICATION_CHANNEL_ID)
+
+            }
+        }
     }
 }
