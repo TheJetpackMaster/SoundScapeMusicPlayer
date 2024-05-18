@@ -26,6 +26,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.NowPlayingScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AboutUs.AboutUs
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AudioSettings.AudioSettings
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.Settings
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.ThemeSettings.ThemeSettings
@@ -223,6 +224,10 @@ fun BottomNavGraph(
                 audioViewModel = audioViewModel,
                 videoViewModel = videoViewModel
             )
+        }
+
+        composable(ScreenRoute.AboutUs.route){
+            AboutUs(navController = navController)
         }
     }
 }

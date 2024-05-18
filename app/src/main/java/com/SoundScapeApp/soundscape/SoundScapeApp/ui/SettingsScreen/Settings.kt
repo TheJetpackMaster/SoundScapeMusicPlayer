@@ -204,7 +204,7 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     .fillMaxWidth()
                     .height(48.dp)
                     .clickable {
-
+                        navController.navigate(ScreenRoute.AboutUs.route)
                     }
                     .padding(start = 16.dp, end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
