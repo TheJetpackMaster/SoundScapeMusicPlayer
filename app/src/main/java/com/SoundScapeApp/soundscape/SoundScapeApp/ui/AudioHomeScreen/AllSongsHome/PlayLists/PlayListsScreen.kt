@@ -63,6 +63,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,12 +71,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -90,6 +94,7 @@ fun PlayListsScreen(
 ) {
 
     val myPlaylists by viewModel.playlists.collectAsState()
+
 
     var isAddingPlayList by remember {
         mutableStateOf(false)
@@ -149,6 +154,7 @@ fun PlayListsScreen(
     viewModel.setIsPlaylistSelected(selectedPlaylists.any { it.value })
 
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -333,8 +339,17 @@ fun PlayListsScreen(
                     ) {
                         firstSongId?.let {
                             val imageUrl = viewModel.getSongImageUrl(it)
+
                             val painter = rememberAsyncImagePainter(
-                                imageUrl
+
+                                ImageRequest.Builder(context)
+                                    .data(
+                                        data = imageUrl!!
+                                    )
+                                    .apply(block = fun ImageRequest.Builder.() {
+                                        error(R.drawable.sample)
+                                    }
+                                    ).build()
                             )
                             Image(
                                 painter = painter,
@@ -533,7 +548,6 @@ fun PlayListsScreen(
 
         if (showSheet) {
             val firstSongId = selectedPlaylist!!.songIds.lastOrNull()
-
             ModalBottomSheet(
                 containerColor = SoundScapeThemes.colorScheme.secondary,
                 dragHandle = {},
@@ -546,7 +560,7 @@ fun PlayListsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .wrapContentHeight()
-                        .padding(top = 12.dp, bottom = 42.dp)
+                        .padding(top = 12.dp, bottom = 16.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -565,8 +579,17 @@ fun PlayListsScreen(
                         ) {
                             firstSongId?.let {
                                 val imageUrl = viewModel.getSongImageUrl(it)
+
                                 val painter = rememberAsyncImagePainter(
-                                    imageUrl
+
+                                    ImageRequest.Builder(context)
+                                        .data(
+                                            data = imageUrl!!
+                                        )
+                                        .apply(block = fun ImageRequest.Builder.() {
+                                            error(R.drawable.sample)
+                                        }
+                                        ).build()
                                 )
                                 Image(
                                     painter = painter,
@@ -610,42 +633,46 @@ fun PlayListsScreen(
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp)
-                            .clickable {
-//                                showAddPlaylistDialog = true
-                                showSheet = false
-                            }
-                            .padding(start = 24.dp, end = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedIconButton(
-                            border = BorderStroke(1.dp, White90),
-                            modifier = Modifier.size(22.dp),
-                            onClick = {
-
-                            })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                tint = White90,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Play",
-                            color = White90,
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
+//
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(46.dp)
+//                            .clickable {
+////                                showAddPlaylistDialog = true
+//                                showSheet = false
+//                            }
+//                            .padding(start = 24.dp, end = 12.dp),
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        OutlinedIconButton(
+//                            border = BorderStroke(1.dp, White90),
+//                            modifier = Modifier.size(22.dp),
+//                            onClick = {
+//                                scope.launch {
+//                                    viewModel.loadSongsForCurrentPlaylist(selectedPlaylist!!.id)
+//                                }
+//                                viewModel.setMediaItems(audioList = playlistSongs.value, context =context )
+//
+//                            })
+//                        {
+//                            Icon(
+//                                imageVector = Icons.Default.PlayArrow,
+//                                contentDescription = null,
+//                                tint = White90,
+//                                modifier = Modifier.size(16.dp)
+//                            )
+//                        }
+//
+//                        Spacer(modifier = Modifier.width(10.dp))
+//                        Text(
+//                            text = "Play",
+//                            color = White90,
+//                            fontSize = 14.sp
+//                        )
+//                    }
+//
+//                    Spacer(modifier = Modifier.height(4.dp))
 
                     Row(
                         modifier = Modifier

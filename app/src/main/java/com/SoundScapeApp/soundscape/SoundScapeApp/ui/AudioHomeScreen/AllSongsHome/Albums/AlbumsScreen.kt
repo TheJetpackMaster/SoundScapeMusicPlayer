@@ -109,11 +109,12 @@ fun AlbumGridItem(
     modifier: Modifier = Modifier
 ) {
     val painter: Painter = rememberAsyncImagePainter(
+
         ImageRequest.Builder(LocalContext.current)
             .data(data = album.artwork)
             .apply(block = fun ImageRequest.Builder.() {
                 placeholder(R.drawable.musicnote)
-                error(R.drawable.musicnote)
+                error(R.drawable.sample)
             }
             ).build()
     )

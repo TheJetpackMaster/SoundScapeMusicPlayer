@@ -425,7 +425,7 @@ fun FolderVideosList(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight()
-                                        .padding(top = 12.dp, bottom = 42.dp)
+                                        .padding(top = 12.dp, bottom = 16.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -474,7 +474,7 @@ fun FolderVideosList(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     HorizontalDivider(
-                                        color = Theme2Secondary,
+                                        color = White90,
                                         thickness = 1.dp
                                     )
 

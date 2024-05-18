@@ -162,6 +162,7 @@ fun VideosHome(
         containerColor = Color.Transparent,
         topBar = {
             VideosHomeTopBar(
+                navController = navController,
                 searchValue = search,
                 onValueChange = {
                     search = it

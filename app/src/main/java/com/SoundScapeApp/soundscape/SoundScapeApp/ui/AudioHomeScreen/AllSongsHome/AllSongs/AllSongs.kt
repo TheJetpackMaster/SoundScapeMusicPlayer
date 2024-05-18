@@ -380,13 +380,13 @@ fun AllSongs(
                 },
                 title = {
                     Text(
-                        text = "Delete Songs",
+                        text = "Delete Songs?",
                         color = White90
                     )
                 },
                 text = {
                     Text(
-                        text = "${selectedSongsIds.size} will be deleted",
+                        text = "${selectedSongsIds.size} songs will be deleted",
                         color = White50
                     )
                 },
@@ -439,7 +439,7 @@ fun AllSongs(
     }
 }
 
-fun toggleSongSelection(songId: Long, selectedSongIds: MutableList<Long>) {
+private fun toggleSongSelection(songId: Long, selectedSongIds: MutableList<Long>) {
     if (selectedSongIds.contains(songId)) {
         selectedSongIds.remove(songId)
     } else {

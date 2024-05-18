@@ -43,6 +43,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
@@ -66,7 +68,8 @@ fun VideosHomeTopBar(
     onSelectAllPlaylist: () -> Unit = {},
     onSelectAllMovies:()->Unit = {},
     onVideoDelete:()->Unit,
-    selectedVideosCount: MutableState<Int>
+    selectedVideosCount: MutableState<Int>,
+    navController: NavController
 ) {
 
     var search by remember {
@@ -76,6 +79,7 @@ fun VideosHomeTopBar(
     val showAllPlaylistsDropDown = remember{ mutableStateOf(false) }
     val showAllVideosDropDown = remember{ mutableStateOf(false) }
     val showAllMoviesDropDown = remember{ mutableStateOf(false) }
+    val showMoreDropDown = remember { mutableStateOf(false) }
 
 
     Box {
@@ -171,13 +175,50 @@ fun VideosHomeTopBar(
             },
             actions = {
                 if (!search) {
-                    IconButton(onClick = { })
+                    IconButton(onClick = {
+                        showMoreDropDown.value = true
+                    })
                     {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = null,
                             tint = White90
                         )
+
+                        DropdownMenu(
+                            expanded = showMoreDropDown.value,
+                            onDismissRequest = {
+                                showMoreDropDown.value = false },
+                            modifier = Modifier.background(SoundScapeThemes.colorScheme.primary)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Video Settings",
+                                        color = White90,
+                                        style = SoundScapeThemes.typography.bodyMedium
+                                    )
+                                },
+                                onClick = {
+                                    showMoreDropDown.value = false
+                                    navController.navigate(ScreenRoute.VideoSettings.route)
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Themes",
+                                        color = White90,
+                                        style = SoundScapeThemes.typography.bodyMedium
+                                    )
+                                },
+                                onClick = {
+                                    showMoreDropDown.value = false
+                                    navController.navigate(ScreenRoute.ThemeSettings.route)
+                                }
+                            )
+                        }
                     }
                 } else {
                     Text(text = "cancel",

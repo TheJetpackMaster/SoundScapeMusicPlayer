@@ -204,14 +204,14 @@ fun SongsHomeTopAppBar(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Settings",
+                                        text = "Audio Settings",
                                         color = White90,
                                         style = SoundScapeThemes.typography.bodyMedium
                                     )
                                 },
                                 onClick = {
                                     showMoreDropDown.value = false
-                                    navController.navigate(BottomNavScreenRoutes.Settings.route)
+                                    navController.navigate(ScreenRoute.AudioSettings.route)
                                 }
                             )
 

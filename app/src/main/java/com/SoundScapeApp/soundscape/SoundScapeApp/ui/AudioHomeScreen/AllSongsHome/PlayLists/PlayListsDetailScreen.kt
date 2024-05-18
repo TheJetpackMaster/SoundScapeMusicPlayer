@@ -715,6 +715,6 @@ fun startService(context: Context) {
     if (!isMediaSessionServiceRunning(context)) {
         startForegroundService(context,intent)
     }else{
-        startService(context)
+//        startService(context)
     }
 }

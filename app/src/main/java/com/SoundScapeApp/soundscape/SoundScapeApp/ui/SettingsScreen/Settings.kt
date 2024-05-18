@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -62,6 +64,8 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                 ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            /*
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,6 +89,7 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     style = SoundScapeThemes.typography.titleSmall
                 )
             }
+             */
 
             Row(
                 modifier = Modifier
@@ -93,14 +98,14 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     .clickable {
                         navController.navigate(ScreenRoute.AudioSettings.route)
                     }
-                    .padding(start = 12.dp, end = 12.dp),
+                    .padding(start = 16.dp, end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.musicnote),
                     contentDescription = null,
                     tint = White90,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(20.dp)
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -120,7 +125,7 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     .clickable {
                         navController.navigate(ScreenRoute.VideoSettings.route)
                     }
-                    .padding(start = 12.dp, end = 12.dp),
+                    .padding(start = 16.dp, end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
@@ -128,7 +133,7 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     painter = painterResource(id = R.drawable.videosettings),
                     contentDescription = null,
                     tint = White90,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(24.dp)
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -141,6 +146,7 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
             }
 
 
+            /*
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,6 +168,8 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     style = SoundScapeThemes.typography.titleSmall
                 )
             }
+             */
+
 
             Row(
                 modifier = Modifier
@@ -170,12 +178,40 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     .clickable {
                         navController.navigate(ScreenRoute.ThemeSettings.route)
                     }
-                    .padding(start = 12.dp, end = 12.dp),
+                    .padding(start = 16.dp, end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
 
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.themesetting),
+                    contentDescription = null,
+                    tint = White90,
+                    modifier = Modifier.size(28.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "Theme",
+                    color = White90,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clickable {
+
+                    }
+                    .padding(start = 16.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
                     contentDescription = null,
                     tint = White90,
                     modifier = Modifier.size(26.dp)
@@ -184,7 +220,7 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = "Theme",
+                    text = "About us",
                     color = White90,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp

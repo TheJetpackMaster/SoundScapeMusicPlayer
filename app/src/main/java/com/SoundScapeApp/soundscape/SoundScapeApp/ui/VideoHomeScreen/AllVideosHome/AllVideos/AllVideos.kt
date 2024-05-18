@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosH
 import Video
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.compose.runtime.key
 import androidx.compose.foundation.BorderStroke
@@ -80,9 +81,11 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoSortType
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.toggleSongSelection
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ShowSongDetailsDialog
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
+import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 import java.util.concurrent.TimeUnit
@@ -137,6 +140,9 @@ fun AllVideos(
     var showAddPlaylistDialog by remember {
         mutableStateOf(false)
     }
+
+    val showVideoDetailsDialog = remember{ mutableStateOf(false) }
+
 //
     val playLists by viewModel.videoPlaylists.collectAsState()
 //    val currentPlayListSongs by viewModel.favoritesSongs.collectAsState()
@@ -190,21 +196,28 @@ fun AllVideos(
         }
     }
 
+    val showDeleteDialog = remember { mutableStateOf(false) }
+
     LaunchedEffect(deleteSelectedVideo.value) {
         if (deleteSelectedVideo.value) {
-            val selectedVideosList = selectedVideos
-                .filter { it.value } // Filter out only the selected songs
-                .map { it.key } // Extract the IDs of the selected songs
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                showDeleteDialog.value = true
+                deleteSelectedVideo.value = false
+            } else {
+                val selectedVideosList = selectedVideos
+                    .filter { it.value } // Filter out only the selected songs
+                    .map { it.key } // Extract the IDs of the selected songs
 
-            val selectedVideoURIs = filteredVideoList
-                .filter { selectedVideosList.contains(it.id) } // Filter selected songs
-                .map { video -> video.uri.toUri() } // Map each song to its URI
+                val selectedVideoURIs = filteredVideoList
+                    .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                    .map { video -> video.uri.toUri() } // Map each song to its URI
 
-            onVideoDelete(selectedVideoURIs)
-            deleteSelectedVideo.value = false
-            selectedVideos.clear()
-            selectedVideosIds.clear()
-            viewModel.setIsVideoSelected(false)
+                onVideoDelete(selectedVideoURIs)
+                deleteSelectedVideo.value = false
+                selectedVideos.clear()
+                selectedVideosIds.clear()
+                viewModel.setIsVideoSelected(false)
+            }
         }
     }
 
@@ -220,40 +233,44 @@ fun AllVideos(
                     bottom = 0.dp,
                 )
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Text(
-                    text = "Total Videos (${filteredVideoList.size})",
-                    color = White90,
-                    fontSize = 14.sp,
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                IconButton(onClick = {
-                    showSort.value = true
-                })
-                {
-                    Icon(
-                        painter = painterResource(id = R.drawable.sorting),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = White90
-                    )
-                }
-            }
-
-
             key(search){
                 LazyColumn(
                     state = lazyListState,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 8.dp, end = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+
+                            Text(
+                                text = "Total Videos: ${filteredVideoList.size}",
+                                color = White90,
+                                style = SoundScapeThemes.typography.bodySmall
+                            )
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            IconButton(
+                                modifier = Modifier.size(24.dp),
+                                onClick = {
+                                    showSort.value = true
+                                })
+                            {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.sorting),
+                                    contentDescription = "all videos list sorting button",
+                                    modifier = Modifier.size(24.dp),
+                                    tint = White90
+                                )
+                            }
+                        }
+                    }
+
                     items(items = filteredVideoList, key = { it.id }) { video ->
                         val isSelected = selectedVideos[video.id] ?: false
                         val id = video.id.toString()
@@ -278,8 +295,9 @@ fun AllVideos(
                                                     !(selectedVideos[video.id] ?: false)
 
                                                 viewModel.setIsVideoSelected(selectedVideos.any { it.value })
-                                                selectedVideosCount.value = selectedVideos.count { it.value }
-                                                toggleSongSelection(video.id,selectedVideosIds)
+                                                selectedVideosCount.value =
+                                                    selectedVideos.count { it.value }
+                                                toggleVideoSelection(video.id, selectedVideosIds)
                                             }
                                         },
                                         onTap = {
@@ -290,8 +308,9 @@ fun AllVideos(
                                                     !(selectedVideos[video.id] ?: false)
 
                                                 viewModel.setIsVideoSelected(selectedVideos.any { it.value })
-                                                selectedVideosCount.value = selectedVideos.count { it.value }
-                                                toggleSongSelection(video.id,selectedVideosIds)
+                                                selectedVideosCount.value =
+                                                    selectedVideos.count { it.value }
+                                                toggleVideoSelection(video.id, selectedVideosIds)
 
                                             } else {
                                                 if (!isSearch.value) {
@@ -482,7 +501,7 @@ fun AllVideos(
                         modifier = Modifier
                             .fillMaxWidth()
                             .wrapContentHeight()
-                            .padding(top = 12.dp, bottom = 42.dp)
+                            .padding(top = 12.dp, bottom = 16.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -544,6 +563,13 @@ fun AllVideos(
                                 .fillMaxWidth()
                                 .height(48.dp)
                                 .clickable {
+                                    selectedVideo.let {
+                                        viewModel.setVideoMediaItemAndPlay(selectedVideo!!)
+                                    }
+                                    navController.navigate(ScreenRoute.VideoPlayingScreen.route)
+                                    showSheet = false
+//                                    onItemClick(0, selectedSong!!.id)
+//                                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
                                     showSheet = false
 //                                    onItemClick(0, selectedSong!!.id)
 //                                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -555,6 +581,10 @@ fun AllVideos(
                                 border = BorderStroke(1.dp, White90),
                                 modifier = Modifier.size(22.dp),
                                 onClick = {
+                                    selectedVideo.let {
+                                        viewModel.setVideoMediaItemAndPlay(selectedVideo!!)
+                                    }
+                                    navController.navigate(ScreenRoute.VideoPlayingScreen.route)
                                     showSheet = false
 //                                    onItemClick(0, selectedSong!!.id)
 //                                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
@@ -616,8 +646,8 @@ fun AllVideos(
                                 .fillMaxWidth()
                                 .height(48.dp)
                                 .clickable {
-
                                     showSheet = false
+                                    showVideoDetailsDialog.value = true
                                 }
                                 .padding(start = 12.dp, end = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -626,7 +656,8 @@ fun AllVideos(
                                 border = BorderStroke(1.dp, White90),
                                 modifier = Modifier.size(22.dp),
                                 onClick = {
-
+                                    showSheet = false
+                                    showVideoDetailsDialog.value = true
                                 })
                             {
                                 Icon(
@@ -1070,7 +1101,6 @@ fun AllVideos(
                                     tint = White50
                                 )
                             }
-
                         }
                         Row(
                             modifier = Modifier
@@ -1159,6 +1189,75 @@ fun AllVideos(
                     }
                 }
             }
+
+            if (showDeleteDialog.value) {
+                AlertDialog(
+                    containerColor = Theme2Primary,
+                    onDismissRequest = {
+                        showDeleteDialog.value = false
+                    },
+                    title = {
+                        Text(
+                            text = "Delete Videos?",
+                            color = White90
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "${selectedVideosIds.size} videos will be deleted",
+                            color = White50
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            onClick = {
+                                val selectedVideosList = selectedVideos
+                                    .filter { it.value } // Filter out only the selected songs
+                                    .map { it.key } // Extract the IDs of the selected songs
+
+                                val selectedVideoURIs = filteredVideoList
+                                    .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                                    .map { video -> video.uri.toUri() } // Map each song to its URI
+
+                                onVideoDelete(selectedVideoURIs)
+                                deleteSelectedVideo.value = false
+                                selectedVideos.clear()
+                                selectedVideosIds.clear()
+                                viewModel.setIsVideoSelected(false)
+                                viewModel.setIsVideoSelected(false)
+                                showDeleteDialog.value = false
+                            })
+                        {
+                            Text(
+                                text = "Delete",
+                                color = White90
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent
+                            ),
+                            onClick = {
+                                showDeleteDialog.value = false
+                            })
+                        {
+                            Text(
+                                text = "Cancel",
+                                color = White90
+                            )
+                        }
+                    }
+                )
+            }
+            if(showVideoDetailsDialog.value){
+                ShowSVideoDetailsDialog(selectedVideo = selectedVideo!!,
+                    showVideoDetails = showVideoDetailsDialog)
+            }
         }
     }
 }
@@ -1213,5 +1312,48 @@ private fun toggleVideoSelection(videoId: Long,selectedVideoIds:MutableList<Long
         selectedVideoIds.add(videoId)
     }
 }
+
+@Composable
+fun ShowSVideoDetailsDialog(
+    selectedVideo: Video,
+    showVideoDetails:MutableState<Boolean>
+) {
+    AlertDialog(
+        containerColor = SoundScapeThemes.colorScheme.secondary,
+        onDismissRequest = {
+            showVideoDetails.value = false
+        },
+        title = {
+
+        },
+        text = {
+            Text(
+                text = selectedVideo.thumbnail,
+                color = White50
+            )
+        },
+        confirmButton = {
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent
+                ),
+                onClick = {
+                    showVideoDetails.value = false
+                })
+            {
+                Text(
+                    text = "OK",
+                    color = White90
+                )
+            }
+        },
+        dismissButton = {
+
+        }
+    )
+}
+
+
+
 
 

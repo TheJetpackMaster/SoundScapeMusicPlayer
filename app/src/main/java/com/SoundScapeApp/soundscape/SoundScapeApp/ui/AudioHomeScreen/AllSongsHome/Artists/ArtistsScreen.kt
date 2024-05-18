@@ -114,7 +114,7 @@ fun ArtistGridItem(
             .data(data = artist.artwork)
             .apply(block = fun ImageRequest.Builder.() {
                 placeholder(R.drawable.musicnote)
-                error(R.drawable.musicnote)
+                error(R.drawable.sample)
             }
             ).build()
     )

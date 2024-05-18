@@ -1,5 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.ThemeSettings
 
+import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -47,16 +49,20 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
 import com.SoundScapeApp.soundscape.ui.theme.GrayIcons
 import com.SoundScapeApp.soundscape.ui.theme.Pink80
 import com.SoundScapeApp.soundscape.ui.theme.PurpleIcons
@@ -82,8 +88,10 @@ import com.SoundScapeApp.soundscape.ui.theme.Theme9Primary
 import com.SoundScapeApp.soundscape.ui.theme.Theme9Secondary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun ThemeSettings(
     navController: NavController,
@@ -125,6 +133,8 @@ fun ThemeSettings(
         Theme13Secondary
     )
 
+    val context = LocalContext.current
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -137,7 +147,11 @@ fun ThemeSettings(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.popBackStack()
+                        if (navController.currentBackStackEntry?.lifecycle?.currentState
+                            == Lifecycle.State.RESUMED
+                        ) {
+                            navController.popBackStack()
+                        }
                     })
                     {
                         Icon(
@@ -165,14 +179,27 @@ fun ThemeSettings(
                     .weight(1f)
                     .fillMaxWidth(.6f)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.naturesbg),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .blur(40.dp),
-                    contentScale = ContentScale.FillHeight
-                )
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                    val blurredBitmap =
+                        BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
+                    Image(
+                        bitmap = blurredBitmap.asImageBitmap(),
+                        contentDescription = "Background image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                } else {
+                    GlideImage(
+                        model = R.drawable.naturesbg,
+                        contentDescription = "Background Image",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .blur(40.dp),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                }
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -736,18 +763,21 @@ fun ThemeSettings(
                     if (currentTheme != theme) {
                         audioViewModel.setTheme(theme)
                     }
-                }
+                },
+                context = context
             )
         }
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ColorThemeRow(
     primaryColorList: List<Color>,
     secondaryColorList: List<Color>,
     currentTheme: Int,
-    onItemClick: (Int) -> Unit = {}
+    onItemClick: (Int) -> Unit = {},
+    context:Context
 ) {
 
     val painter = painterResource(id = R.drawable.naturesbg)
@@ -770,14 +800,26 @@ fun ColorThemeRow(
                     .clickable { onItemClick(index + 1) },
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painter,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(20.dp),
-                    contentScale = ContentScale.FillBounds
-                )
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                    val blurredBitmap =
+                        BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
+                    Image(
+                        bitmap = blurredBitmap.asImageBitmap(),
+                        contentDescription = "Background image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                } else {
+                    GlideImage(
+                        model = R.drawable.naturesbg,
+                        contentDescription = "Background Image",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .blur(40.dp),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

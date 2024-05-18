@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
 
     private val audioViewModel: AudioViewModel by viewModels()
     private val videoViewModel: VideoViewModel by viewModels()
-    private val musicServiceControl = MusicService()
+
 
     @Inject
     lateinit var player: ExoPlayer
@@ -397,7 +397,7 @@ class MainActivity : ComponentActivity() {
         if (!isMediaSessionServiceRunning(this)) {
             startForegroundService(intent)
         } else {
-            startService(intent)
+//            startService(intent)
         }
     }
 
