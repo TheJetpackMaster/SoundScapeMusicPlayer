@@ -249,6 +249,7 @@ fun VideoPlaylistDetailScreen(
                                     )
                                 },
                                 onClick = {
+                                    navController.navigate(ScreenRoute.AddVideosToPlaylist.route)
                                     showMoreDetailDropDown = false
 
                                 }

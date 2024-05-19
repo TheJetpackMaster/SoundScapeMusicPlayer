@@ -1,19 +1,22 @@
-package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists
+package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Playlists
 
 
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,20 +25,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,9 +58,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -63,42 +74,51 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.AllVideos.formatVideoDuration
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Secondary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
+import kotlinx.coroutines.flow.collect
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalGlideComposeApi::class
+)
 @SuppressLint("MutableCollectionMutableState")
 @Composable
-fun AddSongsToPlaylist(
+fun AddVideosToPlaylist(
     navController: NavController,
-    viewModel: AudioViewModel,
+    viewModel: VideoViewModel,
 ) {
 
 //    val selectedSongs by remember { mutableStateOf<MutableSet<Long>>(mutableSetOf()) }
-    val selectedSongs = remember { mutableStateMapOf<Long, Boolean>() }
+    val selectedVideos = remember { mutableStateMapOf<Long, Boolean>() }
 
     var showFAB by remember {
         mutableStateOf(false)
     }
-    val currentPlayListSongs by viewModel.currentPlaylistSongs.collectAsState()
+    val currentPlayListVideos by viewModel.currentPlaylistVideos.collectAsState()
 
+    val currentPlaylistId = viewModel.currentVideoPlaylistId.collectAsState()
 
     var searchValue by remember {
         mutableStateOf("")
     }
-    val audioList by viewModel.scannedAudioList.collectAsState()
+    val videoList by viewModel.scannedVideoList.collectAsState()
 
-    val filteredAudioList = if (searchValue.isNotBlank()) {
-        audioList.filter { audio ->
-            audio.displayName.contains(searchValue, ignoreCase = true) ||
-                    audio.artist.contains(searchValue, ignoreCase = true)
+    val filteredVideoList = if (searchValue.isNotBlank()) {
+        videoList.filter { video ->
+            video.displayName.contains(searchValue, ignoreCase = true)
         }
     } else {
-        audioList
+        videoList
     }
 
+    val lazyListState = rememberLazyListState()
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val context = LocalContext.current
@@ -134,7 +154,7 @@ fun AddSongsToPlaylist(
                     if (showSearch.value) {
                         Box {
                             Text(
-                                text = if (searchValue.isEmpty()) "Search Song" else "",
+                                text = if (searchValue.isEmpty()) "Search Video" else "",
                                 color = White90,
                                 fontSize = 14.sp,
                                 modifier = Modifier
@@ -210,8 +230,8 @@ fun AddSongsToPlaylist(
                         }
                     } else {
                         Text(
-                            text = if (selectedSongs.values.isNotEmpty()) "${selectedSongs.count{it.value}} songs selected"
-                            else "Select songs",
+                            text = if (selectedVideos.values.isNotEmpty()) "${selectedVideos.count { it.value }} videos selected"
+                            else "Select Videos",
                             color = White90
                         )
                     }
@@ -253,89 +273,133 @@ fun AddSongsToPlaylist(
                     )
             ) {
                 LazyColumn(
-                    modifier = Modifier.padding(bottom = if (showFAB) 48.dp else 0.dp)
+                    state = lazyListState,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(
-                        items = filteredAudioList.filterNot { audio -> audio.id in currentPlayListSongs },
+                        items = filteredVideoList.filterNot { video -> video.id in currentPlayListVideos },
                         key = { it.id })
-                    { song ->
+                    { video ->
 //                        val isSelected by remember { mutableStateOf(selectedSongs.contains(song.id)) }
-                        val isSelected = selectedSongs[song.id] ?: false
+                        val isSelected = selectedVideos[video.id] ?: false
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(62.dp)
-                                .clickable(
-                                    onClick = {
-                                        selectedSongs[song.id] = !(selectedSongs[song.id] ?: false)
-                                        showFAB = selectedSongs.any { it.value }
-                                    }
-                                )
+                                .height(82.dp)
                                 .background(
                                     if (isSelected) SoundScapeThemes.colorScheme.primary.copy(.9f)
                                     else Color.Transparent
                                 )
-                                .padding(8.dp)
-                                .animateItemPlacement(animationSpec = tween(400)),
-                            verticalAlignment = Alignment.CenterVertically,
+                                .clickable {
+                                    selectedVideos[video.id] = !(selectedVideos[video.id] ?: false)
+                                    showFAB = selectedVideos.any { it.value }
+                                }
+                                .padding(
+                                    top = 8.dp,
+                                    bottom = 8.dp,
+                                    start = 12.dp,
+                                    end = 8.dp
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 contentAlignment = Alignment.Center
                             ) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(
-                                        ImageRequest.Builder(LocalContext.current)
-                                            .data(data = song.artwork)
-                                            .apply(block = fun ImageRequest.Builder.() {
-                                                crossfade(true)
-                                                error(R.drawable.sample)
-                                            }).build()
-                                    ),
+                                GlideImage(
+                                    model = video.thumbnail,
                                     contentDescription = null,
                                     modifier = Modifier
-                                        .size(46.dp)
-                                        .clip(CircleShape),
+                                        .width(125.dp)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(4.dp)),
                                     contentScale = ContentScale.Crop
                                 )
 
-                                Spacer(
+                                Text(
+                                    text = formatVideoDuration(video.duration.toLong()),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = White90,
                                     modifier = Modifier
-                                        .size(16.dp)
-                                        .clip(CircleShape)
-                                        .background(Theme2Secondary)
+                                        .align(Alignment.BottomEnd)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color.Black.copy(.4f))
+                                        .padding(end = 4.dp, start = 4.dp)
+
                                 )
                             }
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
 
                             Column(
-                                modifier = Modifier
-                                    .fillParentMaxHeight(),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.Start
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = song.displayName,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    text = video.displayName,
+                                    style = SoundScapeThemes.typography.titleSmall,
                                     color = White90,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth(.9f)
                                 )
-                                Text(
-                                    text = song.artist,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = White50,
-                                    modifier = Modifier.width(220.dp),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "${video.sizeMB} MB",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = White50,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    VerticalDivider(
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = video.bucketName,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = White50,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.weight(1f))
+
+                            if (selectedVideos.any { it.value }) {
+                                OutlinedIconButton(
+                                    modifier = Modifier.size(20.dp),
+                                    border = BorderStroke(1.dp, White90),
+                                    onClick = {
+                                        selectedVideos[video.id] =
+                                            !(selectedVideos[video.id] ?: false)
+                                    })
+                                {
+                                    if (isSelected
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = White90,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.height(2.dp))
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(74.dp))
                     }
                 }
             }
@@ -348,11 +412,10 @@ fun AddSongsToPlaylist(
                         .background(White90)
                         .align(Alignment.BottomCenter)
                         .clickable {
-                            val selectedSongsList = selectedSongs
+                            val selectedSongsList = selectedVideos
                                 .filter { it.value }
                                 .map { it.key }
-                            Log.d("sele", selectedSongsList.toString())
-                            viewModel.addSongToPlaylist(selectedSongsList, context)
+                            viewModel.addVideoToDifferentPlaylist(currentPlaylistId.value!!,selectedSongsList, context)
                             navController.popBackStack()
                         },
                     verticalAlignment = Alignment.CenterVertically,

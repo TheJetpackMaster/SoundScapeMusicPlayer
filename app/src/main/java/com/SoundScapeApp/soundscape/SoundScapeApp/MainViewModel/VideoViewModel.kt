@@ -635,6 +635,12 @@ class VideoViewModel @Inject constructor(
                 }
             }
         }
+
+        viewModelScope.launch {
+            val currentPlaylistVideos =
+                videoPlaylistManager.getVideosByPlaylistId(playlistId)
+            _currentPlaylistVideos.value = currentPlaylistVideos
+        }
     }
 
     //  Clicked Playlist
