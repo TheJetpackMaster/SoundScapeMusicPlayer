@@ -1,9 +1,13 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome
 
+import android.Manifest
 import android.app.ActivityManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -69,6 +73,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +90,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.navigation.NavController
@@ -94,11 +100,13 @@ import coil.request.ImageRequest
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.Albums.AlbumsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.AllSongs
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.Artists.ArtistsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.PlayListsScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.PurpleGrey80
@@ -107,8 +115,10 @@ import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.security.Permission
 
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongsHome(
@@ -120,11 +130,19 @@ fun SongsHome(
     viewModel: AudioViewModel,
     context: Context,
     mediaSession: MediaSession,
-    onSongDelete:(List<Uri>)->Unit
+    onSongDelete: (List<Uri>) -> Unit
 ) {
 
-    val currentSong = viewModel.getCurrentPlayingSong()
-    Log.d("songskdm",currentSong!!)
+    val isPermissionGranted = remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+                isPermissionGranted(context, Manifest.permission.READ_MEDIA_AUDIO)
+            } else {
+                isPermissionGranted(context, Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+        )
+    }
+
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Songs", "Playlists", "Albums", "Artists")
@@ -136,13 +154,26 @@ fun SongsHome(
     }
 
 
+    var playbackState = viewModel.retrievePlaybackState()
+
+    val shouldReloadPlay = rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+        playbackState = viewModel.retrievePlaybackState()
+
+    }
+
     val current = remember {
         mutableLongStateOf(0L)
     }
 
-    val currentPlayingSong: Audio? by remember(audioList, current.longValue) {
+    Log.d("lastplayed", current.longValue.toString())
+
+    val currentPlayingSong: Audio? by remember(audioList, playbackState.lastPlayedSong) {
         derivedStateOf {
-            audioList.find { it.id == current.longValue }
+            audioList.find { it.id == (playbackState.lastPlayedSong.toLongOrNull() ?: 0L) }
         }
     }
 
@@ -227,7 +258,7 @@ fun SongsHome(
     val selectAllPlaylistsClicked = remember { mutableStateOf(false) }
 
     val deleteSongsClicked = remember { mutableStateOf(false) }
-    val selectedSongsCount = remember{ mutableStateOf(0) }
+    val selectedSongsCount = remember { mutableStateOf(0) }
     val selectedSongIds = remember { mutableStateListOf<Long>() }
 
 
@@ -260,7 +291,8 @@ fun SongsHome(
                     confirmAddSong.value = true
                 },
                 onSelectAllSongs = {
-                    selectAllSongsClicked.value = true },
+                    selectAllSongsClicked.value = true
+                },
                 onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true },
                 onSongDelete = {
                     deleteSongsClicked.value = true
@@ -307,7 +339,7 @@ fun SongsHome(
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(
                                     index,
-                                    animationSpec =  spring(stiffness = Spring.StiffnessLow)
+                                    animationSpec = spring(stiffness = Spring.StiffnessLow)
                                 )
                             }
                         },
@@ -449,9 +481,19 @@ fun SongsHome(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
+
+                    val songs = viewModel.scannedAudioList.collectAsState()
+                    val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
+
+                    val nowPlaying = songs.value.firstOrNull { it.id == currentSong }
+
                     //Main Playing bar with Progress and PlayPause
 //                    AnimatedVisibility(visible = !listState.isScrollInProgress,) {
-                    if(player.playWhenReady) {
+
+                    val lastPlayedSongId = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
+                    val isAvailable = audioList.any { it.id == lastPlayedSongId }
+
+                    if (viewModel.retrievePlaybackState().lastPlayedSong != "0" && isPermissionGranted.value && nowPlaying != null && isAvailable) {
                         MainPlayingBar(
                             navController = navController,
                             painter = painter,
@@ -460,9 +502,12 @@ fun SongsHome(
                             current = current,
                             currentPlayingSong = currentPlayingSong,
                             viewModel = viewModel,
+                            context = context,
+                            shouldReloadPlay = shouldReloadPlay,
+                            isPermissionGranted = isPermissionGranted
                         )
-//                    }
                     }
+//                    }
                 }
             }
         }
@@ -478,8 +523,10 @@ fun MainPlayingBar(
     player: ExoPlayer,
     current: MutableState<Long>,
     viewModel: AudioViewModel,
+    context: Context,
+    shouldReloadPlay: MutableState<Boolean>,
+    isPermissionGranted: MutableState<Boolean>
 ) {
-
     val isPlaying = remember {
         mutableStateOf(false)
     }
@@ -542,8 +589,21 @@ fun MainPlayingBar(
                 .size(50.dp)
                 .clip(CircleShape)
                 .clickable(onClick = {
-                    onStart()
-                    isPlaying.value = !isPlaying.value
+                    val playbackState = viewModel.retrievePlaybackState()
+                    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+                            context
+                        )
+                    ) {
+                        // Resume playback from the last saved position
+                        viewModel.restorePlaybackState(playbackState, context = context)
+                        player.play()
+                        isPlaying.value = !isPlaying.value
+                        startService(context)
+                        shouldReloadPlay.value = true
+                    } else {
+                        onStart()
+                        isPlaying.value = player.isPlaying
+                    }
                 }),
             contentAlignment = Alignment.Center
         ) {
@@ -556,7 +616,9 @@ fun MainPlayingBar(
 
             CustomCircularProgressIndicator(
                 player = player,
-                viewModel = viewModel
+                viewModel = viewModel,
+                currentPlayingSong,
+                isPermissionGranted = isPermissionGranted
             )
         }
     }
@@ -567,13 +629,33 @@ fun MainPlayingBar(
 fun CustomCircularProgressIndicator(
     player: ExoPlayer,
     viewModel: AudioViewModel,
+    currentPlayingSong: Audio?,
+    isPermissionGranted: MutableState<Boolean>
 ) {
+
+    val playbackState = viewModel.retrievePlaybackState()
+    val songs = viewModel.scannedAudioList.collectAsState()
+    val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
+    val context = LocalContext.current
+
+    val nowPlaying = songs.value.firstOrNull { it.id == currentSong }
+
     val songProgress = remember {
-        mutableFloatStateOf(0f)
+        mutableFloatStateOf(
+            if (isPermissionGranted.value && nowPlaying != null) {
+                playbackState.lastPlaybackPosition.toFloat() / nowPlaying.duration
+            } else {
+                0f
+            }
+        )
     }
 
-    LaunchedEffect(viewModel.progress) {
-        songProgress.floatValue = (player.currentPosition.toFloat() / player.duration.toFloat())
+
+    if (player.isPlaying) {
+        LaunchedEffect(viewModel.progress) {
+            songProgress.floatValue =
+                (player.currentPosition.toFloat() / player.duration.toFloat())
+        }
     }
 
     CircularProgressIndicator(
@@ -792,6 +874,7 @@ fun FastScrollButton(
     }
 }
 
+@Suppress("DEPRECATION")
 private fun isMediaSessionServiceRunning(context: Context): Boolean {
     val serviceClass = MusicService::class.java
     val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -802,4 +885,11 @@ private fun isMediaSessionServiceRunning(context: Context): Boolean {
         }
     }
     return false
+}
+
+fun isPermissionGranted(context: Context, permission: String): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        permission
+    ) == PackageManager.PERMISSION_GRANTED
 }

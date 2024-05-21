@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -187,9 +188,13 @@ fun AllSongs(
                 selectedSongs.clear()
                 selectedSongsIds.clear()
                 viewModel.setIsSongSelected(false)
+
             }
         }
     }
+
+    val playbackState = viewModel.retrievePlaybackState()
+
 
     Column(
         modifier = Modifier
@@ -271,7 +276,7 @@ fun AllSongs(
                             selectedSong = song
                             current.longValue = song.id
                         },
-                        isPlaying = viewModel.currentSelectedAudio == song.id,
+                        isPlaying = (playbackState.lastPlayedSong.toLongOrNull() ?: 0L) == song.id,
                         modifier = Modifier
                             .animateItemPlacement(
                                 animationSpec = spring(
@@ -304,6 +309,7 @@ fun AllSongs(
                     viewModel.setSingleMediaItem(selectedSong!!)
                     viewModel.setMediaItemFlag(false)
                     startService(context)
+                    viewModel.setCurrentPlayingSection(0)
 //                    viewModel.setMediaItems(filteredAudioList)
 //                    onItemClick(0, selectedSong!!.id)
 //                    navController.navigate(ScreenRoute.NowPlayingScreen.route)

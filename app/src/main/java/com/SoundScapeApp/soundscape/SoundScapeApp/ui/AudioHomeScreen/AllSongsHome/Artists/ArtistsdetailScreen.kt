@@ -146,6 +146,7 @@ fun ArtistsDetailScreen(
 
     val showSelectAllDropDown = remember { mutableStateOf(false) }
 
+    val playbackState = viewModel.retrievePlaybackState()
 
 
     Scaffold(
@@ -322,8 +323,11 @@ fun ArtistsDetailScreen(
                     ),
                     onClick = {
                         if (currentArtistSongs.isNotEmpty()) {
-                            viewModel.setMediaItemFlag(false)
 
+                            viewModel.setCurrentPlayingSection(4)
+                            viewModel.setCurrentPlayingArtist(artistSongs[0].artist)
+
+                            viewModel.setMediaItemFlag(false)
                             viewModel.setMediaItems(artistSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
@@ -358,6 +362,11 @@ fun ArtistsDetailScreen(
                     ),
                     onClick = {
                         if (currentArtistSongs.isNotEmpty()) {
+
+
+                            viewModel.setCurrentPlayingSection(4)
+                            viewModel.setCurrentPlayingArtist(artistSongs[0].artist)
+
                             viewModel.setMediaItemFlag(false)
 
                             viewModel.setMediaItems(artistSongs,context)
@@ -427,6 +436,9 @@ fun ArtistsDetailScreen(
                                     viewModel.play(audioList.indexOf(selectedAudio))
                                 }
                                 setMediaItems.value = true
+                                viewModel.setCurrentPlayingSection(4)
+                                viewModel.setCurrentPlayingArtist(artistSongs[0].artist)
+
                                 navController.navigate(ScreenRoute.NowPlayingScreen.route)
                             }
                         },
@@ -436,7 +448,7 @@ fun ArtistsDetailScreen(
                             current.longValue = songId.id
                         },
                         context = context,
-                        isPlaying = viewModel.currentSelectedAudio == songId.id,
+                        isPlaying = (playbackState.lastPlayedSong.toLongOrNull() ?: 0L) == songId.id,
                     )
                 }
             }
@@ -454,6 +466,7 @@ fun ArtistsDetailScreen(
                         showSheet.value = false
                         viewModel.setSingleMediaItem(selectedSong!!)
                         startService(context)
+                        viewModel.setCurrentPlayingSection(0)
                     },
                     onAddToPlaylistClick = {
                         showSheet.value = false

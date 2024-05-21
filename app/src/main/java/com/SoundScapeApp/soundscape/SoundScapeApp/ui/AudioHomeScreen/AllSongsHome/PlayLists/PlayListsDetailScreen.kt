@@ -47,6 +47,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,6 +57,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,6 +89,7 @@ import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -122,17 +125,6 @@ fun PlayListDetailsScreen(
     val previousPlaylistSize = remember { mutableIntStateOf(0) }
 //    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        if (currentPlayingPlaylist == currentPlaylistId
-            && setMediaItems.value
-            && currentPlayListSongs.size > previousPlaylistSize.intValue
-        ) {
-            setMediaItems.value = false
-        }
-
-        previousPlaylistSize.intValue = currentPlayListSongs.size
-        Log.d("ScreenRecomposition", "Screen is recomposing...")
-    }
 
     val context = LocalContext.current
 
@@ -198,6 +190,10 @@ fun PlayListDetailsScreen(
     }
 
     val showSelectAllDropDown = remember { mutableStateOf(false) }
+
+    val playbackState = viewModel.retrievePlaybackState()
+    val scope = rememberCoroutineScope()
+
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -407,8 +403,10 @@ fun PlayListDetailsScreen(
                         ),
                         onClick = {
                             if (currentPlayListSongs.isNotEmpty()) {
-                                viewModel.setMediaItemFlag(false)
+                                viewModel.setCurrentPlayingSection(2)
+                                viewModel.setCurrentPlayingPlaylist(currentPlaylistId!!)
 
+                                viewModel.setMediaItemFlag(false)
                                 viewModel.setMediaItems(playListSongs,context)
                                 viewModel.onUiEvents(UIEvents.PlayPause)
 
@@ -446,9 +444,10 @@ fun PlayListDetailsScreen(
                     ),
                     onClick = {
                         if (currentPlayListSongs.isNotEmpty()) {
+                            viewModel.setCurrentPlayingSection(2)
+                            viewModel.setCurrentPlayingPlaylist(currentPlaylistId!!)
+
                             viewModel.setMediaItemFlag(false)
-
-
                             viewModel.setMediaItems(playListSongs,context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
@@ -521,6 +520,9 @@ fun PlayListDetailsScreen(
                                 }
                                 setMediaItems.value = true
                                 navController.navigate(ScreenRoute.NowPlayingScreen.route)
+
+                                viewModel.setCurrentPlayingSection(2)
+                                viewModel.setCurrentPlayingPlaylist(currentPlaylistId!!)
                             }
                         },
                         onIconClick = {
@@ -531,7 +533,7 @@ fun PlayListDetailsScreen(
                             viewModel.getFavoritesSongs()
                         },
                         context = context,
-                        isPlaying = viewModel.currentSelectedAudio == song.id,
+                        isPlaying = (playbackState.lastPlayedSong.toLongOrNull() ?: 0L) == song.id,
                         modifier = Modifier.animateItemPlacement(
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioLowBouncy,
@@ -556,6 +558,7 @@ fun PlayListDetailsScreen(
                         showSheet.value = false
                         viewModel.setSingleMediaItem(selectedSong!!)
                         startService(context)
+                        viewModel.setCurrentPlayingSection(0)
                     },
                     onAddToPlaylistClick = {
                         showSheet.value = false
@@ -612,7 +615,7 @@ fun PlayListDetailsScreen(
                 val songMessage = if (!showDeleteSongsDialog)
                     "Remove song ${selectedSong!!.title}'?" else "Remove ${selectedSongs.size} songs'?"
                 AlertDialog(
-                    containerColor = Theme2Primary,
+                    containerColor = SoundScapeThemes.colorScheme.secondary,
                     onDismissRequest = {
                         showDeleteSongDialog = false
                         showDeleteSongsDialog = false

@@ -914,7 +914,6 @@ class VideoViewModel @Inject constructor(
         _doubleTapSeekEnabled.value = enabled
     }
 
-
     fun setScanMovieLengthTime(scanLength: Long) {
         videoPlaylistManager.setScanMovieLengthTime(scanLength)
         _scanMovieLengthTime.value = scanLength
