@@ -52,6 +52,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -72,6 +75,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.C
@@ -82,6 +86,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayin
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.PlayerScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.ScreenBrightnessController
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.mapBrightnessToRange
+import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import kotlinx.coroutines.delay
@@ -98,9 +103,7 @@ import kotlin.math.abs
 fun VideoPlayingScreen(
     viewModel: VideoViewModel,
     navController: NavController,
-    onPipClick: () -> Unit
-//    onRotateScreenClick: () -> Unit,
-//    onBackClick: () -> Unit,
+    onPipClick: () -> Unit,
 ) {
 
     val currentSeekTime = viewModel.videoSeekTime.collectAsState()
@@ -213,6 +216,7 @@ fun VideoPlayingScreen(
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showSubtitleDialog by remember { mutableStateOf(false) }
+    var showMoreVertDialog by remember { mutableStateOf(false) }
 
     val currentSelectedSubtitle = remember { mutableStateOf("disable") }
 
@@ -433,13 +437,19 @@ fun VideoPlayingScreen(
                             onBackClick = {
                                 navController.popBackStack()
                             },
-                            onLanguageClick = {
+                            /*onLanguageClick = {
                                 showLanguageDialog = !showLanguageDialog
                                 viewModel.updateAvailableTracks()
-                            },
+                            },*/
                             onSubtitleClick = {
                                 showSubtitleDialog = !showSubtitleDialog
                                 viewModel.updateAvailableSubtitles()
+                            },
+                            onMoreClick = {
+                                showMoreVertDialog = !showMoreVertDialog
+                                if (exoPlayer.isPlaying) {
+                                    exoPlayer.pause()
+                                }
                             }
                         )
                     }
@@ -800,9 +810,10 @@ fun VideoPlayingScreen(
         }
         if (showLanguageDialog) {
             AlertDialog(
-                containerColor = Theme2Primary,
+                containerColor = SoundScapeThemes.colorScheme.secondary,
                 onDismissRequest = {
                     showLanguageDialog = false
+                    exoPlayer.play()
                 },
                 confirmButton = { /*TODO*/ },
                 title = {
@@ -856,6 +867,7 @@ fun VideoPlayingScreen(
                                                             )
                                                     )
                                                     showLanguageDialog = false
+                                                    exoPlayer.play()
                                                 }
                                             ),
                                         verticalAlignment = Alignment.CenterVertically
@@ -863,7 +875,7 @@ fun VideoPlayingScreen(
                                     ) {
                                         val text =
                                             if (tracks[0].language == "und" || tracks[0].language == "```") "Default Track" else "$index.${track.language}"
-                                        Text(text = text)
+                                        Text(text = text, color = Color.White)
                                     }
                                     Spacer(modifier = Modifier.height(2.dp))
                                 }
@@ -875,7 +887,7 @@ fun VideoPlayingScreen(
         }
         if (showSubtitleDialog) {
             AlertDialog(
-                containerColor = Theme2Primary,
+                containerColor = SoundScapeThemes.colorScheme.secondary,
                 onDismissRequest = {
                     showSubtitleDialog = false
                 },
@@ -987,6 +999,155 @@ fun VideoPlayingScreen(
                 }
             )
         }
+        if (showMoreVertDialog) {
+            AlertDialog(
+                containerColor = SoundScapeThemes.colorScheme.secondary,
+                onDismissRequest = {
+                    showMoreVertDialog = false
+                    exoPlayer.play()
+                },
+
+                confirmButton = {
+                },
+                text = {
+                    Column {
+                        // First row of IconButtons with text
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        showMoreVertDialog = false
+                                        exoPlayer.pause()
+                                        showLanguageDialog = !showLanguageDialog
+                                        viewModel.updateAvailableTracks()
+                                    }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.language),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "Language",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_timer_24),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+
+                                Text(
+                                    text = "Timer",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.notrepeat),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "Loop",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // Second row of IconButtons
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clickable {
+                                        showMoreVertDialog = false
+                                        exoPlayer.pause()
+                                    }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_screen_rotation_24),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "Rotation",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+
+                            /*Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_timer_24),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+
+                                Text(
+                                    text = "Timer",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }*/
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "Info",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -997,8 +1158,9 @@ private fun UpperControls(
     videoTitle: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    onLanguageClick: () -> Unit,
-    onSubtitleClick: () -> Unit
+    //onLanguageClick: () -> Unit,
+    onSubtitleClick: () -> Unit,
+    onMoreClick: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -1044,7 +1206,7 @@ private fun UpperControls(
                 )
             }
 
-            IconButton(onClick = {
+            /*IconButton(onClick = {
                 onLanguageClick()
             })
             {
@@ -1054,8 +1216,21 @@ private fun UpperControls(
                     tint = White90,
                     modifier = Modifier.size(24.dp)
                 )
+            }*/
+
+            IconButton(onClick = {
+                onMoreClick()
+            })
+            {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null,
+                    tint = White90,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
+
     }
 }
 
@@ -1065,7 +1240,7 @@ fun CustomSeekBar(
     modifier: Modifier = Modifier,
     onProgress: (Float) -> Unit,
     videoProgress: Float,
-    isSeekFinished: MutableState<Boolean>
+    isSeekFinished: MutableState<Boolean>,
 ) {
 
     val primaryColor = White90
