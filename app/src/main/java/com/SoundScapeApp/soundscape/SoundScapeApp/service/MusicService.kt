@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.system.exitProcess
@@ -28,6 +29,9 @@ class MusicService : MediaSessionService() {
 
     @Inject
     lateinit var context: Context
+
+    @Inject
+    lateinit var sharedPreferencesHelper: SharedPreferencesHelper
 
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -65,6 +69,11 @@ class MusicService : MediaSessionService() {
         stopSelf()
 //        mediaSession.release()
         exoPlayer.pause()
+        sharedPreferencesHelper.savePlaybackState(
+            exoPlayer.currentMediaItem!!.mediaId,
+            exoPlayer.currentPosition,
+            exoPlayer.isPlaying
+        )
 
 //        val intent = Intent("com.SoundScapeApp.soundscape.FINISH_ACTIVITY")
 //        sendBroadcast(intent)

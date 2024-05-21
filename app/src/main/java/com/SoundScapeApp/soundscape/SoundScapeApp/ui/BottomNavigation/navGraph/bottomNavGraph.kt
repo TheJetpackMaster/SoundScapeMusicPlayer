@@ -32,6 +32,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.Settings
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.ThemeSettings.ThemeSettings
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.VideoSettings.VideoSettings
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Folders.FolderVideosList
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Playlists.AddVideosToPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Playlists.VideoPlaylistDetailScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.VideosHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
@@ -52,10 +53,10 @@ fun BottomNavGraph(
     audioViewModel: AudioViewModel,
     videoViewModel: VideoViewModel,
     onPipClick: () -> Unit,
-    onVideoItemClick:(Int,Long)->Unit,
+    onVideoItemClick: (Int, Long) -> Unit,
     mediaSession: MediaSession,
-    onDeleteSong:(List<Uri>)->Unit,
-    onVideoDelete:(List<Uri>)->Unit
+    onDeleteSong: (List<Uri>) -> Unit,
+    onVideoDelete: (List<Uri>) -> Unit
 ) {
     NavHost(navController = navController,
         startDestination = BottomNavScreenRoutes.SongsHome.route,
@@ -201,6 +202,13 @@ fun BottomNavGraph(
             )
         }
 
+        composable(ScreenRoute.AddVideosToPlaylist.route) {
+            AddVideosToPlaylist(
+                navController = navController,
+                viewModel = videoViewModel
+            )
+        }
+
 
 //        SETTINGS
         composable(BottomNavScreenRoutes.Settings.route) {
@@ -226,7 +234,7 @@ fun BottomNavGraph(
             )
         }
 
-        composable(ScreenRoute.AboutUs.route){
+        composable(ScreenRoute.AboutUs.route) {
             AboutUs(navController = navController)
         }
     }

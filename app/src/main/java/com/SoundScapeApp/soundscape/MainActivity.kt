@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.util.Rational
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -54,6 +55,7 @@ import androidx.navigation.compose.rememberNavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.AudioPermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.ExternalStoragePermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.PermissionDialog
@@ -84,6 +86,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var mediaSession: MediaSession
 
+    @Inject
+    lateinit var sharedPreferencesHelper: SharedPreferencesHelper
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val permissionsToRequest = arrayOf(
         permission.READ_MEDIA_VIDEO,
@@ -92,8 +97,8 @@ class MainActivity : ComponentActivity() {
 
 
     //For deleting songs and videos
-    private lateinit var permissionRequestLauncher:ActivityResultLauncher<Array<String>>
-    private lateinit var intentSenderLauncher:ActivityResultLauncher<IntentSenderRequest>
+    private lateinit var permissionRequestLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @androidx.annotation.OptIn(UnstableApi::class)
@@ -105,41 +110,56 @@ class MainActivity : ComponentActivity() {
 
 
         // DELETING MEDIA ITEMS
-        intentSenderLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()){
-            if(it.resultCode == RESULT_OK){
+        intentSenderLauncher =
+            registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+                if (it.resultCode == RESULT_OK) {
 
-                if(audioViewModel.isDeletingSong.value) {
-                    Toast.makeText(
-                        this,
-                        "${audioViewModel.selectedSongs.value.size} songs Deleted",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    audioViewModel.setMediaItemFlag(false)
-                    audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
-                    audioViewModel.setSelectedSongs(emptyList())
-                    audioViewModel.setIsDeletingSongs(false)
+                    if (audioViewModel.isDeletingSong.value) {
+                        Toast.makeText(
+                            this,
+                            "${audioViewModel.selectedSongs.value.size} songs Deleted",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        audioViewModel.setMediaItemFlag(false)
+                        audioViewModel.setIsDeletingSongs(false)
+
+                        val songs = audioViewModel.scannedAudioList.value
+                        val selectedSongs = audioViewModel.selectedSongs.value
+                        val sortedSelectedSongs = selectedSongs.sortedDescending()
+                        Log.d("seled",selectedSongs.toString())
+
+                        sortedSelectedSongs.asReversed().forEach { deletedSongId ->
+                            val index = songs.indexOfFirst { it.id == deletedSongId }
+                            if (index != -1) {
+                                player.removeMediaItem(index)
+                            }
+                        }
+
+                        audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
+                        audioViewModel.setSelectedSongs(emptyList())
 
 
-                }else{
-                    Toast.makeText(
-                        this,
-                        "${videoViewModel.selectedVideos.value.size} videos Deleted",
-                        Toast.LENGTH_SHORT
-                    ).show()
+
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "${videoViewModel.selectedVideos.value.size} videos Deleted",
+                            Toast.LENGTH_SHORT
+                        ).show()
 //                    videoViewModel.setMediaItemFlag(false)
-                    videoViewModel.reloadVideos(videoViewModel.selectedVideos.value)
-                    videoViewModel.setSelectedVideos(emptyList())
-                }
+                        videoViewModel.reloadVideos(videoViewModel.selectedVideos.value)
+                        videoViewModel.setSelectedVideos(emptyList())
+                    }
 
-            }else{
-                if(audioViewModel.isDeletingSong.value) {
-                    audioViewModel.setSelectedSongs(emptyList())
-                    audioViewModel.setIsDeletingSongs(false)
-                }else{
-                    videoViewModel.setSelectedVideos(emptyList())
+                } else {
+                    if (audioViewModel.isDeletingSong.value) {
+                        audioViewModel.setSelectedSongs(emptyList())
+                        audioViewModel.setIsDeletingSongs(false)
+                    } else {
+                        videoViewModel.setSelectedVideos(emptyList())
+                    }
                 }
             }
-        }
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
@@ -323,7 +343,8 @@ class MainActivity : ComponentActivity() {
                             selectedAudio?.let {
                                 if (!audioViewModel.isSearch.value) {
                                     if (!audioViewModel.setMediaItems) {
-                                        audioViewModel.setMediaItems(audioList,this)
+                                        audioViewModel.setCurrentPlayingSection(1)
+                                        audioViewModel.setMediaItems(audioList, this)
                                         audioViewModel.play(audioList.indexOf(selectedAudio))
                                         audioViewModel.setMediaItemFlag(true)
                                         player.repeatMode = Player.REPEAT_MODE_ALL
@@ -332,6 +353,7 @@ class MainActivity : ComponentActivity() {
                                         audioViewModel.play(audioList.indexOf(selectedAudio))
                                     }
                                 } else {
+                                    audioViewModel.setCurrentPlayingSection(0)
                                     audioViewModel.setSingleMediaItem(selectedAudio)
                                     player.repeatMode = Player.REPEAT_MODE_ALL
                                     audioViewModel.setMediaItemFlag(false)
@@ -350,7 +372,7 @@ class MainActivity : ComponentActivity() {
                         onPipClick = {
                             enterPiPMode()
                         },
-                        onDeleteSong = {uri->
+                        onDeleteSong = { uri ->
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(uri)
                             }
@@ -362,7 +384,7 @@ class MainActivity : ComponentActivity() {
                                 videoViewModel.setVideoMediaItemAndPlay(selectedVideo)
                             }
                         },
-                        onVideoDelete = {videoUri->
+                        onVideoDelete = { videoUri ->
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(videoUri)
                             }
@@ -413,38 +435,57 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private suspend fun deleteSongFromExternalStorage(songUri:List<Uri>){
-        withContext(Dispatchers.IO){
+    private suspend fun deleteSongFromExternalStorage(songUri: List<Uri>) {
+        withContext(Dispatchers.IO) {
             try {
                 songUri.forEach {
-                    contentResolver.delete(it,null,null)
+                    contentResolver.delete(it, null, null)
                 }
 
-                if(audioViewModel.isDeletingSong.value) {
+                if (audioViewModel.isDeletingSong.value) {
                     audioViewModel.setMediaItemFlag(false)
+
+//                    val songs = audioViewModel.scannedAudioList.value
+//                    val selectedSongs = audioViewModel.selectedSongs.value
+//                    val sortedSelectedSongs = selectedSongs.sortedDescending()
+//                    Log.d("seled",selectedSongs.toString())
+//
+//                    sortedSelectedSongs.asReversed().forEach { deletedSongId ->
+//                        val index = songs.indexOfFirst { it.id == deletedSongId }
+//                        if (index != -1) {
+//                            player.removeMediaItem(index)
+//                        }
+//                    }
+//
+//                    audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
+//                    audioViewModel.setSelectedSongs(emptyList())
+
                     audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
                     audioViewModel.setSelectedSongs(emptyList())
                     audioViewModel.setIsDeletingSongs(false)
 
 
-                }else{
+                } else {
 //                    videoViewModel.setMediaItemFlag(false)
                     videoViewModel.reloadVideos(videoViewModel.selectedVideos.value)
                     videoViewModel.setSelectedVideos(emptyList())
                 }
 
-            }catch (e:SecurityException){
-                val intentSender = when{
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R->{
+            } catch (e: SecurityException) {
+                val intentSender = when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
                         MediaStore.createDeleteRequest(contentResolver, songUri).intentSender
+
                     }
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q->{
+
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
                         val recoverAbleSecurityException = e as? RecoverableSecurityException
                         recoverAbleSecurityException?.userAction?.actionIntent?.intentSender
                     }
-                    else-> null
+
+                    else -> null
                 }
-                intentSender?.let{sender->
+                intentSender?.let { sender ->
                     intentSenderLauncher.launch(
                         IntentSenderRequest.Builder(sender).build()
                     )
@@ -491,10 +532,20 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
+        if(!isInPictureInPictureMode){
+           videoViewModel.destroyVideoMediaSession()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
 //        unregisterReceiver(finishActivityReceiver)
+
+        sharedPreferencesHelper.savePlaybackState(
+            player.currentMediaItem!!.mediaId,
+            player.currentPosition,
+            player.isPlaying
+        )
+
     }
 }

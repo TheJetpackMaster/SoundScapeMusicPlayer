@@ -635,6 +635,12 @@ class VideoViewModel @Inject constructor(
                 }
             }
         }
+
+        viewModelScope.launch {
+            val currentPlaylistVideos =
+                videoPlaylistManager.getVideosByPlaylistId(playlistId)
+            _currentPlaylistVideos.value = currentPlaylistVideos
+        }
     }
 
     //  Clicked Playlist
@@ -907,7 +913,6 @@ class VideoViewModel @Inject constructor(
         videoPlaylistManager.setDoubleTapSeekEnabled(enabled)
         _doubleTapSeekEnabled.value = enabled
     }
-
 
     fun setScanMovieLengthTime(scanLength: Long) {
         videoPlaylistManager.setScanMovieLengthTime(scanLength)

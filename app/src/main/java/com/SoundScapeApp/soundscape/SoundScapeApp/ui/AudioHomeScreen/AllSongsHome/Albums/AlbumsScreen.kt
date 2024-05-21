@@ -82,6 +82,8 @@ fun AlbumsScreen(
                     AlbumGridItem(
                         album = it,
                         onClick = {
+                            val albumsId = it.albumId.toLongOrNull()?:0L
+                            viewModel.setCurrentPlayingAlbum(albumsId)
                             viewModel.loadSongsForAlbum(it.albumId.toLong())
                             viewModel.albumClicked(it.albumId.toLong())
                             navController.navigate(ScreenRoute.AlbumDetailScreen.route)

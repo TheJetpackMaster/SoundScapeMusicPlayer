@@ -21,15 +21,19 @@ class SharedPreferencesHelper @Inject constructor(
     private val PLAYLISTS_KEY = "playlists_key"
     private val FAVORITES_KEY = "favorites_key"
 
-    private val PLAYING_FROM_ALL_KEY = "playing_from_all_key"
+//    private val PLAYING_FROM_ALL_KEY = "playing_from_all_key"
+
     private val SHUFFLE_KEY = "shuffle_key"
-    private val CURRENT_PLAYLIST_ID_KEY = "current_playlist_id_key"
     private val SORT_TYPE_KEY = "sort_type_key"
-    private val PLAYBACK_SPEED_KEY = "playback_speed_key"
-    private val DEFAULT_PLAYBACK_SPEED = 1f
+//    private val PLAYBACK_SPEED_KEY = "playback_speed_key"
+//    private val DEFAULT_PLAYBACK_SPEED = 1f
     private val SONGS_SCAN_LENGTH_KEY = "songs_length_scan_key"
     private val THEME_KEY = "theme_key"
-    private val CURRENT_SONG_KEY = "current_song_key"
+
+    private val CURRENTLY_PLAYING_FROM_KEY = "currently_playing_from"
+    private val CURRENT_PLAYING_PLAYLIST_KEY = "current_playing_playlist"
+    private val CURRENT_PLAYING_ARTIST_KEY = "current_playing_artist"
+    private val CURRENT_PLAYING_ALBUM_KEY = "current_playing_album"
 
 
 
@@ -314,12 +318,62 @@ class SharedPreferencesHelper @Inject constructor(
         return sharedPreferences.getInt(THEME_KEY, 1)
     }
 
-    fun setCurrentPlayingSong(currentMediaId: String) {
-        sharedPreferences.edit().putString(CURRENT_SONG_KEY, currentMediaId).apply()
+    fun savePlaybackState(songId: String, position: Long, isPlaying: Boolean) {
+        with(sharedPreferences.edit()) {
+            putString("lastPlayedSongId", songId)
+            putLong("lastPlaybackPosition", position)
+            putBoolean("isPlaying", isPlaying)
+            apply()
+        }
     }
 
-    fun getCurrentPlayingSong(): String? {
-        return sharedPreferences.getString(CURRENT_SONG_KEY, "0")
+    fun retrievePlaybackState(): PlaybackState {
+        val lastPlayedSongId = sharedPreferences.getString("lastPlayedSongId", "0")
+        val lastPlaybackPosition = sharedPreferences.getLong("lastPlaybackPosition", 0)
+        val isPlaying = sharedPreferences.getBoolean("isPlaying", false)
+
+        return PlaybackState(lastPlayedSongId!!, lastPlaybackPosition, isPlaying)
     }
+
+    //KEEP TRACK OF FROM WHERE SONG WAS BEING PLAYED BEFORE APP WAS CLOSED
+    fun setCurrentPlayingSection(playingFrom:Int){
+        sharedPreferences.edit().putInt(CURRENTLY_PLAYING_FROM_KEY,playingFrom).apply()
+    }
+
+    fun getCurrentPlayingSection():Int{
+        return sharedPreferences.getInt(CURRENTLY_PLAYING_FROM_KEY,1)
+    }
+
+    fun setCurrentPlayingPlaylist(playlistId:Long){
+        sharedPreferences.edit().putLong(CURRENT_PLAYING_PLAYLIST_KEY,playlistId).apply()
+    }
+
+    fun getCurrentPlayingPlaylist():Long{
+        return sharedPreferences.getLong(CURRENT_PLAYING_PLAYLIST_KEY,0)
+    }
+
+
+    fun setCurrentPlayingAlbum(album:Long){
+        sharedPreferences.edit().putLong(CURRENT_PLAYING_ALBUM_KEY,album).apply()
+    }
+
+    fun getCurrentPlayingAlbum():Long{
+        return sharedPreferences.getLong(CURRENT_PLAYING_ALBUM_KEY,0)
+    }
+
+    fun setCurrentPlayingArtist(artist:String){
+        sharedPreferences.edit().putString(CURRENT_PLAYING_ARTIST_KEY,artist).apply()
+    }
+
+    fun getCurrentPlayingArtist():String?{
+        return sharedPreferences.getString(CURRENT_PLAYING_ARTIST_KEY,"")
+    }
+
 }
+
+data class PlaybackState(
+    val lastPlayedSong:String,
+    val lastPlaybackPosition:Long,
+    val isPlaying:Boolean
+)
 

@@ -20,7 +20,8 @@ import javax.inject.Inject
 
 @OptIn(DelicateCoroutinesApi::class)
 class MusicServiceHandler @Inject constructor(
-    private val exoPlayer: ExoPlayer
+    private val exoPlayer: ExoPlayer,
+    private val sharedPreferencesHelper: SharedPreferencesHelper
 ) : Player.Listener {
 
     private val coroutineScope = CoroutineScope(Job() + Dispatchers.Main)
@@ -42,7 +43,7 @@ class MusicServiceHandler @Inject constructor(
         }
     }
 
-    fun setMediaItem(mediaItem: MediaItem){
+    fun setMediaItem(mediaItem: MediaItem) {
         exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
         exoPlayer.play()
@@ -60,10 +61,10 @@ class MusicServiceHandler @Inject constructor(
                 exoPlayer.pause()
                 startProgressUpdate()
             } else {
-                if(!exoPlayer.playWhenReady) {
+                if (!exoPlayer.playWhenReady) {
                     exoPlayer.prepare()
                     exoPlayer.play()
-                }else{
+                } else {
                     exoPlayer.play()
                 }
                 _audioState.value = AudioState.Playing(
@@ -95,7 +96,7 @@ class MusicServiceHandler @Inject constructor(
             PlayerEvent.SelectedAudioChange -> handleSelectedAudioChange(selectedAudioIndex)
             PlayerEvent.Stop -> stopPlayback()
             is PlayerEvent.UpdateProgress -> updateProgress(playerEvent.newProgress)
-            else->{}
+            else -> {}
         }
     }
 
@@ -117,9 +118,16 @@ class MusicServiceHandler @Inject constructor(
     }
 
     override fun onPlaybackStateChanged(playbackState: Int) {
-        when(playbackState) {
-            ExoPlayer.STATE_BUFFERING -> _audioState.value =
-                AudioState.Buffering(exoPlayer.currentPosition)
+        when (playbackState) {
+            ExoPlayer.STATE_BUFFERING -> {
+                _audioState.value = AudioState.Buffering(exoPlayer.currentPosition)
+                sharedPreferencesHelper.savePlaybackState(
+                    exoPlayer.currentMediaItem!!.mediaId,
+                    exoPlayer.currentPosition,
+                    exoPlayer.isPlaying
+                )
+            }
+
 
             ExoPlayer.STATE_READY -> _audioState.value =
                 AudioState.Ready(exoPlayer.duration)
@@ -148,7 +156,14 @@ class MusicServiceHandler @Inject constructor(
         val mediaIdLong = mediaIdString?.toLongOrNull() ?: -1L
 
         _audioState.value = AudioState.CurrentPlaying(mediaIdLong)
+
+        sharedPreferencesHelper.savePlaybackState(
+            exoPlayer.currentMediaItem!!.mediaId,
+            exoPlayer.currentPosition,
+            exoPlayer.isPlaying
+        )
     }
+
 
 
     private fun startProgressUpdate() {
@@ -174,9 +189,11 @@ class MusicServiceHandler @Inject constructor(
             ExoPlayer.REPEAT_MODE_OFF -> {
                 exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_ONE
             }
+
             ExoPlayer.REPEAT_MODE_ONE -> {
                 exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_ALL
             }
+
             ExoPlayer.REPEAT_MODE_ALL -> {
                 exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_OFF
             }
@@ -206,5 +223,5 @@ sealed class AudioState {
     data class Progress(val progress: Long) : AudioState()
     data class Buffering(val progress: Long) : AudioState()
     data class Playing(val isPlaying: Boolean) : AudioState()
-    data class CurrentPlaying(val mediaId:Long) : AudioState()
+    data class CurrentPlaying(val mediaId: Long) : AudioState()
 }

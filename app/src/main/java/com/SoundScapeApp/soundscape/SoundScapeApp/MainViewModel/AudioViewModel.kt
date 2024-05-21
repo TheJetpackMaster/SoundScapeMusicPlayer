@@ -5,9 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -17,10 +15,7 @@ import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.DefaultDataSourceFactory
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
@@ -28,6 +23,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -35,6 +31,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -133,11 +131,6 @@ class AudioViewModel @Inject constructor(
     private val currentCreatedPlaylistId: StateFlow<Long?> = _currentCreatedPlaylistId
 
 
-    //   Playing from current this playlist
-    private val _currentPlayingPlaylistId = MutableStateFlow<Long?>(null)
-    val currentPlayingPlaylistId: StateFlow<Long?> = _currentPlayingPlaylistId
-
-
     private val _currentPlaylistName = MutableStateFlow<String?>(null)
     val currentPlaylistName: StateFlow<String?> = _currentPlaylistName
 
@@ -204,11 +197,51 @@ class AudioViewModel @Inject constructor(
     val isDeletingSong: StateFlow<Boolean> = _isDeletingSong
 
 
+    // KEEPING TRACK OF CURRENT PLAYING
+    private val _currentPlayingSection = MutableStateFlow<Int>(0)
+    val currentPlayingSection: StateFlow<Int> = _currentPlayingSection
+
+    //   Playing from current this playlist
+    private val _currentPlayingPlaylistId = MutableStateFlow<Long>(0L)
+    val currentPlayingPlaylistId: StateFlow<Long> = _currentPlayingPlaylistId
+
+    //Playing From this Album
+    private val _currentPlayingAlbumId = MutableStateFlow<Long>(0L)
+    val currentPlayingAlbumId: StateFlow<Long> = _currentPlayingAlbumId
+
+    //Playing From this Artist
+    private val _currentPlayingArtist = MutableStateFlow<String?>(null)
+    val currentPlayingArtist: StateFlow<String?> = _currentPlayingArtist
+
+
+    // SEPARATE LISTS FOR RESUMPTION
+    private val _currentPlaylistSongsForResumption = MutableStateFlow<List<Long>>(emptyList())
+    val currentPlaylistSongsForResumption: StateFlow<List<Long>> =
+        _currentPlaylistSongsForResumption
+
+
+    private val _currentAlbumSongsForResumption: MutableStateFlow<List<Long>> =
+        MutableStateFlow(emptyList())
+    val currentAlbumSongsForResumption: StateFlow<List<Long>> = _currentAlbumSongsForResumption
+
+
+    private val _currentArtistSongsForResumption: MutableStateFlow<List<Long>> =
+        MutableStateFlow(emptyList())
+    val currentArtistSongsForResumption: StateFlow<List<Long>> = _currentArtistSongsForResumption
+
     init {
 //        loadAudioData()
 //        loadVideoData()
 //        setupAudioStateHandler()
-        viewModelScope.launch { loadPlaylists() }
+        viewModelScope.launch {
+            loadPlaylists()
+            if (currentPlayingPlaylistId.value == 123L) {
+                loadSongsForFavoritesResumption()
+            } else {
+                loadSongsForCurrentPlaylistResumption(currentPlayingPlaylistId.value)
+            }
+        }
+
         getTheme()
         getScanSongLengthTime()
         loadPlaylistAudioData()
@@ -217,6 +250,13 @@ class AudioViewModel @Inject constructor(
         duration = player.duration
         player.shuffleModeEnabled = isShuffleEnabled()
         currentSelectedAudio = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
+
+        getCurrentPlayingSection()
+        getCurrentPlayingPlaylist()
+        getCurrentPlayingAlbum()
+        getCurrentPlayingArtist()
+
+        retrievePlaybackState()
     }
 
 //    private val _audioData = MutableStateFlow<PagingData<Audio>>(PagingData.empty())
@@ -236,10 +276,7 @@ class AudioViewModel @Inject constructor(
                         currentSelectedAudio = if (mediaId != null) {
                             mediaId.toLong()
                         } else {
-                            // Handle the case when mediaId is null
-                            // For example, you can assign a default value or throw an exception
-                            // Default value example: 0L
-                            0L
+                            retrievePlaybackState().lastPlayedSong.toLongOrNull() ?: 0L
                         }
 
                     }
@@ -298,6 +335,13 @@ class AudioViewModel @Inject constructor(
             }
             val length = scanSongLengthTime.value * 1000L
             loadScannedAudioList(length)
+
+            if (_currentPlayingAlbumId.value != 0L) {
+                loadSongsForAlbumResumption(currentPlayingAlbumId.value)
+            }
+            currentPlayingArtist.value?.let {
+                loadSongsForArtistResumption(currentPlayingArtist.value.toString())
+            }
         }
     }
 
@@ -336,6 +380,14 @@ class AudioViewModel @Inject constructor(
         }
     }
 
+    fun loadSongsForAlbumResumption(albumId: Long) {
+        viewModelScope.launch {
+            val songsForAlbumIds =
+                scannedAudioList.value.filter { it.albumId.toLong() == albumId }.map { it.id }
+            _currentAlbumSongsForResumption.value = songsForAlbumIds
+        }
+    }
+
     //    Load artist songs
     fun loadSongsForArtist(artist: String) {
         viewModelScope.launch {
@@ -345,8 +397,15 @@ class AudioViewModel @Inject constructor(
         }
     }
 
+    fun loadSongsForArtistResumption(artist: String) {
+        viewModelScope.launch {
+            val songsForArtist = scannedAudioList.value.filter { it.artist == artist }.map { it.id }
+            _currentArtistSongsForResumption.value = songsForArtist
+        }
+    }
+
     //        For All songs
-    fun setMediaItems(audioList: List<Audio>,context: Context) {
+    fun setMediaItems(audioList: List<Audio>, context: Context) {
         if (audioList.isNotEmpty()) {
             val mediaItems = audioList.map { audio ->
                 MediaItem.Builder()
@@ -419,29 +478,6 @@ class AudioViewModel @Inject constructor(
         _playListSongsList.value = songsList
     }
 
-    //    For Playlists songs
-//    fun setPlaylistMediaItems(
-//        currentPlaylistSongs: List<Long>
-//    ) {
-//        val playListSongs: List<Audio> = audioList.value.filter { audio ->
-//            audio.id in currentPlaylistSongs
-//        }
-//        if (playListSongs.isNotEmpty()) {
-//            val mediaItems = playListSongs.map { audio ->
-//                MediaItem.Builder()
-//                    .setUri(audio.uri)
-//                    .setMediaId(audio.id.toString())
-//                    .setMediaMetadata(
-//                        MediaMetadata.Builder()
-//                            .setAlbumArtist(audio.artist)
-//                            .setDisplayTitle(audio.title)
-//                            .setSubtitle(audio.displayName)
-//                            .build()
-//                    ).build()
-//            }
-//            audioServiceHandler.setMediaItemList(mediaItems)
-//        }
-//    }
 
     private fun setupAudioStateHandler() = viewModelScope.launch {
         audioServiceHandler.audioState.collectLatest { mediaState ->
@@ -453,26 +489,6 @@ class AudioViewModel @Inject constructor(
         audioServiceHandler.play(index)
     }
 
-//    //    Playlists play
-//    fun playFromPlaylist(index: Int) {
-//        if (_currentPlaylistSongs.value.isNotEmpty()) {
-//            audioServiceHandler.play(index)
-//        }
-//    }
-//
-//    //    Albums play
-//    fun playFromAlbum(index: Int) {
-//        if (currentAlbumSongs.value.isNotEmpty()) {
-//            audioServiceHandler.play(index)
-//        }
-//    }
-//
-//    //    Artists Play
-//    fun playFromArtist(index: Int) {
-//        if (currentArtistSongs.value.isNotEmpty()) {
-//            audioServiceHandler.play(index)
-//        }
-//    }
 
     private fun calculateProgressValue(currentProgress: Long) {
         progress =
@@ -716,6 +732,13 @@ class AudioViewModel @Inject constructor(
         }
     }
 
+    suspend fun loadSongsForCurrentPlaylistResumption(playlistId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val songs = sharedPreferencesHelper.getSongsByPlaylistId(playlistId)
+            _currentPlaylistSongsForResumption.value = songs
+        }
+    }
+
 
     fun deletePlaylist(playlistId: Long) {
         sharedPreferencesHelper.deletePlaylist(playlistId)
@@ -808,6 +831,13 @@ class AudioViewModel @Inject constructor(
         }
     }
 
+    fun loadSongsForFavoritesResumption() {
+        viewModelScope.launch {
+            val songs = getFavoriteSongs()
+            _currentPlaylistSongsForResumption.value = songs
+        }
+    }
+
     fun getFavoritesSongs() {
         val songs = getFavoriteSongs()
         _favoritesSongs.value = songs
@@ -837,7 +867,6 @@ class AudioViewModel @Inject constructor(
             addToFavorites(songId)
         }
     }
-
 
     //    ALBUMS SECTIONS
     fun albumClicked(albumId: Long) {
@@ -949,10 +978,6 @@ class AudioViewModel @Inject constructor(
         _currentTheme.value = sharedPreferencesHelper.getTheme()
     }
 
-    fun getCurrentPlayingSong(): String? {
-        return sharedPreferencesHelper.getCurrentPlayingSong()
-    }
-
     fun setSelectedSongs(selectedSongs: List<Long>) {
         _selectedSongs.value = selectedSongs
     }
@@ -975,6 +1000,120 @@ class AudioViewModel @Inject constructor(
             }
             updatePlaylists()
         }
+    }
+
+    fun retrievePlaybackState(): PlaybackState {
+        return sharedPreferencesHelper.retrievePlaybackState()
+    }
+
+    fun restorePlaybackState(playbackState: PlaybackState, context: Context) {
+        if (playbackState.lastPlayedSong != "0") {
+            // Load the song and seek to the last playback position
+            val song =
+                loadSong(playbackState.lastPlayedSong.toLongOrNull() ?: 0L, context = context)
+
+            song?.let {
+                when (currentPlayingSection.value) {
+                    0 -> {
+                        setSingleMediaItem(song)
+                        play(scannedAudioList.value.indexOf(song))
+                        player.seekTo(playbackState.lastPlaybackPosition)
+                    }
+
+                    1 -> {
+                        setMediaItems(scannedAudioList.value, context)
+                        play(scannedAudioList.value.indexOf(song))
+                        player.seekTo(playbackState.lastPlaybackPosition)
+                    }
+
+                    2 -> {
+                        if (currentPlayingPlaylistId.value != 0L && currentPlaylistSongsForResumption.value.isNotEmpty()) {
+                            val playListSongs: List<Audio> =
+                                scannedAudioList.value.filter { audio ->
+                                    audio.id in currentPlaylistSongsForResumption.value
+                                }
+
+                            setMediaItems(playListSongs, context)
+                            Log.d("song", song.id.toString())
+                            Log.d("playlistSongs", playListSongs.toString())
+                            play(playListSongs.indexOf(song))
+                            player.seekTo(playbackState.lastPlaybackPosition)
+
+                        }
+                    }
+
+                    3 -> {
+                        if (currentPlayingAlbumId.value != 0L && currentAlbumSongsForResumption.value.isNotEmpty()) {
+                            val albumSongs: List<Audio> =
+                                scannedAudioList.value.filter { audio ->
+                                    audio.id in currentAlbumSongsForResumption.value
+                                }
+
+                            setMediaItems(albumSongs, context)
+                            play(albumSongs.indexOf(song))
+                            player.seekTo(playbackState.lastPlaybackPosition)
+
+                        }
+                    }
+                    4->{
+                        if (currentPlayingArtist.value != null && currentArtistSongsForResumption.value.isNotEmpty()) {
+                            val artistSongs: List<Audio> =
+                                scannedAudioList.value.filter { audio ->
+                                    audio.id in currentArtistSongsForResumption.value
+                                }
+
+                            setMediaItems(artistSongs, context)
+                            play(artistSongs.indexOf(song))
+                            player.seekTo(playbackState.lastPlaybackPosition)
+
+                        }
+                    }
+
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun loadSong(songId: Long, context: Context): Audio? {
+        val song = scannedAudioList.value.firstOrNull { it.id == songId }
+        return song!!
+    }
+
+    fun setCurrentPlayingSection(playingFrom: Int) {
+        _currentPlayingSection.value = playingFrom
+        sharedPreferencesHelper.setCurrentPlayingSection(playingFrom)
+    }
+
+    fun getCurrentPlayingSection() {
+        _currentPlayingSection.value = sharedPreferencesHelper.getCurrentPlayingSection()
+    }
+
+    fun setCurrentPlayingPlaylist(playlistId: Long) {
+        _currentPlayingPlaylistId.value = playlistId
+        sharedPreferencesHelper.setCurrentPlayingPlaylist(playlistId)
+    }
+
+    fun getCurrentPlayingPlaylist() {
+        _currentPlayingPlaylistId.value = sharedPreferencesHelper.getCurrentPlayingPlaylist()
+    }
+
+    fun setCurrentPlayingAlbum(albumId: Long) {
+        _currentPlayingAlbumId.value = albumId
+        sharedPreferencesHelper.setCurrentPlayingAlbum(albumId)
+    }
+
+    fun getCurrentPlayingAlbum() {
+        _currentPlayingAlbumId.value = sharedPreferencesHelper.getCurrentPlayingAlbum()
+    }
+
+    fun setCurrentPlayingArtist(artist: String) {
+        _currentPlayingArtist.value = artist
+        sharedPreferencesHelper.setCurrentPlayingArtist(artist)
+    }
+
+    fun getCurrentPlayingArtist() {
+        _currentPlayingArtist.value = sharedPreferencesHelper.getCurrentPlayingArtist()
     }
 
 

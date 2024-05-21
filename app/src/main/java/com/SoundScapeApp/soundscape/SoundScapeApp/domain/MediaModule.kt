@@ -87,8 +87,9 @@ object MediaModule {
 
     @Provides
     @Singleton
-    fun provideServiceHandler(exoPlayer: ExoPlayer): MusicServiceHandler = MusicServiceHandler(
-        exoPlayer
+    fun provideServiceHandler(exoPlayer: ExoPlayer,sharedPreferencesHelper: SharedPreferencesHelper): MusicServiceHandler = MusicServiceHandler(
+        exoPlayer,
+        sharedPreferencesHelper
     )
 
     @Provides

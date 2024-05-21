@@ -299,17 +299,21 @@ fun VideosHomeTopBar(
                 ),
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onVideoClear)
-                    {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = null,
-                            tint = White90.copy(.9f)
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onVideoClear)
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = null,
+                                tint = White90.copy(.9f)
+                            )
+                        }
+                        Text(text = selectedVideosCount.value.toString(),
+                            style = SoundScapeThemes.typography.titleLarge,
+                            color = White90)
                     }
-                    Text(text = selectedVideosCount.value.toString(),
-                        style = SoundScapeThemes.typography.titleLarge,
-                        color = White90)
                 },
                 actions = {
                     IconButton(onClick = onVideoDelete)

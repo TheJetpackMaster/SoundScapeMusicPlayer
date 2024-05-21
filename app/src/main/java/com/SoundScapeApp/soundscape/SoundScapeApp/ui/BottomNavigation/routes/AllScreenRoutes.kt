@@ -23,6 +23,8 @@ sealed class ScreenRoute(val route:String){
     data object VideoPlayingScreen:ScreenRoute(route = "videoplayingscreen")
     data object VidePlaylistDetailScreen:ScreenRoute(route = "videoplaylistdetailscreen")
 
+    data object AddVideosToPlaylist:ScreenRoute(route = "addvideostoplaylist")
+
 
     data object VideoSettings:ScreenRoute(route = "videomainsettings")
     data object AudioSettings:ScreenRoute(route = "audiomainsettings")
