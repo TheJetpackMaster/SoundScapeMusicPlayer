@@ -73,7 +73,8 @@ fun MainScreen(
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit,
     onDeleteSong:(List<Uri>)->Unit,
-    onVideoDelete:(List<Uri>)->Unit
+    onVideoDelete:(List<Uri>)->Unit,
+    onScreenRotationClick: () -> Unit
 ) {
 
     val systemUiController = rememberSystemUiController()
@@ -176,7 +177,8 @@ fun MainScreen(
                     onVideoItemClick = onVideoItemClick,
                     mediaSession = mediaSession,
                     onDeleteSong = onDeleteSong,
-                    onVideoDelete = onVideoDelete
+                    onVideoDelete = onVideoDelete,
+                    onScreenRotationClick= onScreenRotationClick
                 )
             }
         }

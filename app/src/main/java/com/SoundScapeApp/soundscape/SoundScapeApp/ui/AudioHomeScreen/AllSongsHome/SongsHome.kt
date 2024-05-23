@@ -91,6 +91,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.navigation.NavController
@@ -540,7 +541,13 @@ fun MainPlayingBar(
             .fillMaxWidth()
             .height(62.dp)
             .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = { navController.navigate(ScreenRoute.NowPlayingScreen.route) })
+            .clickable(onClick = {
+                if (navController.currentBackStackEntry?.lifecycle?.currentState
+                    == Lifecycle.State.RESUMED
+                ) {
+                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                }
+            })
             .background(SoundScapeThemes.colorScheme.primary)
             .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically

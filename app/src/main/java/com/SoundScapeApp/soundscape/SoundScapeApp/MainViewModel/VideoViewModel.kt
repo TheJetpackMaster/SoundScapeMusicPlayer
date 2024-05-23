@@ -4,9 +4,11 @@ import Video
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Build
+import android.os.CountDownTimer
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -208,6 +210,9 @@ class VideoViewModel @Inject constructor(
     // SELECTED FOR DELeTION
     private val _selectedVideos = MutableStateFlow<List<Long>>(emptyList())
     val selectedVideos: StateFlow<List<Long>> = _selectedVideos
+
+    // SELECTED FOR SetTimer
+    private var timer: CountDownTimer? = null
 
     init {
         loadVideoPlaylists()
@@ -523,15 +528,15 @@ class VideoViewModel @Inject constructor(
     //  Screen Rotation
     @androidx.annotation.OptIn(UnstableApi::class)
     fun onRotateScreen() {
-        val orientation =
-            if (_playerState.value.orientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
-                ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
-            } else {
+       /* val orientation =
+            if (_playerState.value.orientation == ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT) {
                 ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+            } else {
+                ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
             }
         _playerState.update {
             it.copy(orientation = orientation)
-        }
+        }*/
     }
 
     // Resize Screen
@@ -973,7 +978,33 @@ class VideoViewModel @Inject constructor(
         }
     }
 
+    fun toggleVideoVolume(isMuted:MutableState<Boolean>){
+        if (isMuted.value) {
+            exoPlayer.volume = 0f
+        } else {
+            exoPlayer.volume = 1f
+        }
+    }
 
+    fun CurrentVideoLooping(isVideoLooping: Boolean, exoPlayer: ExoPlayer){
+        exoPlayer.repeatMode =
+            if (isVideoLooping) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+    }
+
+    fun startTimer(duration: Long, onFinish: () -> Unit,exoPlayer: ExoPlayer) {
+        timer?.cancel() // Cancel any existing timer
+
+        timer = object : CountDownTimer(duration, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                // Update UI if necessary with the remaining time
+            }
+
+            override fun onFinish() {
+                onFinish()
+                exoPlayer.pause()
+            }
+        }.start()
+    }
     override fun onCleared() {
         super.onCleared()
         destroyVideoMediaSession()

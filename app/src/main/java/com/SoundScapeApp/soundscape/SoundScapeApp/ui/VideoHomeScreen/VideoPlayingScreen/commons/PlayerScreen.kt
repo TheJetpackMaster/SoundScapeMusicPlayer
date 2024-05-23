@@ -37,9 +37,8 @@ fun PlayerScreen(
     skipText: MutableState<String>,
     event: Lifecycle.Event,
     view: View,
-    window: Window
-
-
+    window: Window,
+    onScreenRotationClick: () -> Unit
 ) {
 
     LaunchedEffect(showControls.value) {

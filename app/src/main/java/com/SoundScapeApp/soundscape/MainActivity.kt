@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -108,7 +109,7 @@ class MainActivity : ComponentActivity() {
 //        val filter = IntentFilter("com.SoundScapeApp.soundscape.FINISH_ACTIVITY")
 //        registerReceiver(finishActivityReceiver, filter, RECEIVER_EXPORTED)
 
-
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
         // DELETING MEDIA ITEMS
         intentSenderLauncher =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
@@ -126,7 +127,7 @@ class MainActivity : ComponentActivity() {
                         val songs = audioViewModel.scannedAudioList.value
                         val selectedSongs = audioViewModel.selectedSongs.value
                         val sortedSelectedSongs = selectedSongs.sortedDescending()
-                        Log.d("seled",selectedSongs.toString())
+                        Log.d("seled", selectedSongs.toString())
 
                         sortedSelectedSongs.asReversed().forEach { deletedSongId ->
                             val index = songs.indexOfFirst { it.id == deletedSongId }
@@ -137,7 +138,6 @@ class MainActivity : ComponentActivity() {
 
                         audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
                         audioViewModel.setSelectedSongs(emptyList())
-
 
 
                     } else {
@@ -388,7 +388,16 @@ class MainActivity : ComponentActivity() {
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(videoUri)
                             }
+                        },
+                        onScreenRotationClick = {
+                            requestedOrientation =
+                                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
+                                    ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                                } else {
+                                    ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                                }
                         }
+
                     )
                 }
             }
@@ -532,8 +541,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-        if(!isInPictureInPictureMode){
-           videoViewModel.destroyVideoMediaSession()
+        if (!isInPictureInPictureMode) {
+            videoViewModel.destroyVideoMediaSession()
         }
     }
 
