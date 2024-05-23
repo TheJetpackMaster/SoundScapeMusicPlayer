@@ -126,9 +126,7 @@ object MediaModule {
     @Provides
     @Singleton
     fun provideLocalMediaProvider(application: Application): LocalMediaProvider = LocalMediaProvider(
-         applicationContext = application
+        applicationContext = application
     )
-
-
 
 }

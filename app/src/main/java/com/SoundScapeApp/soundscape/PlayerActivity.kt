@@ -43,7 +43,7 @@ class PlayerActivity : ComponentActivity() {
 
     private val videoViewModel: VideoViewModel by viewModels()
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         handleWindowInsetsAndDecors(window = window)
