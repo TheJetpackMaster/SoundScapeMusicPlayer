@@ -435,7 +435,7 @@ fun VideoPlayingScreen(
                         UpperControls(
                             videoTitle = exoPlayer.currentMediaItem?.mediaMetadata?.displayTitle.toString(),
                             onBackClick = {
-                                navController.popBackStack()
+//                                navController.popBackStack()
                             },
                             /*onLanguageClick = {
                                 showLanguageDialog = !showLanguageDialog

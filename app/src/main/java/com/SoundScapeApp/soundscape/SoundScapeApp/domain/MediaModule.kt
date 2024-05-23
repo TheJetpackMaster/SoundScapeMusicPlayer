@@ -10,6 +10,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
@@ -121,4 +122,13 @@ object MediaModule {
     fun providesCoroutineScope():CoroutineScope{
         return CoroutineScope(Dispatchers.IO)
     }
+
+    @Provides
+    @Singleton
+    fun provideLocalMediaProvider(application: Application): LocalMediaProvider = LocalMediaProvider(
+         applicationContext = application
+    )
+
+
+
 }

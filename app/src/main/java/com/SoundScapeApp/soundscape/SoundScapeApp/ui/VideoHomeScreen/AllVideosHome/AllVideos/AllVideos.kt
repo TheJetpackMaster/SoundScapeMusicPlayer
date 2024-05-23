@@ -2,8 +2,10 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosH
 
 import Video
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.runtime.key
 import androidx.compose.foundation.BorderStroke
@@ -74,8 +76,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
+import com.SoundScapeApp.soundscape.PlayerActivity
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.SoundScapeApp.soundscape.R
@@ -109,13 +113,12 @@ fun AllVideos(
     selectedVideosCount: MutableState<Int>,
     selectedVideosIds:MutableList<Long>
 ) {
+    val context = LocalContext.current
 
     val videosList by viewModel.scannedVideoList.collectAsState()
     val lazyListState = rememberLazyListState()
 
     val resumeFromLeftPos by viewModel.resumeFromLeftPositionEnabled.collectAsState()
-
-    val context = LocalContext.current
 
     val currentSortType = viewModel.currentVideoSortType
 
@@ -336,7 +339,11 @@ fun AllVideos(
 
                                                 }
                                                 viewModel.updateAvailableTracks()
+                                                // Pass ViewModel to PlayerActivity
+//                                                val intent = Intent(context,PlayerActivity::class.java)
+//                                                context.startActivity(intent)
                                                 navController.navigate(ScreenRoute.VideoPlayingScreen.route)
+
                                             }
                                         }
                                     )

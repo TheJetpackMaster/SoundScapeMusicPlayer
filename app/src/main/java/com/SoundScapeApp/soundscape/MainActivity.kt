@@ -104,9 +104,6 @@ class MainActivity : ComponentActivity() {
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //FOR CLOSING APP
-//        val filter = IntentFilter("com.SoundScapeApp.soundscape.FINISH_ACTIVITY")
-//        registerReceiver(finishActivityReceiver, filter, RECEIVER_EXPORTED)
 
 
         // DELETING MEDIA ITEMS
@@ -526,7 +523,6 @@ class MainActivity : ComponentActivity() {
             enterPiPMode()
         }
     }
-
 
     //
     override fun onPause() {

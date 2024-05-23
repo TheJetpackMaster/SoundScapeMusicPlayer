@@ -3,11 +3,13 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 import Video
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +25,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.videoPlaylist
@@ -45,10 +48,11 @@ import javax.inject.Inject
 class VideoViewModel @Inject constructor(
     private val repository: MusicRepository,
     private val videoPlaylistManager: VideoPlaylistManager,
+    private val localMediaProvider:LocalMediaProvider,
     videoStateHandle: SavedStateHandle,
     context: Context,
 
-    ) : ViewModel() {
+    ) : ViewModel(){
 
 
     private val _continuesPlayEnabled = MutableStateFlow(false)
@@ -242,6 +246,7 @@ class VideoViewModel @Inject constructor(
                 }
             }
         }
+        Log.d("intilized","initilized")
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -970,6 +975,36 @@ class VideoViewModel @Inject constructor(
             if(currentVideoPlaylistId.value != null) {
                 loadVideosForCurrentPlaylist(currentVideoPlaylistId.value!!)
             }
+        }
+    }
+
+    private fun setMediaItem(uri: Uri) {
+        exoPlayer.apply{
+            addMediaItem(MediaItem.fromUri(uri))
+            exoPlayer.prepare()
+            exoPlayer.play()
+        }
+    }
+
+    private fun updateCurrentVideoItem(videoItem: Video){
+        _playerState.update {
+            it.copy(
+                currentVideoItem = videoItem
+            )
+        }
+        setMediaItem(_playerState.value.currentVideoItem!!.uri.toUri())
+    }
+
+    fun onIntent(uri: Uri){
+        localMediaProvider.getVideoItemFromContentUri(uri)?.let{
+            updateCurrentVideoItem(it)
+        }
+    }
+
+    fun onNewIntent(uri:Uri){
+        exoPlayer.clearMediaItems()
+        localMediaProvider.getVideoItemFromContentUri(uri)?.let{
+            updateCurrentVideoItem(it)
         }
     }
 
