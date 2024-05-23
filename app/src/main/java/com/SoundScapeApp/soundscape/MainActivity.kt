@@ -391,7 +391,8 @@ class MainActivity : ComponentActivity() {
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(videoUri)
                             }
-                        }
+                        },
+                        onScreenRotationClick = {}
                     )
                 }
             }

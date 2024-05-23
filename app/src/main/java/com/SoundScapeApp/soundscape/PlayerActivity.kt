@@ -76,7 +76,8 @@ class PlayerActivity : ComponentActivity() {
                             navController = rememberNavController(),
                             onPipClick = {
                                 enterPiPMode()
-                            }
+                            },
+                            onScreenRotationClick = { }
                         )
                     }
                 }
