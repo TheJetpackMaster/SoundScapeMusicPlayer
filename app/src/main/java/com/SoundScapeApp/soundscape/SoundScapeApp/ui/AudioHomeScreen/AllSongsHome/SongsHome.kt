@@ -540,7 +540,22 @@ fun MainPlayingBar(
             .fillMaxWidth()
             .height(62.dp)
             .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = { navController.navigate(ScreenRoute.NowPlayingScreen.route) })
+            .clickable(
+                onClick = {
+                    val playbackState = viewModel.retrievePlaybackState()
+                    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+                            context
+                        )
+                    ) {
+                        // Resume playback from the last saved position
+                        viewModel.restorePlaybackState(playbackState, context = context)
+                        player.pause()
+                        isPlaying.value = !isPlaying.value
+                        shouldReloadPlay.value = true
+                    }
+
+                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                })
             .background(SoundScapeThemes.colorScheme.primary)
             .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -636,7 +651,7 @@ fun CustomCircularProgressIndicator(
     val playbackState = viewModel.retrievePlaybackState()
     val songs = viewModel.scannedAudioList.collectAsState()
     val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
-    val context = LocalContext.current
+
 
     val nowPlaying = songs.value.firstOrNull { it.id == currentSong }
 

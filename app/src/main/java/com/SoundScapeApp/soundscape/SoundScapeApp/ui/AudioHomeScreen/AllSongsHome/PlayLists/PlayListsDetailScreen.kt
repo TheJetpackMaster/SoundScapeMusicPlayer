@@ -647,7 +647,7 @@ fun PlayListDetailsScreen(
                                     }
                                 if (showDeleteSongsDialog) {
                                     if (currentPlaylistName == "Favorites") {
-
+                                        viewModel.removeMultipleSongsFromFavorites(selectedSongsList)
                                     } else {
                                         viewModel.deleteSongFromPlaylist(selectedSongsList)
                                     }

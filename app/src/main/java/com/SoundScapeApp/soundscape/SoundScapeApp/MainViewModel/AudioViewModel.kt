@@ -868,6 +868,27 @@ class AudioViewModel @Inject constructor(
         }
     }
 
+    fun removeMultipleSongsFromFavorites(songIds: List<Long>) {
+        val favoriteSongs = sharedPreferencesHelper.getFavoriteSongs().toMutableList()
+        val updatedCurrentPlaylistSongs = _currentPlaylistSongs.value.toMutableList()
+
+        songIds.forEach { songId ->
+            if (favoriteSongs.contains(songId)) {
+                removeFromFavorites(songId)
+
+                // Remove the song from the current playlist
+                updatedCurrentPlaylistSongs.remove(songId)
+                // Update the favorites songs
+                favoriteSongs.remove(songId)
+            }
+        }
+
+        _currentPlaylistSongs.value = updatedCurrentPlaylistSongs
+        _favoritesSongs.value = favoriteSongs
+    }
+
+
+
     //    ALBUMS SECTIONS
     fun albumClicked(albumId: Long) {
         _currentAlbumId.value = albumId

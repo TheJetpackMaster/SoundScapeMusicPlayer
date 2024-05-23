@@ -363,7 +363,7 @@ fun NowPlayingScreen(
                     viewModel = viewModel
                 )
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 SongControlButtons(
                     onShuffleClick = {

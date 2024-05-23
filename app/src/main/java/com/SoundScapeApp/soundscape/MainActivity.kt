@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape
 import android.Manifest
 import android.Manifest.permission
 import android.app.ActivityManager
+import android.app.NotificationManager
 import android.app.PictureInPictureParams
 import android.app.RecoverableSecurityException
 import android.content.BroadcastReceiver
@@ -97,7 +98,6 @@ class MainActivity : ComponentActivity() {
 
 
     //For deleting songs and videos
-    private lateinit var permissionRequestLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -115,6 +115,12 @@ class MainActivity : ComponentActivity() {
                 if (it.resultCode == RESULT_OK) {
 
                     if (audioViewModel.isDeletingSong.value) {
+
+//                        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.Q){
+//                            lifecycleScope.launch {
+//                                deleteSongFromExternalStorage()
+//                            }
+//                        }
                         Toast.makeText(
                             this,
                             "${audioViewModel.selectedSongs.value.size} songs Deleted",
@@ -432,6 +438,15 @@ class MainActivity : ComponentActivity() {
             .build()
         this.enterPictureInPictureMode(params)
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
+        videoViewModel.createVideoMediaSession(this)
+
+        if (isInPictureInPictureMode) {
+            stopService(Intent(this, MusicService::class.java))
+
+            // Cancel the notification
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(101)
+        }
     }
 
 
@@ -525,14 +540,18 @@ class MainActivity : ComponentActivity() {
                 currentMediaPosition
             )
         }
-//        videoViewModel.destroyVideoMediaSession()
+        videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
+
+        if(!videoViewModel.isPipModeEnabled.value){
+            videoViewModel.destroyVideoMediaSession()
+        }
     }
 
 
     override fun onResume() {
         super.onResume()
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-        if(!isInPictureInPictureMode){
+        if(!videoViewModel.isPipModeEnabled.value){
            videoViewModel.destroyVideoMediaSession()
         }
     }

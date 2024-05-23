@@ -61,14 +61,14 @@ fun RootNav(
 
         composable(ScreenRoute.SplashScreen.route,
             exitTransition = {
-                fadeOut(tween(250, easing = LinearEasing))
+                fadeOut(tween(200, easing = LinearEasing))
             }) {
             SplashScreen(navController = navController)
         }
 
         composable(ScreenRoute.MainScreen.route,
             enterTransition = {
-                fadeIn(tween(350, easing = LinearEasing))
+                fadeIn(tween(250, easing = LinearEasing))
             }
             ) {
             MainScreen(
