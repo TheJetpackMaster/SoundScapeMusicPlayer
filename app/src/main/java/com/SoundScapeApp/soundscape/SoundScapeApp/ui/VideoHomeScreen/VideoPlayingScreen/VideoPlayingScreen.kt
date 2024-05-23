@@ -1,6 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen
 
 import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.ui.theme.White90
 import kotlinx.coroutines.launch
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
@@ -52,13 +54,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -79,10 +85,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.C
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.AllVideos.formatVideoDuration
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.BottomControls
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.CenterControls
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.PlayerScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.ScreenBrightnessController
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.mapBrightnessToRange
@@ -104,6 +112,7 @@ fun VideoPlayingScreen(
     viewModel: VideoViewModel,
     navController: NavController,
     onPipClick: () -> Unit,
+    onScreenRotationClick: () -> Unit,
 ) {
 
     val currentSeekTime = viewModel.videoSeekTime.collectAsState()
@@ -143,6 +152,8 @@ fun VideoPlayingScreen(
     var progress by remember { mutableStateOf(0f) }
 
     val isPlaying = remember { mutableStateOf(false) }
+
+    var isMuted = remember { mutableStateOf(false) }
 
     LaunchedEffect(
         showControls.value,
@@ -211,14 +222,18 @@ fun VideoPlayingScreen(
     var isVolumeChanging by remember { mutableStateOf(false) }
     var isSkipTextChanging by remember { mutableStateOf(false) }
 
-    var showSettingsBottomSheet by remember { mutableStateOf(false) }
+    var showSpeedDailog by remember { mutableStateOf(false) }
     val settingsSheetState = rememberModalBottomSheetState()
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showSubtitleDialog by remember { mutableStateOf(false) }
     var showMoreVertDialog by remember { mutableStateOf(false) }
+    var showTimerDialog by remember { mutableStateOf(false) }
+    var isVideoLooping by remember { mutableStateOf(false) }
 
     val currentSelectedSubtitle = remember { mutableStateOf("disable") }
+
+    var selectedTime by remember { mutableStateOf(0L) } // Default time selection is 0 minutes
 
 
 
@@ -248,6 +263,7 @@ fun VideoPlayingScreen(
 
     val lifeCycleOwner = LocalLifecycleOwner.current
 
+    val activity = context as? ComponentActivity
 
     DisposableEffect(key1 = lifeCycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -267,6 +283,9 @@ fun VideoPlayingScreen(
                 currentMediaPosition.value
             )
 
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+            viewModel.playBackSpeed(1f)
+            viewModel.startTimer(duration = 0, onFinish = { exoPlayer.pause() }, exoPlayer)
         }
     }
 
@@ -311,7 +330,8 @@ fun VideoPlayingScreen(
             skipText = skipText,
             event = lifecycle,
             view = view,
-            window = window
+            window = window,
+            onScreenRotationClick = onScreenRotationClick
         )
 
         if (!pipMode) {
@@ -457,9 +477,34 @@ fun VideoPlayingScreen(
                     Spacer(modifier = Modifier.weight(1f))
 
                     if (!isLocked.value) {
+                        CenterControls(
+                            isMuted = isMuted,
+                            onLockClick = { isLocked.value = !isLocked.value },
+                            onMuteClick = {
+                                isMuted.value = !isMuted.value
+                                viewModel.toggleVideoVolume(isMuted)
+                            },
+                            onScreenRotationClick = {
+                                viewModel.onRotateScreen()
+                                onScreenRotationClick()
+                            },
+                            onVideoLoopClick = {
+                                isVideoLooping = !isVideoLooping
+                                viewModel.CurrentVideoLooping(isVideoLooping, exoPlayer)
+                                //exoPlayer.repeatMode =
+                                //  if (isVideoLooping) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+                            },
+                            isVideoLooping = isVideoLooping
+                        )
+                    }
+
+                    if (!isLocked.value) {
                         BottomControls(
                             player = exoPlayer,
-                            onRotateScreenClick = {},
+                            onRotateScreenClick = {
+                                //viewModel.onRotateScreen()
+                                //Log.d("like", "VideoPlayingScreen: ${viewModel.onRotateScreen()}")
+                            },
                             resizeMode = playerState.resizeMode,
                             onResizeModeChange = {
                                 viewModel.onResizeClick()
@@ -472,8 +517,8 @@ fun VideoPlayingScreen(
                                 isLocked.value = !isLocked.value
                             },
                             onPIPClick = onPipClick,
-                            onSettingsClick = {
-                                showSettingsBottomSheet = !showSettingsBottomSheet
+                            onSpeedClick = {
+                                showSpeedDailog = !showSpeedDailog
                             },
                             showControl = showControls
                         )
@@ -482,18 +527,23 @@ fun VideoPlayingScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(100.dp),
+                                .height(250.dp),
                             verticalAlignment = Alignment.Top,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            IconButton(onClick = {
-                                isLocked.value = false
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    isLocked.value = false
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = Color.Black.copy(0.4f)
+                                )
+                            ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.lock),
                                     contentDescription = null,
-                                    modifier = Modifier.size(28.dp),
-                                    tint = White90
+                                    modifier = Modifier.size(20.dp),
+                                    tint = if (isLocked.value) Color.Green.copy(0.9f) else Color.White,
                                 )
                             }
 
@@ -614,8 +664,85 @@ fun VideoPlayingScreen(
             }
 
         }
-        if (showSettingsBottomSheet) {
-            ModalBottomSheet(
+        if (showSpeedDailog) {
+            AlertDialog(
+                containerColor = SoundScapeThemes.colorScheme.secondary,
+                onDismissRequest = {
+                    showSpeedDailog = false
+                },
+                title = { Text(text = "Speed", color = Color.White) },
+                confirmButton = {},
+                text = {
+                    Column {
+                        // First row of IconButtons with text
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically, // Align items vertically
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        val newSpeed =
+                                            (exoPlayer.playbackParameters.speed - 0.25f).coerceIn(
+                                                0.25f,
+                                                3.0f
+                                            )
+                                        viewModel.playBackSpeed(newSpeed)
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_remove_24),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp) // Size of the icon itself
+                                    )
+                                }
+                            }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+
+                                Text(
+                                    text = "${currentPlaybackSpeed}x",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                )
+                            }
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        val newSpeed =
+                                            (exoPlayer.playbackParameters.speed + 0.25f).coerceIn(
+                                                0.25f,
+                                                3.0f
+                                            )
+                                        viewModel.playBackSpeed(newSpeed)
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp) // Size of the icon itself
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+
+            /*ModalBottomSheet(
                 shape = RoundedCornerShape(4.dp),
                 containerColor = Theme2Primary,
                 dragHandle = {
@@ -806,7 +933,7 @@ fun VideoPlayingScreen(
 
                     }
                 }
-            }
+            }*/
         }
         if (showLanguageDialog) {
             AlertDialog(
@@ -1043,7 +1170,13 @@ fun VideoPlayingScreen(
 
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        showMoreVertDialog = false
+                                        exoPlayer.pause()
+                                        showTimerDialog = !showTimerDialog
+                                    }
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.baseline_timer_24),
@@ -1146,6 +1279,107 @@ fun VideoPlayingScreen(
                         }
                     }
                 }
+            )
+        }
+        if (showTimerDialog) {
+            AlertDialog(
+                containerColor = SoundScapeThemes.colorScheme.secondary,
+                onDismissRequest = {
+                    showTimerDialog = false
+                    exoPlayer.play()
+                },
+                title = { Text(text = "Set Timer", color = Color.White) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            exoPlayer.play()
+                            viewModel.startTimer(
+                                duration = selectedTime,
+                                onFinish = { exoPlayer.pause() },
+                                exoPlayer
+                            )
+                            showTimerDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = White90.copy(.8f)),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text(text = "Set Timer",color  = SoundScapeThemes.colorScheme.secondary)
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            showTimerDialog = false
+                            exoPlayer.play()
+                        },
+                        colors  = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                },
+                text = {
+                    Column {
+                        // Row for increment and decrement buttons
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        selectedTime =
+                                            (selectedTime - 5 * 60 * 1000).coerceAtLeast(0)
+                                    },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_remove_24),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "${selectedTime / (60 * 1000)} min",
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        selectedTime =
+                                            (selectedTime + 5 * 60 * 1000).coerceAtMost(60 * 60 * 1000)
+                                    },
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
             )
         }
     }

@@ -6,6 +6,7 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -50,14 +52,14 @@ fun BottomControls(
     resizeMode: Int,
     onLockClock: () -> Unit,
     onPIPClick: () -> Unit,
-    onSettingsClick: () -> Unit,
+    onSpeedClick: () -> Unit,
     onResizeModeChange: () -> Unit,
     modifier: Modifier = Modifier,
     showControls: () -> Unit,
     viewModel: VideoViewModel,
-    showControl: MutableState<Boolean>
+    showControl: MutableState<Boolean>,
 
-) {
+    ) {
 
     val isPlaying = remember { mutableStateOf(player.isPlaying) }
     val currentPosition = remember { mutableStateOf(0L) }
@@ -66,7 +68,12 @@ fun BottomControls(
 
     val isSeekFinished = remember { mutableStateOf(false) }
 
-    LaunchedEffect(player.currentPosition, player.duration,player.isPlaying,player.currentMediaItem) {
+    LaunchedEffect(
+        player.currentPosition,
+        player.duration,
+        player.isPlaying,
+        player.currentMediaItem
+    ) {
         currentPosition.value = player.currentPosition
         duration.value = player.duration
 
@@ -115,13 +122,14 @@ fun BottomControls(
             },
             onPlayPauseClick = {
                 viewModel.onPlayPause()
+                onRotateScreenClick()
             },
             onSeekForwardClick = {
                 viewModel.playNext()
                 if (!player.isPlaying) {
                     viewModel.exoPlayer.play()
                     isPlaying.value = true
-                }else{
+                } else {
                     isPlaying.value = true
                 }
             },
@@ -131,7 +139,7 @@ fun BottomControls(
                     viewModel.exoPlayer.play()
                     isPlaying.value = true
 
-                }else{
+                } else {
                     isPlaying.value = true
                 }
             },
@@ -140,7 +148,7 @@ fun BottomControls(
             resizeMode = resizeMode,
             onLockClick = onLockClock,
             onPIPClick = onPIPClick,
-            onSettingsClick = onSettingsClick,
+            onSpeedClick = onSpeedClick,
             isPlaying = isPlaying
         )
         Spacer(modifier = Modifier.size(24.dp))
@@ -159,10 +167,10 @@ private fun playbackControls(
     onResizeClick: () -> Unit,
     onPIPClick: () -> Unit,
     onLockClick: () -> Unit,
-    onSettingsClick: () -> Unit,
+    onSpeedClick: () -> Unit,
     modifier: Modifier = Modifier,
     player: ExoPlayer,
-    isPlaying: MutableState<Boolean>
+    isPlaying: MutableState<Boolean>,
 ) {
 
     Row(
@@ -172,7 +180,7 @@ private fun playbackControls(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        playbackControlsItem(
+        /* playbackControlsItem(
             icon = R.drawable.unlock,
             contentDescription = "lock",
             onIconClick = {
@@ -185,28 +193,27 @@ private fun playbackControls(
 
 
         playbackControlsItem(
-            icon = R.drawable.settingsbottom,
-            contentDescription = "lock",
-            onIconClick = {
-                onSettingsClick()
-            },
-            onSingleClick = { /*TODO*/ },
-            onDoubleClick = { /*TODO*/ },
-            iconSize = 20.dp
-        )
+             icon = R.drawable.settingsbottom,
+             contentDescription = "lock",
+             onIconClick = {
+                 onSettingsClick()
+             },
+             onSingleClick = { /*TODO*/ },
+             onDoubleClick = { /*TODO*/ },
+             iconSize = 20.dp
+         )*/
 
-        Spacer(modifier = Modifier.weight(.2f))
-
+        //Spacer(modifier = Modifier.weight(.2f))
         playbackControlsItem(
             icon = R.drawable.skippreviousicon,
             contentDescription = "back",
             onIconClick = onSeekBackwardClick,
             onSingleClick = onClick,
             onDoubleClick = onSeekBackwardClick,
-            modifier = modifier
-                .weight(1f),
+            modifier = modifier,
             iconSize = 22.dp
         )
+        Spacer(modifier = Modifier.weight(.1f))
 
         playbackControlsItem(
             icon = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon,
@@ -219,23 +226,26 @@ private fun playbackControls(
                 onClick()
             },
             onDoubleClick = onPlayPauseClick,
-            modifier = modifier.weight(1f),
             outlineColor = White90,
             outlineStroke = 1.dp,
             iconSize = 22.dp
         )
-
+        Spacer(modifier = Modifier.weight(.1f))
         playbackControlsItem(
             icon = R.drawable.skipnexticon,
             contentDescription = "next",
             onIconClick = onSeekForwardClick,
             onSingleClick = onClick,
-            onDoubleClick = onSeekForwardClick,
-            modifier = modifier
-                .weight(1f)
+            onDoubleClick = onSeekForwardClick
         )
 
-        Spacer(modifier = Modifier.weight(.2f))
+        Spacer(modifier = Modifier.weight(1f))
+
+        Text(
+            text = "Speed",
+            fontSize = 18.sp,
+            color = Color.White,
+            modifier = Modifier.clickable { onSpeedClick() })
 
         playbackControlsItem(
             icon = R.drawable.pipmode,
@@ -272,9 +282,9 @@ private fun playbackControlsItem(
     onDoubleClick: () -> Unit,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
     outlineStroke: Dp = 0.dp,
-    outlineColor: Color = Color.Transparent
+    outlineColor: Color = Color.Transparent,
 
-) {
+    ) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
