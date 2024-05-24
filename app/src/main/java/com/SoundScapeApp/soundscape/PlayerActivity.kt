@@ -110,7 +110,7 @@ class PlayerActivity : ComponentActivity() {
         if (videoUri != null) {
             videoViewModel.onNewIntent(videoUri)
         }
-        val parvezname = 5;
+        val name = 5;
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
