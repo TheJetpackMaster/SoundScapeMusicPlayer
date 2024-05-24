@@ -58,6 +58,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.AudioPermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.ExternalStoragePermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.PermissionDialog
@@ -87,6 +88,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var mediaSession: MediaSession
+
+    @Inject lateinit var videoPlaylistManager: VideoPlaylistManager
 
     @Inject
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
