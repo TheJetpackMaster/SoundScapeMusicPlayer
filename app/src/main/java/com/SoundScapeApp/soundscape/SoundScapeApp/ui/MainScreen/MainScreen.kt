@@ -177,8 +177,7 @@ fun MainScreen(
                     onVideoItemClick = onVideoItemClick,
                     mediaSession = mediaSession,
                     onDeleteSong = onDeleteSong,
-                    onVideoDelete = onVideoDelete,
-                    onScreenRotationClick= onScreenRotationClick
+                    onVideoDelete = onVideoDelete
                 )
             }
         }
