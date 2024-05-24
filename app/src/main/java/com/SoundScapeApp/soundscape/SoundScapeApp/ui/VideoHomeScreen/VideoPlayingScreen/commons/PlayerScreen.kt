@@ -37,8 +37,7 @@ fun PlayerScreen(
     skipText: MutableState<String>,
     event: Lifecycle.Event,
     view: View,
-    window: Window
-
+    window: Window,
 
 ) {
 
@@ -56,7 +55,7 @@ fun PlayerScreen(
                 val playerView = PlayerView(context).apply {
                     player = exoPlayer
                     useController = false
-                    fitsSystemWindows = !showControls.value
+                    fitsSystemWindows = showControls.value
                 }
                 playerView
             },
@@ -103,7 +102,5 @@ fun PlayerScreen(
                 exoPlayer.pause()
             }
         )
-
-
     }
 }

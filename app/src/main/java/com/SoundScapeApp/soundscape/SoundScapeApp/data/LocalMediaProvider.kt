@@ -37,7 +37,6 @@ class LocalMediaProvider(
 		}
 
 		return if(displayName != null){
-			Log.d(TAG, "display name is not null")
 			getMediaVideo().first{ displayName == it?.displayName }
 		}else{
 			Log.d(TAG, "display name is null")
@@ -79,6 +78,7 @@ class LocalMediaProvider(
 			val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
 			val dataColumn = cursor.getColumnIndex(MediaStore.Video.Media.DATA)
 			val durationColumn = cursor.getColumnIndex(MediaStore.Video.Media.DURATION)
+			val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
 			val widthColumn = cursor.getColumnIndex(MediaStore.Video.Media.WIDTH)
 			val heightColumn = cursor.getColumnIndex(MediaStore.Video.Media.HEIGHT)
 			val sizeColumn = cursor.getColumnIndex(MediaStore.Video.Media.SIZE)
@@ -88,10 +88,11 @@ class LocalMediaProvider(
 				val id = cursor.getLong(idColumn)
 				val absolutePath = cursor.getString(dataColumn)
 				val name = absolutePath.split("/").lastOrNull().toString()
+				val displayName = cursor.getString(displayNameColumn)?: "Unknown"
 				videoItems.add(
 					Video(
 						id = id,
-						displayName  = name,
+						displayName  = displayName,
 						data = absolutePath,
 						duration = cursor.getLong(durationColumn).toInt(),
 						uri = ContentUris.withAppendedId(VIDEO_COLLECTION_URI, id).toString(),
@@ -121,6 +122,7 @@ class LocalMediaProvider(
 			MediaStore.Video.Media._ID,
 			MediaStore.Video.Media.DATA,
 			MediaStore.Video.Media.DURATION,
+			MediaStore.Video.Media.DISPLAY_NAME,
 			MediaStore.Video.Media.HEIGHT,
 			MediaStore.Video.Media.WIDTH,
 			MediaStore.Video.Media.SIZE,

@@ -184,7 +184,8 @@ fun BottomNavGraph(
             VideoPlayingScreen(
                 viewModel = videoViewModel,
                 navController = navController,
-                onPipClick = onPipClick
+                onPipClick = onPipClick,
+                isMainActivity = false
             )
         }
 //        FolderVideos

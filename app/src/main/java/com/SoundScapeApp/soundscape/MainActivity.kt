@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -106,6 +107,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
 
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+
         // DELETING MEDIA ITEMS
         intentSenderLauncher =
             registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
@@ -174,7 +177,8 @@ class MainActivity : ComponentActivity() {
             val currentTheme by audioViewModel.currentTheme.collectAsState()
 
             SoundScapeThemes(
-                currentTheme
+                currentTheme,
+                this
             ) {
 
                 val dialogQueue = audioViewModel.visiblePermissionDialogQueue
@@ -556,11 +560,13 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
 //        unregisterReceiver(finishActivityReceiver)
 
-        sharedPreferencesHelper.savePlaybackState(
-            player.currentMediaItem!!.mediaId,
-            player.currentPosition,
-            player.isPlaying
-        )
+        if(player.currentMediaItem != null) {
+            sharedPreferencesHelper.savePlaybackState(
+                player.currentMediaItem!!.mediaId,
+                player.currentPosition,
+                player.isPlaying
+            )
+        }
 
     }
 }

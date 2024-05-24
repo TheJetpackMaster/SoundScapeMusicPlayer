@@ -5,9 +5,11 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
+import android.os.CountDownTimer
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -31,6 +33,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistMan
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.videoPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoServiceHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,11 +51,12 @@ import javax.inject.Inject
 class VideoViewModel @Inject constructor(
     private val repository: MusicRepository,
     private val videoPlaylistManager: VideoPlaylistManager,
-    private val localMediaProvider:LocalMediaProvider,
+    private val sharedPreferencesHelper: SharedPreferencesHelper,
+    private val localMediaProvider: LocalMediaProvider,
     videoStateHandle: SavedStateHandle,
     context: Context,
 
-    ) : ViewModel(){
+    ) : ViewModel() {
 
 
     private val _continuesPlayEnabled = MutableStateFlow(false)
@@ -158,7 +162,6 @@ class VideoViewModel @Inject constructor(
     var currentVideoSortType: VideoSortType = getVideoSortType()
 
 
-
     //    Searching video
     private val _isVideoSearch = MutableStateFlow(false)
     val isVideoSearch: StateFlow<Boolean> = _isVideoSearch
@@ -170,6 +173,7 @@ class VideoViewModel @Inject constructor(
 
     @UnstableApi
     private val _playerState = MutableStateFlow(PlayerState())
+
     @UnstableApi
     val playerState = _playerState.asStateFlow()
 
@@ -208,10 +212,16 @@ class VideoViewModel @Inject constructor(
     val isMovieSelected: StateFlow<Boolean> = _isMovieSelected
 
 
-
     // SELECTED FOR DELeTION
     private val _selectedVideos = MutableStateFlow<List<Long>>(emptyList())
     val selectedVideos: StateFlow<List<Long>> = _selectedVideos
+
+
+    // SELECTED FOR SetTimer
+    private var timer: CountDownTimer? = null
+
+    private val _currentTheme = MutableStateFlow(1)
+    val currentTheme: StateFlow<Int> = _currentTheme
 
     init {
         loadVideoPlaylists()
@@ -246,7 +256,7 @@ class VideoViewModel @Inject constructor(
                 }
             }
         }
-        Log.d("intilized","initilized")
+        Log.d("intilized", "initilized")
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -434,7 +444,6 @@ class VideoViewModel @Inject constructor(
     }
 
 
-
     //SELECTIONS
     //SELECTION SECTION
     fun setIsPlaylistSelected(playlistSelected: Boolean) {
@@ -445,7 +454,7 @@ class VideoViewModel @Inject constructor(
         _isVideoSelected.value = songSelected
     }
 
-    fun isMovieSelected(movieSelected:Boolean){
+    fun isMovieSelected(movieSelected: Boolean) {
         _isMovieSelected.value = movieSelected
     }
 
@@ -528,15 +537,15 @@ class VideoViewModel @Inject constructor(
     //  Screen Rotation
     @androidx.annotation.OptIn(UnstableApi::class)
     fun onRotateScreen() {
-        val orientation =
-            if (_playerState.value.orientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
-                ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
-            }
-        _playerState.update {
-            it.copy(orientation = orientation)
-        }
+//        val orientation =
+//            if (_playerState.value.orientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
+//                ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+//            } else {
+//                ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+//            }
+//        _playerState.update {
+//            it.copy(orientation = orientation)
+//        }
     }
 
     // Resize Screen
@@ -960,11 +969,17 @@ class VideoViewModel @Inject constructor(
         _autoPopupEnabled.value = videoPlaylistManager.getAutoPopupEnabled()
     }
 
-    fun setSelectedVideos(selectedVideos:List<Long>){
+    fun setSelectedVideos(selectedVideos: List<Long>) {
         _selectedVideos.value = selectedVideos
     }
+
+
+    fun getTheme() {
+        _currentTheme.value = sharedPreferencesHelper.getTheme()
+    }
+
     // DELETION
-    fun reloadVideos(selectedVideoIds:List<Long>) {
+    fun reloadVideos(selectedVideoIds: List<Long>) {
         viewModelScope.launch {
             val filteredSongs = scannedVideoList.value.filter { song ->
                 song.id !in selectedVideoIds // Filter out songs whose IDs are in selectedSongIds
@@ -972,40 +987,82 @@ class VideoViewModel @Inject constructor(
             _videoList.value = filteredSongs
             _scannedVideoList.value = filteredSongs // Update all songs list
 
-            if(currentVideoPlaylistId.value != null) {
+            if (currentVideoPlaylistId.value != null) {
                 loadVideosForCurrentPlaylist(currentVideoPlaylistId.value!!)
             }
         }
     }
 
-    private fun setMediaItem(uri: Uri) {
-        exoPlayer.apply{
-            addMediaItem(MediaItem.fromUri(uri))
-            exoPlayer.prepare()
-            exoPlayer.play()
+    //    private fun setMediaItem(uri: Uri) {
+//        exoPlayer.apply{
+//            addMediaItem(MediaItem.fromUri(uri))
+//            exoPlayer.prepare()
+//            exoPlayer.play()
+//        }
+//    }
+    private fun setMediaItem(uri: Uri, displayName: String) {
+        exoPlayer.apply {
+            addMediaItem(
+                MediaItem.Builder()
+                    .setUri(uri)
+                    .setMediaMetadata(MediaMetadata.Builder().setDisplayTitle(displayName).build())
+                    .build()
+            )
+            prepare()
+            play()
         }
     }
 
-    private fun updateCurrentVideoItem(videoItem: Video){
+    private fun updateCurrentVideoItem(videoItem: Video) {
         _playerState.update {
             it.copy(
                 currentVideoItem = videoItem
             )
         }
-        setMediaItem(_playerState.value.currentVideoItem!!.uri.toUri())
+        setMediaItem(_playerState.value.currentVideoItem!!.uri.toUri(),playerState.value.currentVideoItem!!.displayName)
     }
 
-    fun onIntent(uri: Uri){
-        localMediaProvider.getVideoItemFromContentUri(uri)?.let{
+    fun onIntent(uri: Uri) {
+        localMediaProvider.getVideoItemFromContentUri(uri)?.let {
             updateCurrentVideoItem(it)
         }
     }
 
-    fun onNewIntent(uri:Uri){
+    fun onNewIntent(uri: Uri) {
         exoPlayer.clearMediaItems()
-        localMediaProvider.getVideoItemFromContentUri(uri)?.let{
+        localMediaProvider.getVideoItemFromContentUri(uri)?.let {
             updateCurrentVideoItem(it)
         }
+    }
+
+    fun toggleVideoVolume(isMuted: MutableState<Boolean>) {
+        if (isMuted.value) {
+            exoPlayer.volume = 0f
+        } else {
+            exoPlayer.volume = 1f
+        }
+    }
+
+
+    fun CurrentVideoLooping(isVideoLooping: Boolean, exoPlayer: ExoPlayer) {
+        exoPlayer.repeatMode =
+            if (isVideoLooping) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+    }
+
+
+    fun startTimer(duration: Long, onFinish: () -> Unit, exoPlayer: ExoPlayer) {
+        timer?.cancel() // Cancel any existing timer
+
+        timer = object : CountDownTimer(duration, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                // Update UI if necessary with the remaining time
+            }
+
+            override fun onFinish() {
+                onFinish()
+                exoPlayer.pause()
+            }
+        }.start()
     }
 
 
