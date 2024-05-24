@@ -38,7 +38,7 @@ fun PlayerScreen(
     event: Lifecycle.Event,
     view: View,
     window: Window,
-    onScreenRotationClick: () -> Unit
+
 ) {
 
     LaunchedEffect(showControls.value) {
@@ -55,7 +55,7 @@ fun PlayerScreen(
                 val playerView = PlayerView(context).apply {
                     player = exoPlayer
                     useController = false
-                    fitsSystemWindows = !showControls.value
+                    fitsSystemWindows = showControls.value
                 }
                 playerView
             },
@@ -102,7 +102,5 @@ fun PlayerScreen(
                 exoPlayer.pause()
             }
         )
-
-
     }
 }

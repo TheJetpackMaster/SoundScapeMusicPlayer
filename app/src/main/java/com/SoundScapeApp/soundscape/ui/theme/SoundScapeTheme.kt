@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.SoundScapeApp.soundscape.MainActivity
+import com.SoundScapeApp.soundscape.PlayerActivity
 
 private val Theme1ColorScheme = SoundScapeColorScheme(
     background = Color.Black,
@@ -222,7 +223,7 @@ private val LargeTypography = SoundScapeTypography(
 @Composable
 fun SoundScapeThemes(
     themeChoice: Int,
-    activity: Activity = LocalContext.current as MainActivity,
+    activity: Activity,
     content: @Composable () -> Unit
 ) {
     val windows = calculateWindowSizeClass(activity = activity)

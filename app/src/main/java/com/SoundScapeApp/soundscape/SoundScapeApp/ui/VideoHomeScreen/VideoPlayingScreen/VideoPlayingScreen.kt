@@ -1,6 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen
 
 import android.app.Activity
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.ui.theme.White90
 import kotlinx.coroutines.launch
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
@@ -112,7 +114,7 @@ fun VideoPlayingScreen(
     viewModel: VideoViewModel,
     navController: NavController,
     onPipClick: () -> Unit,
-    onScreenRotationClick: () -> Unit,
+    isMainActivity:Boolean
 ) {
 
     val currentSeekTime = viewModel.videoSeekTime.collectAsState()
@@ -186,7 +188,7 @@ fun VideoPlayingScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (resumeFromLeftPos) {
+        if (resumeFromLeftPos && isMainActivity) {
             val position = viewModel.getPlaybackPosition(currentMediaId.value)
             viewModel.seekToSavedPosition(position)
         }
@@ -265,6 +267,8 @@ fun VideoPlayingScreen(
 
     val activity = context as? ComponentActivity
 
+    val requestedOrientation = activity?.requestedOrientation
+
     DisposableEffect(key1 = lifeCycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             lifecycle = event
@@ -331,7 +335,6 @@ fun VideoPlayingScreen(
             event = lifecycle,
             view = view,
             window = window,
-            onScreenRotationClick = onScreenRotationClick
         )
 
         if (!pipMode) {
@@ -485,8 +488,11 @@ fun VideoPlayingScreen(
                                 viewModel.toggleVideoVolume(isMuted)
                             },
                             onScreenRotationClick = {
-                                viewModel.onRotateScreen()
-                                onScreenRotationClick()
+                                if(requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT) {
+                                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                                } else {
+                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                                }
                             },
                             onVideoLoopClick = {
                                 isVideoLooping = !isVideoLooping
@@ -1304,7 +1310,7 @@ fun VideoPlayingScreen(
                         shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text(text = "Set Timer",color  = SoundScapeThemes.colorScheme.secondary)
+                        Text(text = "Set Timer", color = SoundScapeThemes.colorScheme.secondary)
                     }
                 },
                 dismissButton = {
@@ -1313,7 +1319,7 @@ fun VideoPlayingScreen(
                             showTimerDialog = false
                             exoPlayer.play()
                         },
-                        colors  = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         modifier = Modifier.padding(8.dp),
                     ) {
                         Text(text = "Cancel")

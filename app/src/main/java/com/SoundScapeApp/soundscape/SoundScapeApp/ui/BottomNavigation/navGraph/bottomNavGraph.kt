@@ -56,8 +56,7 @@ fun BottomNavGraph(
     onVideoItemClick: (Int, Long) -> Unit,
     mediaSession: MediaSession,
     onDeleteSong: (List<Uri>) -> Unit,
-    onVideoDelete: (List<Uri>) -> Unit,
-    onScreenRotationClick: () -> Unit
+    onVideoDelete: (List<Uri>) -> Unit
 ) {
     NavHost(navController = navController,
         startDestination = BottomNavScreenRoutes.SongsHome.route,
@@ -186,7 +185,7 @@ fun BottomNavGraph(
                 viewModel = videoViewModel,
                 navController = navController,
                 onPipClick = onPipClick,
-                onScreenRotationClick = onScreenRotationClick
+                isMainActivity = false
             )
         }
 //        FolderVideos
