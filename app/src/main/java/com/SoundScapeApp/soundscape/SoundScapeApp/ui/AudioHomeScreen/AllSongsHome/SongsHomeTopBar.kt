@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
@@ -67,7 +68,7 @@ fun SongsHomeTopAppBar(
     isPlaylistSelected: Boolean,
     isSongSelected: Boolean,
     navController: NavController,
-    selectedSongsCount:MutableState<Int>
+    selectedSongsCount: MutableState<Int>
 ) {
 
     var search by remember {
@@ -198,7 +199,8 @@ fun SongsHomeTopAppBar(
                         DropdownMenu(
                             expanded = showMoreDropDown.value,
                             onDismissRequest = {
-                            showMoreDropDown.value = false },
+                                showMoreDropDown.value = false
+                            },
                             modifier = Modifier.background(SoundScapeThemes.colorScheme.primary)
                         ) {
                             DropdownMenuItem(
@@ -211,7 +213,11 @@ fun SongsHomeTopAppBar(
                                 },
                                 onClick = {
                                     showMoreDropDown.value = false
-                                    navController.navigate(ScreenRoute.AudioSettings.route)
+                                    if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                        == Lifecycle.State.RESUMED
+                                    ) {
+                                        navController.navigate(ScreenRoute.AudioSettings.route)
+                                    }
                                 }
                             )
 
@@ -225,7 +231,11 @@ fun SongsHomeTopAppBar(
                                 },
                                 onClick = {
                                     showMoreDropDown.value = false
-                                    navController.navigate(ScreenRoute.ThemeSettings.route)
+                                    if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                        == Lifecycle.State.RESUMED
+                                    ) {
+                                        navController.navigate(ScreenRoute.ThemeSettings.route)
+                                    }
                                 }
                             )
                         }
@@ -314,9 +324,11 @@ fun SongsHomeTopAppBar(
                                 tint = White90.copy(.9f)
                             )
                         }
-                        Text(text = selectedSongsCount.value.toString(),
+                        Text(
+                            text = selectedSongsCount.value.toString(),
                             style = SoundScapeThemes.typography.titleLarge,
-                            color = White90)
+                            color = White90
+                        )
                     }
                 },
                 actions = {

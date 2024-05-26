@@ -141,7 +141,7 @@ constructor(@ApplicationContext val context: Context) {
                             id
                         )
                         val artworkUri = loadArtworkUri(albumId).toString()
-                        val albumName = getString(albumNameColumn)
+                        val albumName = getString(albumNameColumn)?:"Unknown"
                         val dateAdded = getString(dateAddedColumn)
 
 

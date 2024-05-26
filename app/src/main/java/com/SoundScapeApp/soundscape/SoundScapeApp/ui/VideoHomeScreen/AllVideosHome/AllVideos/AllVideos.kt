@@ -340,8 +340,7 @@ fun AllVideos(
                                                 }
                                                 viewModel.updateAvailableTracks()
                                                 // Pass ViewModel to PlayerActivity
-//                                                val intent = Intent(context,PlayerActivity::class.java)
-//                                                context.startActivity(intent)
+                                                viewModel.resetDefaultResizeMode()
                                                 navController.navigate(ScreenRoute.VideoPlayingScreen.route)
 
                                             }

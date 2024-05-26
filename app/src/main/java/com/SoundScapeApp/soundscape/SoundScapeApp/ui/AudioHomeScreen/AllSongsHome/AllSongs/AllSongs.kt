@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
@@ -267,7 +268,12 @@ fun AllSongs(
                                 toggleSongSelection(song.id, selectedSongsIds)
                             } else {
                                 onItemClick(0, song.id)
-                                navController.navigate(ScreenRoute.NowPlayingScreen.route)
+
+                                if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                    == Lifecycle.State.RESUMED
+                                ) {
+                                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                                }
                             }
                         },
                         context = context,

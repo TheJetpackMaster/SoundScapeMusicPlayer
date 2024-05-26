@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">SoundScape</string>
     <string name="title_activity_player">PlayerActivity</string>
+    <string name="title_activity_audio_player">AudioPlayerActivity</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons
 
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -19,7 +20,6 @@ fun setScreenBrightness(activity: ComponentActivity, brightness: Float) {
 
 @Composable
 fun ScreenBrightnessController(activity: ComponentActivity, brightness: Float) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     setScreenBrightness(activity, brightness)
 
@@ -45,4 +45,14 @@ fun mapBrightnessToRange(brightness: Float): Int {
     val mappedBrightness =
         (mappedValue / rangeStep) * rangeStep // Round to nearest step in the range
     return mappedBrightness
+}
+
+fun getCurrentBrightness(activity: ComponentActivity): Float {
+    return try {
+        // Get the current screen brightness setting
+        Settings.System.getFloat(activity.contentResolver, Settings.System.SCREEN_BRIGHTNESS)
+    } catch (e: Settings.SettingNotFoundException) {
+        // Return a default brightness value if the setting is not found
+        0.5f
+    }
 }

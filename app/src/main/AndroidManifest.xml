@@ -45,19 +45,16 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-
             </intent-filter>
         </activity>
-
         <activity
             android:name=".PlayerActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
+            android:resizeableActivity="true"
             android:exported="true"
-            android:supportsPictureInPicture="true"
             android:launchMode="singleTask"
-
+            android:supportsPictureInPicture="true"
             android:theme="@style/Theme.SoundScape">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -66,8 +63,26 @@
 
                 <data android:scheme="file" />
                 <data android:scheme="content" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+        </activity>
 
-                <data android:mimeType = "video/*" />
+        <activity
+            android:name=".AudioPlayerActivity"
+            android:label="@string/title_activity_audio_player"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="false"
+            android:theme="@style/Theme.SoundScape">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="audio/*" />
             </intent-filter>
         </activity>
 

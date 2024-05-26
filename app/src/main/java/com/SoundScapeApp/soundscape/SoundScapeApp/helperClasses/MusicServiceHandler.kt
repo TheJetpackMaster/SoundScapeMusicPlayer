@@ -152,21 +152,24 @@ class MusicServiceHandler @Inject constructor(
     override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
         super.onMediaMetadataChanged(mediaMetadata)
 
-        val mediaIdString = exoPlayer.currentMediaItem?.mediaId
-        val mediaIdLong = mediaIdString?.toLongOrNull() ?: -1L
+        exoPlayer.currentMediaItem?.let { mediaItem ->
+            val mediaIdString = mediaItem.mediaId
+            val mediaIdLong = mediaIdString?.toLongOrNull() ?: -1L
 
-        _audioState.value = AudioState.CurrentPlaying(mediaIdLong)
+            _audioState.value = AudioState.CurrentPlaying(mediaIdLong)
 
-        sharedPreferencesHelper.savePlaybackState(
-            exoPlayer.currentMediaItem!!.mediaId,
-            exoPlayer.currentPosition,
-            exoPlayer.isPlaying
-        )
+            sharedPreferencesHelper.savePlaybackState(
+                mediaItem.mediaId,
+                exoPlayer.currentPosition,
+                exoPlayer.isPlaying
+            )
+        }
     }
 
 
 
-    private fun startProgressUpdate() {
+
+    fun startProgressUpdate() {
         job = coroutineScope.launch {
             while (true) {
                 delay(500)

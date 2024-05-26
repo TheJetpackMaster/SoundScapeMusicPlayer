@@ -91,6 +91,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.navigation.NavController
@@ -553,8 +554,11 @@ fun MainPlayingBar(
                         isPlaying.value = !isPlaying.value
                         shouldReloadPlay.value = true
                     }
-
-                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                    if (navController.currentBackStackEntry?.lifecycle?.currentState
+                        == Lifecycle.State.RESUMED
+                    ) {
+                        navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                    }
                 })
             .background(SoundScapeThemes.colorScheme.primary)
             .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),

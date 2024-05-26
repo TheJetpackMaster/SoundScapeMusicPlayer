@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayi
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.media.AudioManager
 import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,10 +96,13 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayin
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.CenterControls
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.PlayerScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.ScreenBrightnessController
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.getCurrentBrightness
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.mapBrightnessToRange
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.setScreenBrightness
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -114,7 +118,8 @@ fun VideoPlayingScreen(
     viewModel: VideoViewModel,
     navController: NavController,
     onPipClick: () -> Unit,
-    isMainActivity:Boolean
+    isMainActivity: Boolean,
+    onVideoBack: () -> Unit = {}
 ) {
 
     val currentSeekTime = viewModel.videoSeekTime.collectAsState()
@@ -157,6 +162,73 @@ fun VideoPlayingScreen(
 
     var isMuted = remember { mutableStateOf(false) }
 
+
+    // Define a mutableStateOf to track temporary UI change after forward seeking
+    val temporaryForward = remember { mutableStateOf(false) }
+    val temporaryBackward = remember { mutableStateOf(false) }
+
+    val temporaryForwardRotation = remember {
+        mutableStateOf(false)
+    }
+    val temporaryBackwardRotation = remember {
+        mutableStateOf(false)
+    }
+    val backwardRotation by animateFloatAsState(
+        targetValue = if (temporaryBackwardRotation.value) -60f else 0f,
+        label = ""
+    )
+    val forwardRotation by animateFloatAsState(
+        targetValue = if (temporaryForwardRotation.value) 60f else 0f,
+        label = ""
+    )
+    val scope = rememberCoroutineScope()
+
+    val currentBrightness by viewModel.videoScreenBrightness.collectAsState()
+    val deviceVolume = getDeviceVolume(context)
+
+    var brightness by remember { mutableStateOf(currentBrightness) }
+    var volumeLevel by remember { mutableStateOf(deviceVolume) }
+    Log.d("volume", getDeviceVolume(context).toString())
+
+    val skipText = remember { mutableStateOf("") }
+
+
+    var isBrightnessChanging by remember { mutableStateOf(false) }
+    var isVolumeChanging by remember { mutableStateOf(false) }
+    var isSkipTextChanging by remember { mutableStateOf(false) }
+
+    val isDoubleTapToSeekEnabled = viewModel.doubleTapSeekEnabled.collectAsState()
+
+    var showSpeedDailog by remember { mutableStateOf(false) }
+
+    val settingsSheetState = rememberModalBottomSheetState()
+
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showSubtitleDialog by remember { mutableStateOf(false) }
+    var showMoreVertDialog by remember { mutableStateOf(false) }
+    var showTimerDialog by remember { mutableStateOf(false) }
+    var isVideoLooping by remember { mutableStateOf(false) }
+
+    var showVideoInfoDialog by remember { mutableStateOf(false) }
+
+    val currentSelectedSubtitle = remember { mutableStateOf("disable") }
+
+    var selectedTime by remember { mutableStateOf(0L) } // Default time selection is 0 minutes
+
+    var lifecycle by remember {
+        mutableStateOf(Lifecycle.Event.ON_CREATE)
+    }
+
+    val lifeCycleOwner = LocalLifecycleOwner.current
+
+    val activity = context as ComponentActivity
+
+    val requestedOrientation = activity?.requestedOrientation
+
+    var delayJob: Job? = null
+    var skipDelayJob: Job? = null
+
+
     LaunchedEffect(
         showControls.value,
         exoPlayer.currentPosition
@@ -187,87 +259,23 @@ fun VideoPlayingScreen(
         duration = exoPlayer.duration
     }
 
+//    LaunchedEffect(brightness) {
+//        delay(delayTime.value)
+//        isBrightnessChanging = false
+//    }
+
+
     LaunchedEffect(Unit) {
         if (resumeFromLeftPos && isMainActivity) {
             val position = viewModel.getPlaybackPosition(currentMediaId.value)
             viewModel.seekToSavedPosition(position)
         }
+
+        val defaultBrightness = getCurrentBrightness(activity) / 100
+        viewModel.setBrightness(defaultBrightness)
+        setScreenBrightness(activity, defaultBrightness)
+
     }
-
-    // Define a mutableStateOf to track temporary UI change after forward seeking
-    val temporaryForward = remember { mutableStateOf(false) }
-    val temporaryBackward = remember { mutableStateOf(false) }
-
-    val temporaryForwardRotation = remember {
-        mutableStateOf(false)
-    }
-    val temporaryBackwardRotation = remember {
-        mutableStateOf(false)
-    }
-    val backwardRotation by animateFloatAsState(
-        targetValue = if (temporaryBackwardRotation.value) -60f else 0f,
-        label = ""
-    )
-    val forwardRotation by animateFloatAsState(
-        targetValue = if (temporaryForwardRotation.value) 60f else 0f,
-        label = ""
-    )
-    val scope = rememberCoroutineScope()
-
-    var brightness by remember { mutableStateOf(0f) }
-    var volumeLevel by remember { mutableStateOf(0f) }
-
-    val skipText = remember { mutableStateOf("") }
-
-
-    var isBrightnessChanging by remember { mutableStateOf(false) }
-    var isVolumeChanging by remember { mutableStateOf(false) }
-    var isSkipTextChanging by remember { mutableStateOf(false) }
-
-    var showSpeedDailog by remember { mutableStateOf(false) }
-    val settingsSheetState = rememberModalBottomSheetState()
-
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    var showSubtitleDialog by remember { mutableStateOf(false) }
-    var showMoreVertDialog by remember { mutableStateOf(false) }
-    var showTimerDialog by remember { mutableStateOf(false) }
-    var isVideoLooping by remember { mutableStateOf(false) }
-
-    val currentSelectedSubtitle = remember { mutableStateOf("disable") }
-
-    var selectedTime by remember { mutableStateOf(0L) } // Default time selection is 0 minutes
-
-
-
-    LaunchedEffect(brightness) {
-        isBrightnessChanging = true
-        delay(200)
-        isBrightnessChanging = false
-    }
-    LaunchedEffect(skipText.value) {
-        isSkipTextChanging = true
-        delay(600)
-        isSkipTextChanging = false
-    }
-
-    LaunchedEffect(volumeLevel) {
-        val invertedVolume = 1f - volumeLevel
-        viewModel.videoVolume(invertedVolume)
-
-        isVolumeChanging = true
-        delay(200)
-        isVolumeChanging = false
-    }
-
-    var lifecycle by remember {
-        mutableStateOf(Lifecycle.Event.ON_CREATE)
-    }
-
-    val lifeCycleOwner = LocalLifecycleOwner.current
-
-    val activity = context as? ComponentActivity
-
-    val requestedOrientation = activity?.requestedOrientation
 
     DisposableEffect(key1 = lifeCycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -290,10 +298,14 @@ fun VideoPlayingScreen(
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
             viewModel.playBackSpeed(1f)
             viewModel.startTimer(duration = 0, onFinish = { exoPlayer.pause() }, exoPlayer)
+            val defaultBrightness = getCurrentBrightness(activity) / 100
+            Log.d("defaultbrit", defaultBrightness.toString())
+            setScreenBrightness(activity, defaultBrightness)
+            viewModel.videoVolume(getDeviceVolume(context))
+            viewModel.setBrightness(defaultBrightness)
         }
     }
 
-//    val pos by viewModel.playbackPosition.collectAsState()
 
     Box(
         modifier = Modifier
@@ -303,8 +315,8 @@ fun VideoPlayingScreen(
                 detectHorizontalDragGestures { change, dragAmount ->
 
                     if (!isLocked.value) {
-                        val maxSwipeDistance = 100
-                        val maxSeekIncrementSeconds = 10
+                        val maxSwipeDistance = 200
+                        val maxSeekIncrementSeconds = 20
                         val swipeRatio = abs(dragAmount) / maxSwipeDistance
                         val seekIncrementSeconds = (swipeRatio * maxSeekIncrementSeconds).toInt()
                         val seekIncrementMillis = seekIncrementSeconds * 1000
@@ -320,6 +332,15 @@ fun VideoPlayingScreen(
                             exoPlayer.seekTo(exoPlayer.currentPosition - seekIncrementMillis)
                         }
                         change.consume()
+
+                        skipDelayJob?.cancel()
+                        isSkipTextChanging = true
+
+
+                        skipDelayJob = scope.launch {
+                            delay(600)
+                            isSkipTextChanging = false
+                        }
                     }
                 }
             },
@@ -355,12 +376,30 @@ fun VideoPlayingScreen(
 
                         .pointerInput(Unit) {
                             detectVerticalDragGestures { change, dragAmount ->
+
+                                temporaryForward.value = false
+                                temporaryForwardRotation.value = false
+                                temporaryBackward.value = false
+                                temporaryBackwardRotation.value = false
+                                isVolumeChanging = false
+
                                 val brightnessChange = dragAmount / 1000
 
                                 // Update brightness within the range 0 to 1
                                 brightness += brightnessChange
                                 brightness = brightness.coerceIn(0f, 1f)
-                                Log.d("bright", brightness.toString())
+
+
+                                viewModel.setBrightness(brightness)
+
+                                delayJob?.cancel()
+
+                                // Start a new delay coroutine
+                                isBrightnessChanging = true
+                                delayJob = scope.launch {
+                                    delay(400)
+                                    isBrightnessChanging = false
+                                }
                             }
                         }
                         .pointerInput(Unit) {
@@ -369,23 +408,32 @@ fun VideoPlayingScreen(
                                     showControls.value = !showControls.value
                                 },
                                 onDoubleTap = {
-                                    viewModel.skipRewind()
+                                    if (isDoubleTapToSeekEnabled.value) {
+                                        viewModel.skipRewind()
 
-                                    temporaryForward.value = false
-                                    temporaryForwardRotation.value = false
-                                    temporaryBackward.value = true
-                                    temporaryBackwardRotation.value = true
+                                        temporaryForward.value = false
+                                        temporaryForwardRotation.value = false
+                                        isVolumeChanging = false
+                                        isBrightnessChanging = false
 
-                                    // Reset temporary UI change after a delay
-                                    scope.launch {
-                                        delay(1200) // Adjust delay time as needed
-                                        temporaryBackward.value = false
+
+                                        delayJob?.cancel()
+
+                                        temporaryBackward.value = true
+                                        temporaryBackwardRotation.value = true
+
+                                        // Reset temporary UI change after a delay
+                                        delayJob = scope.launch {
+                                            delay(1200) // Adjust delay time as needed
+                                            temporaryForward.value = false
+                                            temporaryBackward.value = false
+                                        }
+                                        scope.launch {
+                                            delay(300) // Adjust delay time as needed
+                                            temporaryForwardRotation.value = false
+                                            temporaryBackwardRotation.value = false
+                                        }
                                     }
-                                    scope.launch {
-                                        delay(300) // Adjust delay time as needed
-                                        temporaryBackwardRotation.value = false
-                                    }
-
                                 }
                             )
                         }
@@ -399,14 +447,29 @@ fun VideoPlayingScreen(
                             .weight(1f)
                             .pointerInput(Unit) {
                                 detectVerticalDragGestures { _, dragAmount ->
+                                    temporaryForward.value = false
+                                    temporaryForwardRotation.value = false
+                                    temporaryBackward.value = false
+                                    temporaryBackwardRotation.value = false
+                                    isBrightnessChanging = false
 
                                     val volumeChange = dragAmount / 1000
 
-                                    // Update brightness within the range 0 to 1
+                                    // Update volume within the range 0 to 1
                                     volumeLevel += volumeChange
                                     volumeLevel = volumeLevel.coerceIn(0f, 1f)
 
-                                    Log.d("bright", brightness.toString())
+                                    val invertedVolume = 1f - volumeLevel
+                                    viewModel.videoVolume(invertedVolume)
+
+                                    delayJob?.cancel()
+
+                                    // Start a new delay coroutine
+                                    isVolumeChanging = true
+                                    delayJob = scope.launch {
+                                        delay(400)
+                                        isVolumeChanging = false
+                                    }
                                 }
                             }
 
@@ -416,21 +479,30 @@ fun VideoPlayingScreen(
                                         showControls.value = !showControls.value
                                     },
                                     onDoubleTap = {
-                                        viewModel.skipForward()
+                                        if (isDoubleTapToSeekEnabled.value) {
+                                            viewModel.skipForward()
 
-                                        temporaryBackward.value = false
-                                        temporaryBackwardRotation.value = false
+                                            temporaryBackward.value = false
+                                            temporaryBackwardRotation.value = false
+                                            isVolumeChanging = false
+                                            isBrightnessChanging = false
 
-                                        temporaryForward.value = true
-                                        temporaryForwardRotation.value = true
-                                        // Reset temporary UI change after a delay
-                                        scope.launch {
-                                            delay(1200) // Adjust delay time as needed
-                                            temporaryForward.value = false
-                                        }
-                                        scope.launch {
-                                            delay(300) // Adjust delay time as needed
-                                            temporaryForwardRotation.value = false
+
+
+                                            delayJob?.cancel()
+
+                                            temporaryForward.value = true
+                                            temporaryForwardRotation.value = true
+                                            // Reset temporary UI change after a delay
+
+                                            delayJob = scope.launch {
+                                                delay(1200) // Adjust delay time as needed
+                                                temporaryForward.value = false
+                                            }
+                                            scope.launch {
+                                                delay(300) // Adjust delay time as needed
+                                                temporaryForwardRotation.value = false
+                                            }
                                         }
                                     }
                                 )
@@ -458,7 +530,15 @@ fun VideoPlayingScreen(
                         UpperControls(
                             videoTitle = exoPlayer.currentMediaItem?.mediaMetadata?.displayTitle.toString(),
                             onBackClick = {
-//                                navController.popBackStack()
+                                if (isMainActivity) {
+                                    if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                        == Lifecycle.State.RESUMED
+                                    ) {
+                                        navController.popBackStack()
+                                    }
+                                } else {
+                                    onVideoBack()
+                                }
                             },
                             /*onLanguageClick = {
                                 showLanguageDialog = !showLanguageDialog
@@ -488,10 +568,12 @@ fun VideoPlayingScreen(
                                 viewModel.toggleVideoVolume(isMuted)
                             },
                             onScreenRotationClick = {
-                                if(requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT) {
-                                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT) {
+                                    activity.requestedOrientation =
+                                        ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
                                 } else {
-                                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                                    activity?.requestedOrientation =
+                                        ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
                                 }
                             },
                             onVideoLoopClick = {
@@ -562,48 +644,86 @@ fun VideoPlayingScreen(
 
         AnimatedVisibility(
             visible =
-            (temporaryBackward.value || temporaryForward.value),
+            (temporaryBackward.value && !temporaryForward.value),
             enter = fadeIn(),
             exit = fadeOut()
         )
         {
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(54.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(.2f))
+                    .background(SoundScapeThemes.colorScheme.secondary.copy(.3f))
                     .align(Alignment.Center),
                 contentAlignment = Alignment.Center
             )
             {
                 Icon(
                     painter = painterResource(
-                        id = if (temporaryBackward.value)
-                            R.drawable.backwardseek else R.drawable.forwardbackward
+                        id =
+                        R.drawable.backwardseek
                     ),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(44.dp)
-                        .rotate(if (temporaryBackward.value) backwardRotation else forwardRotation),
+                        .size(40.dp)
+                        .rotate(backwardRotation),
                     tint = White90
                 )
                 Text(
-                    text =
-                    if (temporaryBackward.value) {
-                        "-${currentSeekTime.value / 1000}"
-                    } else "${currentSeekTime.value / 1000}",
+                    text = "-${currentSeekTime.value / 1000}",
                     color = White90,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible =
+            (temporaryForward.value && !temporaryBackward.value),
+            enter = fadeIn(),
+            exit = fadeOut()
+        )
+        {
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .background(SoundScapeThemes.colorScheme.secondary.copy(.3f))
+                    .align(Alignment.Center),
+                contentAlignment = Alignment.Center
+            )
+            {
+                Icon(
+                    painter = painterResource(
+                        id =
+                        R.drawable.forwardbackward
+                    ),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .rotate(forwardRotation),
+                    tint = White90
+                )
+                Text(
+                    text = "${currentSeekTime.value / 1000}",
+                    color = White90,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
         if (isSkipTextChanging && !isBrightnessChanging && !isVolumeChanging) {
-            Box(
-                contentAlignment = Alignment.Center
-            )
-            {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(SoundScapeThemes.colorScheme.secondary)
+                    .padding(top = 4.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Text(
                     text = skipText.value,
                     color = White90,
@@ -616,7 +736,10 @@ fun VideoPlayingScreen(
         if (isBrightnessChanging && !isVolumeChanging) {
             Row(
                 modifier = Modifier
-                    .align(Alignment.Center),
+                    .align(Alignment.Center)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(SoundScapeThemes.colorScheme.secondary)
+                    .padding(top = 4.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -624,18 +747,20 @@ fun VideoPlayingScreen(
                 val formattedBrightness =
                     mapBrightnessToRange(brightness).toString()
 
-                Text(
-                    text = formattedBrightness,
-                    color = White90,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-
                 Icon(
                     painter = painterResource(id = R.drawable.brightness),
                     contentDescription = null,
                     tint = White90,
                     modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Text(
+                    text = formattedBrightness,
+                    color = White90,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -643,30 +768,36 @@ fun VideoPlayingScreen(
 
         }
         if (isVolumeChanging && !isBrightnessChanging) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.Center),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (deviceVolume <= 0f) {
+                Toast.makeText(context, "Phone volume is muted", Toast.LENGTH_SHORT).show()
+            } else {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(SoundScapeThemes.colorScheme.secondary)
+                        .padding(top = 4.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
+                    val formattedVolume =
+                        mapBrightnessToRange(volumeLevel).toString()
 
-                val formattedVolume =
-                    mapBrightnessToRange(volumeLevel).toString()
+                    Icon(
+                        painter = painterResource(id = R.drawable.volume),
+                        contentDescription = null,
+                        tint = White90,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
 
-                Text(
-                    text = formattedVolume,
-                    color = White90,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Icon(
-                    painter = painterResource(id = R.drawable.volume),
-                    contentDescription = null,
-                    tint = White90,
-                    modifier = Modifier.size(22.dp)
-                )
+                    Text(
+                        text = formattedVolume,
+                        color = White90,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
         }
@@ -1202,73 +1333,11 @@ fun VideoPlayingScreen(
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.notrepeat),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Text(
-                                    text = "Loop",
-                                    textAlign = TextAlign.Center,
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        // Second row of IconButtons
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier
                                     .clickable {
-                                        showMoreVertDialog = false
+                                        showVideoInfoDialog = true
                                         exoPlayer.pause()
                                     }
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_screen_rotation_24),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Text(
-                                    text = "Rotation",
-                                    textAlign = TextAlign.Center,
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                            }
-
-                            /*Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_timer_24),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-
-                                Text(
-                                    text = "Timer",
-                                    textAlign = TextAlign.Center,
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-                            }*/
-
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = null,
@@ -1276,7 +1345,7 @@ fun VideoPlayingScreen(
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Text(
-                                    text = "Info",
+                                    text = "Loop",
                                     textAlign = TextAlign.Center,
                                     color = Color.White,
                                     fontSize = 14.sp
@@ -1386,6 +1455,42 @@ fun VideoPlayingScreen(
                         }
                     }
                 },
+            )
+        }
+        if(showVideoInfoDialog){
+            AlertDialog(
+                containerColor = SoundScapeThemes.colorScheme.secondary,
+                onDismissRequest = {
+                    showVideoInfoDialog = false
+                    exoPlayer.play()
+                },
+                title = {
+
+                },
+                text = {
+                    Text(
+                        text = "${exoPlayer.currentMediaItem?.mediaMetadata?.displayTitle}",
+                        color = White50
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Transparent
+                        ),
+                        onClick = {
+                            showVideoInfoDialog = false
+                        })
+                    {
+                        Text(
+                            text = "OK",
+                            color = White90
+                        )
+                    }
+                },
+                dismissButton = {
+
+                }
             )
         }
     }
@@ -1613,3 +1718,11 @@ fun CustomSeekBar(
 //        modifier = modifier
 //    )
 //}
+
+fun getDeviceVolume(context: Context): Float {
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+    return currentVolume.toFloat() / maxVolume.toFloat()
+}

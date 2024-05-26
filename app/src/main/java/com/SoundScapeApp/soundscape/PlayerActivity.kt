@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -35,6 +36,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.rememberNavController
+import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
@@ -49,11 +51,13 @@ class PlayerActivity : ComponentActivity() {
 
     private val videoViewModel: VideoViewModel by viewModels()
 
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
@@ -61,12 +65,12 @@ class PlayerActivity : ComponentActivity() {
             )
         )
 
+        val dataUri = intent.data
 
-        val videoUri = intent.data
-
-        if (videoUri != null) {
-            videoViewModel.onIntent(videoUri)
+        if (dataUri != null) {
+            videoViewModel.onIntent(dataUri)
         }
+
 
         setContent {
             val systemUiController = rememberSystemUiController()
@@ -89,14 +93,18 @@ class PlayerActivity : ComponentActivity() {
                     modifier = Modifier
                         .background(Color.Black)
                 ) {
-
-                    VideoPlayingScreen(viewModel = videoViewModel,
-                        navController = rememberNavController(),
-                        onPipClick = {
-                            enterPiPMode()
-                        },
-                        isMainActivity = false
-                    )
+                    if (dataUri != null) {
+                        VideoPlayingScreen(viewModel = videoViewModel,
+                            navController = rememberNavController(),
+                            onPipClick = {
+                                enterPiPMode()
+                            },
+                            isMainActivity = false,
+                            onVideoBack = {
+                                finish()
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -140,7 +148,7 @@ class PlayerActivity : ComponentActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
 
 
-        if(!isInPictureInPictureMode){
+        if (!isInPictureInPictureMode) {
             videoViewModel.exoPlayer.pause()
         }
     }

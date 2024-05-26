@@ -315,7 +315,7 @@ class SharedPreferencesHelper @Inject constructor(
     }
 
     fun getTheme(): Int {
-        return sharedPreferences.getInt(THEME_KEY, 1)
+        return sharedPreferences.getInt(THEME_KEY, 2)
     }
 
     fun savePlaybackState(songId: String, position: Long, isPlaying: Boolean) {

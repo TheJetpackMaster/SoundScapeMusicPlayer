@@ -32,7 +32,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -75,6 +77,7 @@ import coil.request.ImageRequest
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.CustomSongSlider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.SongControlButtons
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
@@ -94,12 +97,14 @@ fun NowPlayingScreen(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     player: ExoPlayer,
-    viewModel: AudioViewModel
+    viewModel: AudioViewModel,
+    isMainActivity: Boolean = true,
+    onBackClick:()->Unit = {}
 
 ) {
 
     val isPlaying = remember {
-        mutableStateOf(false)
+        mutableStateOf(player.isPlaying)
     }
 
     val currentPlayListSongs by viewModel.favoritesSongs.collectAsState()
@@ -121,14 +126,22 @@ fun NowPlayingScreen(
         }
     }
 
+    val currentIntentMediaItem = viewModel.currentMediaItemAudio.collectAsState()
+
     val dominantColor = remember {
         mutableStateOf(BrightGray)
     }
+
 
     LaunchedEffect(player.currentMediaItem) {
         current.longValue = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
         shuffleMode.value = player.shuffleModeEnabled
         repeatMode.intValue = player.repeatMode
+    }
+
+    LaunchedEffect(!isMainActivity){
+        startService(context)
+        isPlaying.value = true
     }
 
     DisposableEffect(currentPlayingSong?.artwork?.toUri()) {
@@ -174,26 +187,21 @@ fun NowPlayingScreen(
                 ),
                 title = {},
                 actions = {
-                    IconButton(onClick = { /*TODO*/ })
-                    {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = null,
-                            tint = White90,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (navController.currentBackStackEntry?.lifecycle?.currentState
-                            == Lifecycle.State.RESUMED
-                        ) {
-                            navController.popBackStack()
+                        if (isMainActivity) {
+                            if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                == Lifecycle.State.RESUMED
+                            ) {
+                                navController.popBackStack()
+                            }
+                        }else{
+                            onBackClick()
                         }
-                    }) {
+                    }){
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
                             tint = White90,
                             modifier = Modifier.size(32.dp)
@@ -224,7 +232,8 @@ fun NowPlayingScreen(
 //               Image(painter = painterResource(id = R.drawable.sample), contentDescription = null)
 //            }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                val uri = currentPlayingSong?.artwork?.toUri()
+                val uri =
+                    if (isMainActivity) currentPlayingSong?.artwork?.toUri() else currentIntentMediaItem.value?.artwork?.toUri()
                 val blurredBitmap = uri?.let {
                     try {
                         val contextNonNull =
@@ -257,7 +266,7 @@ fun NowPlayingScreen(
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(context)
-                            .data(data = currentPlayingSong?.artwork)
+                            .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
                             .apply(block = fun ImageRequest.Builder.() {
                                 error(R.drawable.sample)
                             }
@@ -290,7 +299,7 @@ fun NowPlayingScreen(
                     Image(
                         painter = rememberAsyncImagePainter(
                             ImageRequest.Builder(context)
-                                .data(data = currentPlayingSong?.artwork)
+                                .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
                                 .apply(block = fun ImageRequest.Builder.() {
                                     error(R.drawable.sample)
                                 }
@@ -304,7 +313,9 @@ fun NowPlayingScreen(
                 Spacer(modifier = Modifier.height(34.dp))
 
                 Text(
-                    text = currentPlayingSong?.title ?: "Unknown Title",
+                    text = if (isMainActivity) currentPlayingSong?.title
+                        ?: "Unknown Title" else currentIntentMediaItem.value?.title
+                        ?: "Unknown Title",
                     fontWeight = FontWeight.Medium,
                     fontSize = 18.sp,
                     color = White90,
@@ -323,8 +334,9 @@ fun NowPlayingScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (currentPlayingSong?.artist == "<unknown>" || currentPlayingSong?.artist == null)
-                        "Unknown Artist" else currentPlayingSong!!.artist,
+                    text = if (isMainActivity) {
+                        if (currentPlayingSong?.artist == "<unknown>" || currentPlayingSong?.artist == null) "Unknown Artist" else currentPlayingSong!!.artist
+                    } else currentIntentMediaItem.value?.artist ?: "Unknown Artist",
                     fontWeight = FontWeight.Normal,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
@@ -360,7 +372,8 @@ fun NowPlayingScreen(
                 CustomSongSlider(
                     onProgress = onProgress,
                     player = player,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    isMainActivity = isMainActivity
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -393,7 +406,8 @@ fun NowPlayingScreen(
                         repeatMode.intValue = player.repeatMode
                     },
                     repeatMode = repeatMode,
-                    player = player
+                    player = player,
+                    isMainActivity = isMainActivity
                 )
             }
         }

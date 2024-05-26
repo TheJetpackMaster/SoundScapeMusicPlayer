@@ -74,6 +74,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -176,7 +177,11 @@ fun VideoPlaylistDetailScreen(
                 navigationIcon = {
                     if (selectedVideos.isEmpty()) {
                         IconButton(onClick = {
-                            navController.popBackStack()
+                            if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                == Lifecycle.State.RESUMED
+                            ) {
+                                navController.popBackStack()
+                            }
                         })
                         {
                             Icon(

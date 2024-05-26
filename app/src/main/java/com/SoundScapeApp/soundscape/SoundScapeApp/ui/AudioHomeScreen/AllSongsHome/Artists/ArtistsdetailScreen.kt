@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.Lifecycle
@@ -169,7 +170,7 @@ fun ArtistsDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = null,
-                                tint = BrightGray
+                                tint = White90
                             )
                         }
                     } else {
@@ -239,14 +240,7 @@ fun ArtistsDetailScreen(
                             }
                         }
                     } else {
-                        IconButton(onClick = { /*TODO*/ })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
+
                     }
                 }
             )
@@ -294,14 +288,17 @@ fun ArtistsDetailScreen(
                 Column {
 
                     Text(
-                        text = "Title",
-                        color = White90
+                        text = "Title ${artistSongs[0].artist}",
+                        color = White90,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Songs",
+                        text = "Songs  ${artistSongs.size}",
                         color = White90
                     )
                 }

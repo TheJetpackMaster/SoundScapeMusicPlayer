@@ -220,8 +220,11 @@ class VideoViewModel @Inject constructor(
     // SELECTED FOR SetTimer
     private var timer: CountDownTimer? = null
 
-    private val _currentTheme = MutableStateFlow(1)
+    private val _currentTheme = MutableStateFlow(2)
     val currentTheme: StateFlow<Int> = _currentTheme
+
+    private val _videoScreenBrightness = MutableStateFlow(0f)
+    val videoScreenBrightness: StateFlow<Float> = _videoScreenBrightness
 
     init {
         loadVideoPlaylists()
@@ -234,6 +237,7 @@ class VideoViewModel @Inject constructor(
         exoPlayer.pauseAtEndOfMediaItems = !continuesPlayEnabled.value
         getScanMovieLengthTime()
         createVideoMediaSession(context)
+        getTheme()
     }
 
     init {
@@ -566,6 +570,14 @@ class VideoViewModel @Inject constructor(
                         AspectRatioFrameLayout.RESIZE_MODE_FIT
                     }
                 }
+            )
+        }
+    }
+
+    fun resetDefaultResizeMode(){
+        _playerState.update {
+            it.copy(
+                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             )
         }
     }
@@ -1063,6 +1075,11 @@ class VideoViewModel @Inject constructor(
                 exoPlayer.pause()
             }
         }.start()
+    }
+
+
+    fun setBrightness(brightness:Float){
+        _videoScreenBrightness.value = brightness
     }
 
 

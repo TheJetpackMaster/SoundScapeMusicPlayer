@@ -46,13 +46,20 @@ fun SongControlButtons(
     isPlaying: MutableState<Boolean>,
     onRepeatClick: () -> Unit,
     repeatMode: MutableIntState,
-    player:ExoPlayer
+    player:ExoPlayer,
+    isMainActivity:Boolean
 
 ) {
-    LaunchedEffect(player.isPlaying) {
-        isPlaying.value = player.isPlaying
 
+    LaunchedEffect(player.isPlaying) {
+        if(isMainActivity) {
+            isPlaying.value = player.isPlaying
+        }
+        else{
+            isPlaying.value = true
+        }
     }
+
     
     val playPauseButtonSize = remember { mutableStateOf(60.dp) }
     val playPauseIconSize = remember{ mutableStateOf(24.dp) }
@@ -71,7 +78,8 @@ fun SongControlButtons(
 
 
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .height(80.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

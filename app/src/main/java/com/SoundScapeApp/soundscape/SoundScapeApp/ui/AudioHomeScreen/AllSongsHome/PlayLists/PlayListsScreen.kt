@@ -69,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -226,7 +227,11 @@ fun PlayListsScreen(
                             onClick = {
                                 viewModel.onFavoritesClicked(123, "Favorites")
                                 viewModel.loadSongsForFavorites()
-                                navController.navigate(ScreenRoute.PlaylistDetailScreen.route)
+                                if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                    == Lifecycle.State.RESUMED
+                                ) {
+                                    navController.navigate(ScreenRoute.PlaylistDetailScreen.route)
+                                }
                             }
                         )
                         .padding(
@@ -309,7 +314,11 @@ fun PlayListsScreen(
                                         scope.launch {
                                             viewModel.loadSongsForCurrentPlaylist(playlistId = playlist.id)
                                         }
-                                        navController.navigate(ScreenRoute.PlaylistDetailScreen.route)
+                                        if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                            == Lifecycle.State.RESUMED
+                                        ) {
+                                            navController.navigate(ScreenRoute.PlaylistDetailScreen.route)
+                                        }
                                     }
 
                                 }

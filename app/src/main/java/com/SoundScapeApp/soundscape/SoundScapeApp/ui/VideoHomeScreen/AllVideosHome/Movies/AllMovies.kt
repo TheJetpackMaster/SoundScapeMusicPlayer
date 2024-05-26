@@ -197,7 +197,8 @@ fun AllMovies(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
             ) {
 
                 Text(
@@ -205,21 +206,6 @@ fun AllMovies(
                     color = White90,
                     fontSize = 14.sp,
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                IconButton(onClick = {
-
-                })
-                {
-                    Icon(
-                        painter = painterResource(id = R.drawable.sorting),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = White90
-                    )
-                }
-
             }
 
             LazyColumn(

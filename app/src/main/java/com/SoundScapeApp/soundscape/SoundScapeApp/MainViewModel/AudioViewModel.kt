@@ -4,6 +4,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +18,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.exoplayer.ExoPlayer
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
@@ -33,6 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -79,6 +82,7 @@ class AudioViewModel @Inject constructor(
     context: Context,
     sharedPreferences: SharedPreferences,
     audioStateHandle: SavedStateHandle,
+    private val localMediaProvider: LocalMediaProvider
 
     ) : ViewModel() {
 
@@ -229,6 +233,14 @@ class AudioViewModel @Inject constructor(
         MutableStateFlow(emptyList())
     val currentArtistSongsForResumption: StateFlow<List<Long>> = _currentArtistSongsForResumption
 
+
+    // PlayfromIntent
+    val _currentMediaItem = MutableStateFlow<Audio?>(null)
+    val currentMediaItemAudio: StateFlow<Audio?> = _currentMediaItem
+
+    private val _isMainActivity = MutableStateFlow(false)
+    val isMainActivity: StateFlow<Boolean> = _isMainActivity
+
     init {
 //        loadAudioData()
 //        loadVideoData()
@@ -273,11 +285,8 @@ class AudioViewModel @Inject constructor(
                     is AudioState.CurrentPlaying -> {
 
                         val mediaId = player.currentMediaItem?.mediaId
-                        currentSelectedAudio = if (mediaId != null) {
-                            mediaId.toLong()
-                        } else {
-                            retrievePlaybackState().lastPlayedSong.toLongOrNull() ?: 0L
-                        }
+
+                        currentSelectedAudio = mediaId?.toLong() ?: (retrievePlaybackState().lastPlayedSong.toLongOrNull() ?: 0L)
 
                     }
 
@@ -953,8 +962,10 @@ class AudioViewModel @Inject constructor(
     }
 
     private fun updatePlaylists() {
-        removeExtraIdsFromPlaylists()
-        removeExtraIdsFromFavorites()
+        if(isMainActivity.value) {
+            removeExtraIdsFromPlaylists()
+            removeExtraIdsFromFavorites()
+        }
         // You can add any other logic here if needed
     }
 
@@ -1137,6 +1148,45 @@ class AudioViewModel @Inject constructor(
         _currentPlayingArtist.value = sharedPreferencesHelper.getCurrentPlayingArtist()
     }
 
+
+    // Play From Intent
+    private fun setMediaItem(uri: Uri, displayName: String,id:String) {
+        player.apply {
+            addMediaItem(
+                MediaItem.Builder()
+                    .setUri(uri)
+                    .setMediaId(id)
+                    .setMediaMetadata(MediaMetadata.Builder().setDisplayTitle(displayName).build())
+                    .build()
+            )
+            prepare()
+            play()
+            audioServiceHandler.startProgressUpdate()
+        }
+    }
+
+    private fun updateCurrentAudioItem(audioItem:Audio) {
+        player.clearMediaItems()
+        setMediaItemFlag(false)
+        _currentMediaItem.value = audioItem
+        setMediaItem(audioItem.uri,audioItem.displayName,audioItem.id.toString())
+    }
+
+    fun onIntent(uri: Uri) {
+        localMediaProvider.getAudioItemFromContentUri(uri)?.let {
+            updateCurrentAudioItem(it)
+        }
+    }
+
+    fun onNewIntent(uri: Uri) {
+        localMediaProvider.getAudioItemFromContentUri(uri)?.let {
+            updateCurrentAudioItem(it)
+        }
+    }
+
+    fun setIsMainActivity(isMainActivity:Boolean){
+        _isMainActivity.value = isMainActivity
+    }
 
     override fun onCleared() {
         super.onCleared()

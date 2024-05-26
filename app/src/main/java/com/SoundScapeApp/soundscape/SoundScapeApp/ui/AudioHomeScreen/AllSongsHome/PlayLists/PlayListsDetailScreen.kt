@@ -294,14 +294,7 @@ fun PlayListDetailsScreen(
                             }
                         }
                     } else {
-                        IconButton(onClick = { /*TODO*/ })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
+
                     }
                 }
             )
@@ -383,7 +376,11 @@ fun PlayListDetailsScreen(
                             containerColor = White50
                         ),
                         onClick = {
-                            navController.navigate("add")
+                            if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                == Lifecycle.State.RESUMED
+                            ) {
+                                navController.navigate("add")
+                            }
                         })
                     {
                         Text(
@@ -413,7 +410,13 @@ fun PlayListDetailsScreen(
                                 startService(context)
 
                                 setMediaItems.value = true
-                                navController.navigate(ScreenRoute.NowPlayingScreen.route)
+
+                                if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                    == Lifecycle.State.RESUMED
+                                ) {
+                                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                                }
+
                                 if (!player.shuffleModeEnabled) {
                                     viewModel.toggleShuffle()
                                 }
@@ -454,7 +457,12 @@ fun PlayListDetailsScreen(
                             startService(context)
 
                             setMediaItems.value = true
-                            navController.navigate(ScreenRoute.NowPlayingScreen.route)
+
+                            if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                == Lifecycle.State.RESUMED
+                            ) {
+                                navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                            }
                             if (player.shuffleModeEnabled) {
                                 viewModel.toggleShuffle()
                             }
@@ -519,7 +527,12 @@ fun PlayListDetailsScreen(
 //                                        viewModel.playFromPlaylist(index)
                                 }
                                 setMediaItems.value = true
-                                navController.navigate(ScreenRoute.NowPlayingScreen.route)
+
+                                if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                    == Lifecycle.State.RESUMED
+                                ) {
+                                    navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                                }
 
                                 viewModel.setCurrentPlayingSection(2)
                                 viewModel.setCurrentPlayingPlaylist(currentPlaylistId!!)

@@ -109,6 +109,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        audioViewModel.setIsMainActivity(true)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 

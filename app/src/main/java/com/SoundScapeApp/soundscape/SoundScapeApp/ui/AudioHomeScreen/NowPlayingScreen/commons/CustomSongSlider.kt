@@ -28,7 +28,8 @@ import java.util.concurrent.TimeUnit
 fun CustomSongSlider(
     onProgress: (Float) -> Unit,
     player: ExoPlayer,
-    viewModel: AudioViewModel
+    viewModel: AudioViewModel,
+    isMainActivity:Boolean
 
 ) {
 
@@ -51,6 +52,7 @@ fun CustomSongSlider(
 //        shuffleMode.value = player.shuffleModeEnabled
         duration.longValue = player.duration
     }
+
 
 
     Row(
