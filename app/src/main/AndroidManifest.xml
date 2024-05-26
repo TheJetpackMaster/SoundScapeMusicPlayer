@@ -51,6 +51,7 @@
             android:name=".PlayerActivity"
             android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
             android:resizeableActivity="true"
+            android:label="@string/title_activity_player"
             android:exported="true"
             android:launchMode="singleTask"
             android:supportsPictureInPicture="true"
