@@ -22,7 +22,7 @@ class NotificationAdapter(
 ) : PlayerNotificationManager.MediaDescriptionAdapter {
 
     override fun getCurrentContentTitle(player: Player): CharSequence =
-        player.mediaMetadata.albumTitle ?: "Unknown"
+        player.mediaMetadata.title ?: "Unknown"
 
 //    override fun createCurrentContentIntent(player: Player): PendingIntent? = pendingIntent
 
@@ -31,7 +31,8 @@ class NotificationAdapter(
     }
 
     override fun getCurrentContentText(player: Player): CharSequence =
-        player.mediaMetadata.title ?: "Unknown"
+        player.mediaMetadata.artist ?: "Unknown"
+
 
     override fun getCurrentLargeIcon(
         player: Player,
@@ -43,6 +44,8 @@ class NotificationAdapter(
             Glide.with(context)
                 .asBitmap()
                 .load(artworkUri)
+                .error(R.drawable.sample)
+                .placeholder(R.drawable.sample)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(object : CustomTarget<Bitmap>() {
 
@@ -56,7 +59,8 @@ class NotificationAdapter(
         } else {
             Glide.with(context)
                 .asBitmap()
-                .load(R.drawable.playicon)
+                .load(R.drawable.sample)
+                .error(R.drawable.sample)
                 .into(object : CustomTarget<Bitmap>() {
 
                     override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
