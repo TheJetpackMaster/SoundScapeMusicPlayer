@@ -21,9 +21,7 @@ import com.SoundScapeApp.soundscape.MainActivity
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
-import okhttp3.internal.notify
 import javax.inject.Inject
-import kotlin.system.exitProcess
 
 
 private const val NOTIFICATION_ID = 101
@@ -86,7 +84,7 @@ class MusicNotificationManager @Inject constructor(
                 )
             )
             .setSmallIconResourceId(
-                R.drawable.soundscaoelogo
+                R.drawable.soundscapelogo
             )
             .setChannelImportance(NotificationUtil.IMPORTANCE_HIGH)
             .setNotificationListener(object : PlayerNotificationManager.NotificationListener {

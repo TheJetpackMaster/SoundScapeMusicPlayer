@@ -76,7 +76,7 @@ fun SplashScreen(
             exit = fadeOut(animationSpec = tween(250))
         ) {
             Image(
-                painter = painterResource(id = R.drawable.applogo),
+                painter = painterResource(id = R.drawable.spalshscreenlogo),
                 contentDescription = "app logo"
             )
         }

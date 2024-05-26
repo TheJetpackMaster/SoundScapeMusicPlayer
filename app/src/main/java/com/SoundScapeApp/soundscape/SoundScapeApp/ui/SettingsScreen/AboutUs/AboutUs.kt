@@ -107,10 +107,10 @@ fun AboutUs(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(SoundScapeThemes.colorScheme.secondary.copy(.6f))
+                    .background(SoundScapeThemes.colorScheme.secondary.copy(.4f))
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.sound_wave_music_logo),
+                    painter = painterResource(id = R.drawable.spalshscreenlogo),
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
