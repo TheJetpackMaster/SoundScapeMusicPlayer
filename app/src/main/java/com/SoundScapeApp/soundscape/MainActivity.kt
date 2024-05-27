@@ -110,6 +110,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         audioViewModel.setIsMainActivity(true)
+        audioViewModel.setMediaItemFlag(false)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
 
@@ -351,6 +352,7 @@ class MainActivity : ComponentActivity() {
                         },
                         onItemClick = { _, id ->
                             val selectedAudio = audioList.firstOrNull { it.id == id }
+                            audioViewModel.getMediaItemsFlags()
                             selectedAudio?.let {
                                 if (!audioViewModel.isSearch.value) {
                                     if (!audioViewModel.setMediaItems) {

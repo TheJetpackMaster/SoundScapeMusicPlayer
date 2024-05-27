@@ -1345,7 +1345,7 @@ fun VideoPlayingScreen(
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Text(
-                                    text = "Loop",
+                                    text = "Info",
                                     textAlign = TextAlign.Center,
                                     color = Color.White,
                                     fontSize = 14.sp

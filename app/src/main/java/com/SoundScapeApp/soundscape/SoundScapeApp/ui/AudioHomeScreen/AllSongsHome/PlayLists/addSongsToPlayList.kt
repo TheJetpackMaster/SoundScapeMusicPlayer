@@ -297,13 +297,6 @@ fun AddSongsToPlaylist(
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
-
-                                Spacer(
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .clip(CircleShape)
-                                        .background(Theme2Secondary)
-                                )
                             }
 
                             Spacer(modifier = Modifier.width(12.dp))

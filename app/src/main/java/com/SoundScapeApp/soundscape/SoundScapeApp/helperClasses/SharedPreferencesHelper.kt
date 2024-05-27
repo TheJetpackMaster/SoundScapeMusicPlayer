@@ -344,6 +344,14 @@ class SharedPreferencesHelper @Inject constructor(
         return sharedPreferences.getInt(CURRENTLY_PLAYING_FROM_KEY,1)
     }
 
+    fun setMediaItemsFlag(setMediaItems:Boolean){
+        sharedPreferences.edit().putBoolean("SETMEDIAITEMS",setMediaItems).apply()
+    }
+
+    fun getMediaItemsFlag():Boolean{
+        return sharedPreferences.getBoolean("SETMEDIAITEMS",false)
+    }
+
     fun setCurrentPlayingPlaylist(playlistId:Long){
         sharedPreferences.edit().putLong(CURRENT_PLAYING_PLAYLIST_KEY,playlistId).apply()
     }

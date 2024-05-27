@@ -39,6 +39,7 @@ class AudioPlayerActivity : ComponentActivity() {
 
         audioViewModel.setIsMainActivity(false)
         audioViewModel.setCurrentPlayingSection(1)
+        audioViewModel.setMediaItemFlag(false)
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(

@@ -263,6 +263,8 @@ class AudioViewModel @Inject constructor(
         player.shuffleModeEnabled = isShuffleEnabled()
         currentSelectedAudio = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
 
+        getMediaItemsFlags()
+
         getCurrentPlayingSection()
         getCurrentPlayingPlaylist()
         getCurrentPlayingAlbum()
@@ -649,6 +651,7 @@ class AudioViewModel @Inject constructor(
     //    SetMediaItemFlag
     fun setMediaItemFlag(setMediaItem: Boolean) {
         setMediaItems = setMediaItem
+        setMediaItemsFlags(setMediaItem)
     }
 
     fun addSongToPlaylist(songIds: List<Long>, context: Context) {
@@ -1119,6 +1122,14 @@ class AudioViewModel @Inject constructor(
 
     fun getCurrentPlayingSection() {
         _currentPlayingSection.value = sharedPreferencesHelper.getCurrentPlayingSection()
+    }
+
+    fun setMediaItemsFlags(setMediaItems:Boolean){
+        sharedPreferencesHelper.setMediaItemsFlag(setMediaItems)
+    }
+
+    fun getMediaItemsFlags(){
+        setMediaItems = sharedPreferencesHelper.getMediaItemsFlag()
     }
 
     fun setCurrentPlayingPlaylist(playlistId: Long) {
