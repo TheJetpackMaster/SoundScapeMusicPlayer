@@ -91,7 +91,8 @@ fun PlayListsScreen(
     search: String,
     selectedPlaylists: MutableMap<Long, Boolean>,
     confirmPlaylistDeletion: MutableState<Boolean>,
-    onSelectAllPlaylistsClicked: MutableState<Boolean>
+    onSelectAllPlaylistsClicked: MutableState<Boolean>,
+    isPlayingBarShown:Boolean
 ) {
 
     val myPlaylists by viewModel.playlists.collectAsState()
@@ -429,7 +430,7 @@ fun PlayListsScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(74.dp))
+                Spacer(modifier = Modifier.height(if(isPlayingBarShown) 74.dp else 2.dp))
             }
         }
         if (isAddingPlayList) {

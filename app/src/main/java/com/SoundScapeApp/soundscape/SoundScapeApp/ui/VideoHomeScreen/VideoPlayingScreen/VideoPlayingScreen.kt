@@ -1,8 +1,13 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.media.AudioManager
 import android.os.Build
 import androidx.compose.foundation.layout.Box
@@ -107,6 +112,7 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 
+@SuppressLint("SourceLockedOrientationActivity")
 @RequiresApi(Build.VERSION_CODES.R)
 @kotlin.OptIn(
     ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class,
@@ -121,6 +127,8 @@ fun VideoPlayingScreen(
     isMainActivity: Boolean,
     onVideoBack: () -> Unit = {}
 ) {
+
+    ScreenRotationHandler()
 
     val currentSeekTime = viewModel.videoSeekTime.collectAsState()
     val resumeFromLeftPos by viewModel.resumeFromLeftPositionEnabled.collectAsState()
@@ -263,6 +271,7 @@ fun VideoPlayingScreen(
 //        delay(delayTime.value)
 //        isBrightnessChanging = false
 //    }
+
 
 
     LaunchedEffect(Unit) {
@@ -1332,9 +1341,11 @@ fun VideoPlayingScreen(
 
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
                                     .clickable {
                                         showVideoInfoDialog = true
+                                        showMoreVertDialog = false
                                         exoPlayer.pause()
                                     }
                             ) {
@@ -1480,6 +1491,7 @@ fun VideoPlayingScreen(
                         ),
                         onClick = {
                             showVideoInfoDialog = false
+                            exoPlayer.play()
                         })
                     {
                         Text(
@@ -1725,4 +1737,60 @@ fun getDeviceVolume(context: Context): Float {
     val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
 
     return currentVolume.toFloat() / maxVolume.toFloat()
+}
+
+
+@Composable
+fun ScreenRotationHandler() {
+    val context = LocalContext.current
+    val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    val activity = context as? Activity
+    val requestedOrientation = activity?.requestedOrientation
+
+    DisposableEffect(key1 = sensorManager, key2 = accelerometer,key3 = requestedOrientation) {
+        val listener = object : SensorEventListener {
+
+
+            var landscapeDetected =
+                requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+
+            override fun onSensorChanged(event: SensorEvent) {
+                if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+                    val x = event.values[0]
+                    val y = event.values[1]
+
+                    // Log the accelerometer values
+                    Log.d("none", "X: $x, Y: $y")
+
+                    // Check if the device is in landscape mode set by the user
+                    if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE) {
+                        // Log the orientation
+                        Log.d("Orientation", "User landscape detected")
+
+                        // Check if the device is tilted horizontally
+                        if (abs(x) > abs(y)) {
+                            // Log the orientation change
+                            Log.d("Orientation", "Tilted horizontally")
+
+                            // Change to sensor-based landscape
+                            (context as? Activity)?.requestedOrientation =
+                                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                        }
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                // Not used
+            }
+        }
+
+        sensorManager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+
+        onDispose {
+            sensorManager.unregisterListener(listener)
+        }
+    }
+
 }

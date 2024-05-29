@@ -213,10 +213,6 @@ fun SongsHome(
         BottomNavScreenRoutes.Settings
     )
 
-    val showPlayingBar = navController
-        .currentBackStackEntryAsState().value?.destination?.route in showInScreens.map { it.route }
-
-
     val placeholderText = when (pagerState.currentPage) {
         0 -> {
             "Search Song"
@@ -261,6 +257,17 @@ fun SongsHome(
     val deleteSongsClicked = remember { mutableStateOf(false) }
     val selectedSongsCount = remember { mutableStateOf(0) }
     val selectedSongIds = remember { mutableStateListOf<Long>() }
+
+
+
+    // Showing Playing bar
+    val songs = viewModel.scannedAudioList.collectAsState()
+    val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
+    val nowPlaying = songs.value.firstOrNull { it.id == currentSong }
+    val lastPlayedSongId = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
+    val isAvailable = audioList.any { it.id == lastPlayedSongId }
+
+    val showPlayingBar = viewModel.retrievePlaybackState().lastPlayedSong != "0" && isPermissionGranted.value && nowPlaying != null && isAvailable
 
 
     Scaffold(
@@ -340,7 +347,7 @@ fun SongsHome(
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(
                                     index,
-                                    animationSpec = spring(stiffness = Spring.StiffnessLow)
+                                    animationSpec = spring(dampingRatio = 1f, stiffness = 500f)
                                 )
                             }
                         },
@@ -387,7 +394,8 @@ fun SongsHome(
                                 deleteSelectedSong = deleteSongsClicked,
                                 onSongDelete = onSongDelete,
                                 selectedSongsCount = selectedSongsCount,
-                                selectedSongsIds = selectedSongIds
+                                selectedSongsIds = selectedSongIds,
+                                isPlayingBarShown = showPlayingBar
 
                             )
                             clearLists(
@@ -406,7 +414,8 @@ fun SongsHome(
                                 search = search,
                                 selectedPlaylists = selectedPlaylists,
                                 confirmPlaylistDeletion = confirmPlaylistDeletion,
-                                onSelectAllPlaylistsClicked = selectAllPlaylistsClicked
+                                onSelectAllPlaylistsClicked = selectAllPlaylistsClicked,
+                                isPlayingBarShown = showPlayingBar
 
                             )
                             clearLists(
@@ -482,19 +491,7 @@ fun SongsHome(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
-
-                    val songs = viewModel.scannedAudioList.collectAsState()
-                    val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
-
-                    val nowPlaying = songs.value.firstOrNull { it.id == currentSong }
-
-                    //Main Playing bar with Progress and PlayPause
-//                    AnimatedVisibility(visible = !listState.isScrollInProgress,) {
-
-                    val lastPlayedSongId = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
-                    val isAvailable = audioList.any { it.id == lastPlayedSongId }
-
-                    if (viewModel.retrievePlaybackState().lastPlayedSong != "0" && isPermissionGranted.value && nowPlaying != null && isAvailable) {
+                    if (showPlayingBar) {
                         MainPlayingBar(
                             navController = navController,
                             painter = painter,
@@ -738,7 +735,7 @@ fun CustomTabIndicator(
         transitionSpec = {
             spring(
                 dampingRatio = 1f, // Adjust the damping ratio for smoother movement
-                stiffness = 200f // Adjust the stiffness for the desired speed of movement
+                stiffness = 400f // Adjust the stiffness for the desired speed of movement
             )
         }, label = ""
     ) {

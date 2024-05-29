@@ -2,7 +2,9 @@ package com.SoundScapeApp.soundscape
 
 import android.Manifest
 import android.Manifest.permission
+import android.app.Activity
 import android.app.ActivityManager
+import android.app.AppOpsManager
 import android.app.NotificationManager
 import android.app.PictureInPictureParams
 import android.app.RecoverableSecurityException
@@ -17,6 +19,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import android.util.Rational
 import android.widget.Toast
@@ -53,6 +56,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
@@ -64,6 +68,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.ExternalStorage
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.PermissionDialog
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.VideoPermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.openAppSettings
@@ -89,7 +94,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var mediaSession: MediaSession
 
-    @Inject lateinit var videoPlaylistManager: VideoPlaylistManager
+    @Inject
+    lateinit var videoPlaylistManager: VideoPlaylistManager
 
     @Inject
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
@@ -137,7 +143,7 @@ class MainActivity : ComponentActivity() {
                         val songs = audioViewModel.scannedAudioList.value
                         val selectedSongs = audioViewModel.selectedSongs.value
                         val sortedSelectedSongs = selectedSongs.sortedDescending()
-                        Log.d("seled",selectedSongs.toString())
+                        Log.d("seled", selectedSongs.toString())
 
                         sortedSelectedSongs.asReversed().forEach { deletedSongId ->
                             val index = songs.indexOfFirst { it.id == deletedSongId }
@@ -148,7 +154,6 @@ class MainActivity : ComponentActivity() {
 
                         audioViewModel.reloadSongs(audioViewModel.selectedSongs.value)
                         audioViewModel.setSelectedSongs(emptyList())
-
 
 
                     } else {
@@ -180,6 +185,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val currentTheme by audioViewModel.currentTheme.collectAsState()
+            val navController = rememberNavController()
+
+            val showPermissionDialog = navController
+                .currentBackStackEntryAsState().value?.destination?.route == BottomNavScreenRoutes.SongsHome.route
 
             SoundScapeThemes(
                 currentTheme,
@@ -250,6 +259,7 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     audioViewModel.loadAudioData()
                                     videoViewModel.loadVideoData()
+                                    audioViewModel.visiblePermissionDialogQueue.clear()
                                 }
                             } else {
                                 // For Android 12 (API level 31) and above
@@ -332,7 +342,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController()
                     val audioList by audioViewModel.scannedAudioList.collectAsState()
                     val videoList by videoViewModel.scannedVideoList.collectAsState()
 
@@ -383,8 +392,19 @@ class MainActivity : ComponentActivity() {
                         videoViewModel = videoViewModel,
                         mediaSession = mediaSession,
                         onPipClick = {
-                            enterPiPMode()
-                        },
+                            val packageManager = this.packageManager
+                            val pipModeSupported = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+                            if (pipModeSupported) {
+                                if (isPipModeEnabled(this)) {
+                                    enterPictureInPictureMode()
+                                }else{
+                                    this.openPipSettings() }
+                            } else {
+                                Toast.makeText(this, "Picture-in-Picture mode is not supported on this device.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        ,
                         onDeleteSong = { uri ->
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(uri)
@@ -408,12 +428,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-//    private val finishActivityReceiver = object : BroadcastReceiver() {
-//        override fun onReceive(context: Context, intent: Intent) {
-//            // Finish the activity when the broadcast is received
-//            finish()
-//        }
-//    }
+
 
     private fun isMediaSessionServiceRunning(context: Context): Boolean {
         val serviceClass = MusicService::class.java
@@ -445,13 +460,16 @@ class MainActivity : ComponentActivity() {
             .build()
         this.enterPictureInPictureMode(params)
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-        videoViewModel.createVideoMediaSession(this)
+        if (videoViewModel.videoMediaSession == null) {
+            videoViewModel.createVideoMediaSession(this)
+        }
 
         if (isInPictureInPictureMode) {
             stopService(Intent(this, MusicService::class.java))
 
             // Cancel the notification
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(101)
         }
     }
@@ -530,7 +548,9 @@ class MainActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (videoViewModel.autoPopupEnabled.value && videoViewModel.exoPlayer.playWhenReady) {
-            enterPiPMode()
+            if(isPipModeEnabled(this)) {
+                enterPiPMode()
+            }
         }
     }
 
@@ -548,7 +568,7 @@ class MainActivity : ComponentActivity() {
         }
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
 
-        if(!videoViewModel.isPipModeEnabled.value){
+        if (!videoViewModel.isPipModeEnabled.value) {
             videoViewModel.destroyVideoMediaSession()
         }
     }
@@ -557,8 +577,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-        if(!videoViewModel.isPipModeEnabled.value){
-           videoViewModel.destroyVideoMediaSession()
+        if (!videoViewModel.isPipModeEnabled.value) {
+            videoViewModel.destroyVideoMediaSession()
         }
     }
 
@@ -566,13 +586,29 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
 //        unregisterReceiver(finishActivityReceiver)
 
-        if(player.currentMediaItem != null) {
+        if (player.currentMediaItem != null) {
             sharedPreferencesHelper.savePlaybackState(
                 player.currentMediaItem!!.mediaId,
                 player.currentPosition,
                 player.isPlaying
             )
         }
-
     }
+}
+
+fun Activity.openPipSettings() {
+    Intent(
+        "android.settings.PICTURE_IN_PICTURE_SETTINGS",
+        Uri.fromParts("package", packageName, null)
+    ).also(::startActivity)
+}
+
+@Suppress("DEPRECATION")
+fun isPipModeEnabled(context: Context): Boolean {
+    val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    return appOpsManager.checkOpNoThrow(
+        /* op = */ AppOpsManager.OPSTR_PICTURE_IN_PICTURE,
+        /* uid = */ android.os.Process.myUid(),
+        /* packageName = */ context.packageName
+    ) == AppOpsManager.MODE_ALLOWED
 }

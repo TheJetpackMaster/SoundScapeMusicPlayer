@@ -80,7 +80,8 @@ fun AllSongs(
     deleteSelectedSong: MutableState<Boolean>,
     onSongDelete: (List<Uri>) -> Unit,
     selectedSongsCount: MutableState<Int>,
-    selectedSongsIds: MutableList<Long>
+    selectedSongsIds: MutableList<Long>,
+    isPlayingBarShown:Boolean
 ) {
 
     val currentSortType = viewModel.currentSortType
@@ -295,7 +296,7 @@ fun AllSongs(
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(74.dp))
+                    Spacer(modifier = Modifier.height(if(isPlayingBarShown) 74.dp else 2.dp))
                 }
             }
         }

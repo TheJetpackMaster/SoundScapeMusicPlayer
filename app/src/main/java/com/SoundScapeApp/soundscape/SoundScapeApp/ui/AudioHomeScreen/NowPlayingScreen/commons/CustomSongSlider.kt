@@ -2,8 +2,14 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlaying
 
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -15,14 +21,19 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.exoplayer.ExoPlayer
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
+import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 import java.util.concurrent.TimeUnit
 
+@SuppressLint("UnrememberedMutableInteractionSource")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomSongSlider(
@@ -76,7 +87,15 @@ fun CustomSongSlider(
                 activeTrackColor = Color.White,
             ),
             thumb = {
-
+                Box(
+                    Modifier
+                        .size(24.dp),
+                    contentAlignment = Alignment.Center
+                ){
+                    Spacer(modifier = Modifier.size(10.dp)
+                        .clip(CircleShape)
+                        .background(White90))
+                }
             }
         )
         Text(

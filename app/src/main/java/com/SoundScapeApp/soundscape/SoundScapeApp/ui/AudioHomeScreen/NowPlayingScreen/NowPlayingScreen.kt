@@ -204,7 +204,7 @@ fun NowPlayingScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
                             tint = White90,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -293,8 +293,8 @@ fun NowPlayingScreen(
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .padding(start = 8.dp, end = 8.dp)
-                        .border(2.dp, Color.White, shape = RoundedCornerShape(24.dp))
-                        .weight(1f)
+                        .border(1.dp, Color.White, shape = RoundedCornerShape(16.dp))
+                        .weight(.9f)
                 ) {
                     Image(
                         painter = rememberAsyncImagePainter(
