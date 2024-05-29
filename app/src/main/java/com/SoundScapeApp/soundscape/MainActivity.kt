@@ -451,7 +451,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    /*@RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun enterPiPMode() {
         val aspectRatio = Rational(16, 9)
         val params = PictureInPictureParams.Builder()
@@ -472,7 +472,31 @@ class MainActivity : ComponentActivity() {
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(101)
         }
+    }*/
+
+    @RequiresApi(Build.VERSION_CODES.S) // Android 12 (API level 31)
+    private fun enterPiPMode() {
+        val aspectRatio = Rational(16, 9)
+        val paramsBuilder = PictureInPictureParams.Builder()
+            .setAspectRatio(aspectRatio)
+        // Check if the device is running Android 12 or higher
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            paramsBuilder.setSeamlessResizeEnabled(true)
+        }
+        val params = paramsBuilder.build()
+        this.enterPictureInPictureMode(params)
+        videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
+        videoViewModel.createVideoMediaSession(this)
+
+        if (isInPictureInPictureMode) {
+            stopService(Intent(this, MusicService::class.java))
+
+            // Cancel the notification
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(101)
+        }
     }
+
 
 
     private suspend fun deleteSongFromExternalStorage(songUri: List<Uri>) {
