@@ -1509,7 +1509,7 @@ fun VideoPlayingScreen(
 fun DisplayVideoInfo(video: Video) {
     Column {
         Text(text = "Title: ${video.displayName}", color = Color.White)
-        Text(text = "Path: ${video.data}", color = Color.White)
+        Text(text = "Path: ${video.uri}", color = Color.White)
         Text(text = "Date Added: ${video.dateAdded}", color = Color.White)
         Text(text = "Duration: ${formatVideoDuration(video.duration.toLong())} seconds", color = Color.White)
         Text(text = "Size: ${video.sizeMB}", color = Color.White)
