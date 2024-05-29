@@ -1,16 +1,21 @@
 package com.SoundScapeApp.soundscape
 
+import android.app.Activity
+import android.app.AppOpsManager
 import android.app.NotificationManager
 import android.app.PictureInPictureParams
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import android.view.Window
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -97,7 +102,18 @@ class PlayerActivity : ComponentActivity() {
                         VideoPlayingScreen(viewModel = videoViewModel,
                             navController = rememberNavController(),
                             onPipClick = {
-                                enterPiPMode()
+                                val packageManager = this@PlayerActivity.packageManager
+                                val pipModeSupported = packageManager.hasSystemFeature(
+                                    PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+                                if (pipModeSupported) {
+                                    if (isPipModeEnabled(this@PlayerActivity)) {
+                                       enterPiPMode()
+                                    }else{
+                                        this@PlayerActivity.openPipSettings() }
+                                } else {
+                                    Toast.makeText(this@PlayerActivity, "Picture-in-Picture mode is not supported on this device.", Toast.LENGTH_SHORT).show()
+                                }
                             },
                             isMainActivity = false,
                             onVideoBack = {
@@ -120,26 +136,23 @@ class PlayerActivity : ComponentActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun enterPiPMode() {
-        val aspectRatio = Rational(16, 9)
-        val params = PictureInPictureParams.Builder()
-            .setAspectRatio(aspectRatio)
-            .setSeamlessResizeEnabled(true)
-            .build()
-        this.enterPictureInPictureMode(params)
+        enterPictureInPictureMode()
+
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-//        videoViewModel.createVideoMediaSession(this)
+
+        if(videoViewModel.videoMediaSession == null) {
+            videoViewModel.createVideoMediaSession(this)
+        }
 
         if (isInPictureInPictureMode) {
             stopService(Intent(this, MusicService::class.java))
-
             // Cancel the notification
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(101)
         }
     }
+
 
     override fun onPictureInPictureModeChanged(
         isInPictureInPictureMode: Boolean,
@@ -150,6 +163,13 @@ class PlayerActivity : ComponentActivity() {
 
         if (!isInPictureInPictureMode) {
             videoViewModel.exoPlayer.pause()
+            videoViewModel.destroyVideoMediaSession()
+        }
+
+        if(isInPictureInPictureMode){
+            if(videoViewModel.videoMediaSession == null){
+                videoViewModel.createVideoMediaSession(this)
+            }
         }
     }
 

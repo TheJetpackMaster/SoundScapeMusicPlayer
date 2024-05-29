@@ -397,7 +397,7 @@ class MainActivity : ComponentActivity() {
 
                             if (pipModeSupported) {
                                 if (isPipModeEnabled(this)) {
-                                    enterPictureInPictureMode()
+                                    enterPiPMode()
                                 }else{
                                     this.openPipSettings() }
                             } else {
@@ -474,19 +474,14 @@ class MainActivity : ComponentActivity() {
         }
     }*/
 
-    @RequiresApi(Build.VERSION_CODES.S) // Android 12 (API level 31)
     private fun enterPiPMode() {
-        val aspectRatio = Rational(16, 9)
-        val paramsBuilder = PictureInPictureParams.Builder()
-            .setAspectRatio(aspectRatio)
-        // Check if the device is running Android 12 or higher
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setSeamlessResizeEnabled(true)
-        }
-        val params = paramsBuilder.build()
-        this.enterPictureInPictureMode(params)
+        enterPictureInPictureMode()
+
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-        videoViewModel.createVideoMediaSession(this)
+
+        if(videoViewModel.videoMediaSession == null) {
+            videoViewModel.createVideoMediaSession(this)
+        }
 
         if (isInPictureInPictureMode) {
             stopService(Intent(this, MusicService::class.java))
@@ -564,8 +559,15 @@ class MainActivity : ComponentActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
             videoViewModel.exoPlayer.pause()
+            videoViewModel.destroyVideoMediaSession()
         }
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
+
+        if(isInPictureInPictureMode){
+            if(videoViewModel.videoMediaSession == null){
+                videoViewModel.createVideoMediaSession(this)
+            }
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -591,10 +593,6 @@ class MainActivity : ComponentActivity() {
             )
         }
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
-
-        if (!videoViewModel.isPipModeEnabled.value) {
-            videoViewModel.destroyVideoMediaSession()
-        }
     }
 
 
