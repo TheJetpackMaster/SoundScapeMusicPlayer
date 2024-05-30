@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen
 
+import Video
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -236,6 +237,9 @@ fun VideoPlayingScreen(
     var delayJob: Job? = null
     var skipDelayJob: Job? = null
 
+
+
+    val videoList by viewModel.videoList.collectAsState()
 
     LaunchedEffect(
         showControls.value,
@@ -1344,8 +1348,9 @@ fun VideoPlayingScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clickable {
-                                        showVideoInfoDialog = true
                                         showMoreVertDialog = false
+                                       // showVideoInfoDialog = true
+                                        showVideoInfoDialog = !showVideoInfoDialog
                                         exoPlayer.pause()
                                     }
                             ) {
@@ -1479,26 +1484,19 @@ fun VideoPlayingScreen(
 
                 },
                 text = {
-                    Text(
-                        text = "${exoPlayer.currentMediaItem?.mediaMetadata?.displayTitle}",
+                    val currentMediaId = exoPlayer.currentMediaItem?.mediaId?.toLongOrNull()
+                    val currentVideo = videoList.find { it.id == currentMediaId }
+                    if (currentVideo != null) {
+                        DisplayVideoInfo(video = currentVideo)
+                    } else {
+                        Text(text = "No media item is currently playing")
+                    }
+                    /*Text(
+                        text = "${exoPlayer.currentMediaItem?.mediaId?}",
                         color = White50
-                    )
+                    )*/
                 },
                 confirmButton = {
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent
-                        ),
-                        onClick = {
-                            showVideoInfoDialog = false
-                            exoPlayer.play()
-                        })
-                    {
-                        Text(
-                            text = "OK",
-                            color = White90
-                        )
-                    }
                 },
                 dismissButton = {
 
@@ -1507,7 +1505,18 @@ fun VideoPlayingScreen(
         }
     }
 }
-
+@Composable
+fun DisplayVideoInfo(video: Video) {
+    Column {
+        Text(text = "Title: ${video.displayName}", color = Color.White)
+        Text(text = "Path: ${video.uri}", color = Color.White)
+        Text(text = "Date Added: ${video.dateAdded}", color = Color.White)
+        Text(text = "Duration: ${formatVideoDuration(video.duration.toLong())} seconds", color = Color.White)
+        Text(text = "Size: ${video.sizeMB}", color = Color.White)
+        Text(text = "Bucket Name: ${video.bucketName}", color = Color.White)
+        // Add more fields as necessary
+    }
+}
 
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
