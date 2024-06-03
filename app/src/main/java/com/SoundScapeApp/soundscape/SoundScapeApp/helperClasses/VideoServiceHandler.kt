@@ -48,7 +48,7 @@ class VideoServiceHandler(
     fun play(mediaItemIndex: Int) {
         exoPlayer.seekToDefaultPosition(mediaItemIndex)
         exoPlayer.play()
-
+        startProgressUpdate()
     }
 
 
@@ -74,11 +74,13 @@ class VideoServiceHandler(
     //    Play next Video
     fun playNext() {
         exoPlayer.seekToNext()
+        startProgressUpdate()
     }
 
     //    Play Previous Video
     fun playPrevious() {
         exoPlayer.seekToPreviousMediaItem()
+        startProgressUpdate()
     }
 
     fun skipForward(seekForward: Long) {
@@ -152,6 +154,8 @@ class VideoServiceHandler(
             }
         }
     }
+
+
 
     private fun updateProgress(newProgress: Float) {
         exoPlayer.seekTo((exoPlayer.duration * newProgress.toLong()))

@@ -38,6 +38,7 @@ fun PlayerScreen(
     event: Lifecycle.Event,
     view: View,
     window: Window,
+    onShowControlsTap:()->Unit
 
 ) {
 
@@ -56,13 +57,13 @@ fun PlayerScreen(
                     player = exoPlayer
                     useController = false
                     fitsSystemWindows = showControls.value
+                    keepScreenOn = true
                 }
                 playerView
             },
             update = { playerView ->
                 playerView.apply {
                     playerView.resizeMode = playerState.resizeMode
-                    playerView.keepScreenOn = playerState.isPlaying
 //                    playerView.fitsSystemWindows = false
 
                     when (event) {
@@ -93,7 +94,7 @@ fun PlayerScreen(
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = {
-                            showControls.value = !showControls.value
+                            onShowControlsTap()
                         }
                     )
                 },

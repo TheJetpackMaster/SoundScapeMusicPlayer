@@ -341,10 +341,22 @@ class VideoViewModel @Inject constructor(
     //    Play video
     fun playVideo(videoIndex: Int) {
         videoServiceHandler.play(videoIndex)
+        _playerState.update {
+            it.copy(
+              isPlaying = exoPlayer.isPlaying
+            )
+        }
     }
 
     //    Toggle video playPause
     fun onPlayPause() {
+        if(!exoPlayer.isPlaying){
+            _playerState.update {
+                it.copy(
+                    isPlaying = exoPlayer.isPlaying
+                )
+            }
+        }
         videoServiceHandler.onPlayPause()
     }
 
@@ -354,6 +366,7 @@ class VideoViewModel @Inject constructor(
             val savedMedia = getPlaybackPosition(exoPlayer.currentMediaItem!!.mediaId)
             seekToSavedPosition(savedMedia)
         }
+
     }
 
     fun playPrevious() {
@@ -439,12 +452,13 @@ class VideoViewModel @Inject constructor(
         }
     }
 
-    fun onProgressSeek(progress: Float) {
+    fun onProgressSeek(newProgress: Float) {
         val totalDuration = exoPlayer.duration.toFloat()
         if (totalDuration > 0) {
-            val targetPosition = (progress / 100f * totalDuration).toLong()
+            val targetPosition = (newProgress / 100f * totalDuration).toLong()
             exoPlayer.seekTo(targetPosition)
         }
+        progress = exoPlayer.currentPosition.toFloat()
     }
 
 

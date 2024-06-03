@@ -48,7 +48,6 @@ import com.SoundScapeApp.soundscape.ui.theme.White90
 @Composable
 fun BottomControls(
     player: ExoPlayer,
-    onRotateScreenClick: () -> Unit,
     resizeMode: Int,
     onLockClock: () -> Unit,
     onPIPClick: () -> Unit,
@@ -57,22 +56,23 @@ fun BottomControls(
     modifier: Modifier = Modifier,
     showControls: () -> Unit,
     viewModel: VideoViewModel,
-    showControl: MutableState<Boolean>,
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    onPlayPause: () -> Unit = {},
+    onProgress: () -> Unit = {}
 
-    ) {
+) {
 
     val isPlaying = remember { mutableStateOf(player.isPlaying) }
     val currentPosition = remember { mutableStateOf(0L) }
     val duration = remember { mutableStateOf(0L) }
-    val progress = remember { mutableStateOf(0f) }
+    val progress =
+        remember { mutableStateOf(0f) }
 
     val isSeekFinished = remember { mutableStateOf(false) }
 
     LaunchedEffect(
-        player.currentPosition,
-        player.duration,
-        player.isPlaying,
-        player.currentMediaItem
+        viewModel.progress
     ) {
         currentPosition.value = player.currentPosition
         duration.value = player.duration
@@ -80,6 +80,18 @@ fun BottomControls(
         progress.value = (player.currentPosition.toFloat() / player.duration.toFloat()) * 100f
         isPlaying.value = player.isPlaying
     }
+
+//    LaunchedEffect(
+//        key1 = player.currentMediaItem,
+//        key2 = showControl.value
+//    ) {
+//        currentPosition.value = player.currentPosition
+//        duration.value = player.duration
+//
+//        progress.value = (player.currentPosition.toFloat() / player.duration.toFloat()) * 100f
+//        isPlaying.value = player.isPlaying
+//    }
+
     Column(
         modifier = modifier
             .wrapContentHeight(align = Alignment.CenterVertically)
@@ -102,7 +114,10 @@ fun BottomControls(
 
 
             CustomSeekBar(
-                onProgress = { viewModel.onProgressSeek(it) },
+                onProgress = {
+                    viewModel.onProgressSeek(it)
+                    onProgress()
+                },
                 videoProgress = progress.value,
                 isSeekFinished = isSeekFinished,
                 modifier = Modifier.weight(1f)
@@ -116,16 +131,18 @@ fun BottomControls(
             )
         }
 
-        playbackControls(
+        PlaybackControls(
             onClick = {
                 showControls()
             },
             onPlayPauseClick = {
+                onPlayPause()
                 viewModel.onPlayPause()
-                onRotateScreenClick()
             },
             onSeekForwardClick = {
                 viewModel.playNext()
+                onNext()
+
                 if (!player.isPlaying) {
                     viewModel.exoPlayer.play()
                     isPlaying.value = true
@@ -134,6 +151,7 @@ fun BottomControls(
                 }
             },
             onSeekBackwardClick = {
+                onPrevious()
                 viewModel.playPrevious()
                 if (!player.isPlaying) {
                     viewModel.exoPlayer.play()
@@ -158,7 +176,7 @@ fun BottomControls(
 
 @OptIn(UnstableApi::class)
 @Composable
-private fun playbackControls(
+private fun PlaybackControls(
     onClick: () -> Unit,
     onPlayPauseClick: () -> Unit,
     resizeMode: Int,

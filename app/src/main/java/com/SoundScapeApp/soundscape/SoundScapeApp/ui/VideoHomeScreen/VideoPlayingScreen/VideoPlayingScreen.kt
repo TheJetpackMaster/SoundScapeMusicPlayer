@@ -107,6 +107,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayin
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlin.math.abs
@@ -235,16 +236,12 @@ fun VideoPlayingScreen(
 
     var delayJob: Job? = null
     var skipDelayJob: Job? = null
+    val showControlDelayJob = remember { mutableStateOf<Job?>(null) }
 
 
     LaunchedEffect(
-        showControls.value,
         exoPlayer.currentPosition
     ) {
-        if (showControls.value) {
-            delay(1500)
-            showControls.value = false
-        }
         currentMediaId.value = exoPlayer.currentMediaItem!!.mediaId
         currentMediaPosition.value = exoPlayer.currentPosition
 
@@ -262,16 +259,19 @@ fun VideoPlayingScreen(
         progress = (currentMediaPosition.value.toFloat() / duration.toFloat()) * 100f
     }
 
-
     LaunchedEffect(exoPlayer.currentMediaItem) {
         duration = exoPlayer.duration
     }
 
-//    LaunchedEffect(brightness) {
-//        delay(delayTime.value)
-//        isBrightnessChanging = false
+//    LaunchedEffect(showControls.value,exoPlayer.isPlaying) {
+//        showControlDelayJob?.cancel()
+//        if (showControls.value && exoPlayer.isPlaying) {
+//            showControlDelayJob = launch {
+//                delay(2500)
+//                showControls.value = false
+//            }
+//        }
 //    }
-
 
 
     LaunchedEffect(Unit) {
@@ -365,6 +365,17 @@ fun VideoPlayingScreen(
             event = lifecycle,
             view = view,
             window = window,
+            onShowControlsTap = {
+                if (!showControls.value) {
+                    triggerShowControls(
+                        showControlDelayJob,
+                        scope,
+                        showControls
+                    )
+                } else {
+                    showControls.value = false
+                }
+            }
         )
 
         if (!pipMode) {
@@ -414,7 +425,16 @@ fun VideoPlayingScreen(
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onTap = {
-                                    showControls.value = !showControls.value
+                                    if (!showControls.value) {
+                                        showControlDelayJob.value?.cancel()
+                                        showControls.value = true
+                                        showControlDelayJob.value = scope.launch {
+                                            delay(2500)
+                                            showControls.value = false
+                                        }
+                                    } else {
+                                        showControls.value = false
+                                    }
                                 },
                                 onDoubleTap = {
                                     if (isDoubleTapToSeekEnabled.value) {
@@ -485,7 +505,15 @@ fun VideoPlayingScreen(
                             .pointerInput(Unit) {
                                 detectTapGestures(
                                     onTap = {
-                                        showControls.value = !showControls.value
+                                        if (!showControls.value) {
+                                            triggerShowControls(
+                                                showControlDelayJob,
+                                                scope,
+                                                showControls
+                                            )
+                                        } else {
+                                            showControls.value = false
+                                        }
                                     },
                                     onDoubleTap = {
                                         if (isDoubleTapToSeekEnabled.value) {
@@ -571,10 +599,23 @@ fun VideoPlayingScreen(
                     if (!isLocked.value) {
                         CenterControls(
                             isMuted = isMuted,
-                            onLockClick = { isLocked.value = !isLocked.value },
+                            onLockClick = {
+                                isLocked.value = !isLocked.value
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
+                            },
                             onMuteClick = {
                                 isMuted.value = !isMuted.value
                                 viewModel.toggleVideoVolume(isMuted)
+
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
                             },
                             onScreenRotationClick = {
                                 if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT) {
@@ -584,12 +625,23 @@ fun VideoPlayingScreen(
                                     activity?.requestedOrientation =
                                         ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
                                 }
+
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
                             },
                             onVideoLoopClick = {
                                 isVideoLooping = !isVideoLooping
                                 viewModel.CurrentVideoLooping(isVideoLooping, exoPlayer)
                                 //exoPlayer.repeatMode =
                                 //  if (isVideoLooping) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
                             },
                             isVideoLooping = isVideoLooping
                         )
@@ -598,16 +650,31 @@ fun VideoPlayingScreen(
                     if (!isLocked.value) {
                         BottomControls(
                             player = exoPlayer,
-                            onRotateScreenClick = {
-                                //viewModel.onRotateScreen()
-                                //Log.d("like", "VideoPlayingScreen: ${viewModel.onRotateScreen()}")
-                            },
                             resizeMode = playerState.resizeMode,
                             onResizeModeChange = {
                                 viewModel.onResizeClick()
+//                                showControlDelayJob.value?.cancel()
+//                                showControls.value = true
+//                                showControlDelayJob.value = scope.launch {
+//                                    delay(2000)
+//                                    showControls.value = false
+//                                }
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
                             },
                             showControls = {
-                                showControls.value = !showControls.value
+                                if (!showControls.value) {
+                                    triggerShowControls(
+                                        showControlDelayJob,
+                                        scope,
+                                        showControls
+                                    )
+                                } else {
+                                    showControls.value = false
+                                }
                             },
                             viewModel = viewModel,
                             onLockClock = {
@@ -617,7 +684,52 @@ fun VideoPlayingScreen(
                             onSpeedClick = {
                                 showSpeedDailog = !showSpeedDailog
                             },
-                            showControl = showControls
+                            onNext = {
+//                                showControlDelayJob.value?.cancel()
+//                                showControls.value = true
+//                                showControlDelayJob.value = scope.launch {
+//                                    delay(2000)
+//                                    showControls.value = false
+//                                }
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
+                            },
+                            onPrevious = {
+//                                showControlDelayJob.value?.cancel()
+//                                showControls.value = true
+//                                showControlDelayJob.value = scope.launch {
+//                                    delay(2000)
+//                                    showControls.value = false
+//                                }
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
+                            },
+                            onPlayPause = {
+                                if (exoPlayer.isPlaying) {
+                                    showControlDelayJob.value?.cancel()
+                                    showControls.value = true
+                                } else {
+                                    triggerShowControls(
+                                        showControlDelayJob,
+                                        scope,
+                                        showControls,
+                                        delayTime = 2000L
+                                    )
+                                }
+                            },
+                            onProgress = {
+                                handleButtonClick(
+                                    showControlDelayJob,
+                                    scope,
+                                    showControls
+                                )
+                            }
                         )
                     } else {
                         Spacer(modifier = Modifier.weight(1f))
@@ -1468,7 +1580,7 @@ fun VideoPlayingScreen(
                 },
             )
         }
-        if(showVideoInfoDialog){
+        if (showVideoInfoDialog) {
             AlertDialog(
                 containerColor = SoundScapeThemes.colorScheme.secondary,
                 onDismissRequest = {
@@ -1601,6 +1713,7 @@ fun CustomSeekBar(
 ) {
 
     val primaryColor = White90
+    Log.d("progress", videoProgress.toString())
 
     Slider(
         value = videoProgress,
@@ -1748,12 +1861,8 @@ fun ScreenRotationHandler() {
     val activity = context as? Activity
     val requestedOrientation = activity?.requestedOrientation
 
-    DisposableEffect(key1 = sensorManager, key2 = accelerometer,key3 = requestedOrientation) {
+    DisposableEffect(key1 = sensorManager, key2 = accelerometer, key3 = requestedOrientation) {
         val listener = object : SensorEventListener {
-
-
-            var landscapeDetected =
-                requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 
             override fun onSensorChanged(event: SensorEvent) {
                 if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
@@ -1792,5 +1901,50 @@ fun ScreenRotationHandler() {
             sensorManager.unregisterListener(listener)
         }
     }
+}
 
+fun startControlVisibilityDelay(
+    showControlDelayJob: MutableState<Job?>,
+    scope: CoroutineScope,
+    showControls: MutableState<Boolean>,
+    delay: Long = 2500L
+) {
+    // Cancel the previous delay job if it exists
+    showControlDelayJob.value?.cancel()
+
+    // Start a new delay job to hide controls after 2500 ms
+    showControlDelayJob.value = scope.launch {
+        delay(delay)
+        showControls.value = false
+    }
+}
+
+// Function to trigger showing controls
+fun triggerShowControls(
+    showControlDelayJob: MutableState<Job?>,
+    scope: CoroutineScope,
+    showControls: MutableState<Boolean>,
+    delayTime: Long = 2500L
+) {
+    showControls.value = true // Show controls immediately
+    startControlVisibilityDelay(
+        showControlDelayJob,
+        scope, showControls,
+        delay = delayTime
+    )// Start the control visibility delay
+}
+
+// Function to handle clicks on other buttons (cancel the delay and start a new one)
+fun handleButtonClick(
+    showControlDelayJob: MutableState<Job?>,
+    scope: CoroutineScope,
+    showControls: MutableState<Boolean>,
+) {
+    showControlDelayJob.value?.cancel() // Cancel the existing delay job
+    startControlVisibilityDelay(
+        showControlDelayJob,
+        scope,
+        showControls,
+        delay = 2000
+    ) // Start a new delay job for hiding controls
 }

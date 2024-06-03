@@ -403,8 +403,7 @@ class MainActivity : ComponentActivity() {
                             } else {
                                 Toast.makeText(this, "Picture-in-Picture mode is not supported on this device.", Toast.LENGTH_SHORT).show()
                             }
-                        }
-                        ,
+                        },
                         onDeleteSong = { uri ->
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(uri)
@@ -427,8 +426,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
 
     private fun isMediaSessionServiceRunning(context: Context): Boolean {
         val serviceClass = MusicService::class.java
@@ -491,7 +488,6 @@ class MainActivity : ComponentActivity() {
             notificationManager.cancel(101)
         }
     }
-
 
 
     private suspend fun deleteSongFromExternalStorage(songUri: List<Uri>) {
