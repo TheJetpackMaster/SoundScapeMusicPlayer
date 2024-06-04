@@ -95,3 +95,6 @@ val Theme13Secondary = Color(0xFFA58D72)
 //THEME16
 //val Theme13Primary = Color(0xFFAD88C6)
 //val Theme13Secondary = Color(0XFFE1AFD1)
+
+val color1 = Color(0XFF30283d)
+val color2 = Color(0XFF4f4776)

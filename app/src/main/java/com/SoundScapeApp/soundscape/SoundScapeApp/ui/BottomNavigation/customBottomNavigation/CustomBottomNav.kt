@@ -9,6 +9,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,12 +22,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.ui.theme.GrayIcons
 import com.SoundScapeApp.soundscape.ui.theme.PurpleIcons
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
+import com.SoundScapeApp.soundscape.ui.theme.White50
 
 @Composable
 fun CustomBottomNav(navController: NavController, context: Context) {
@@ -60,7 +64,7 @@ fun CustomBottomNav(navController: NavController, context: Context) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(52.dp)
             .background(SoundScapeThemes.colorScheme.primary)
             .padding(start = 24.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -124,7 +124,7 @@ fun MainScreen(
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                 val blurredBitmap =
-                    BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
+                    BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
                 Image(
                     bitmap = blurredBitmap.asImageBitmap(),
                     contentDescription = "Background image",
@@ -134,11 +134,11 @@ fun MainScreen(
             } else {
 //
                 GlideImage(
-                    model = R.drawable.naturesbg,
+                    model = R.drawable.themebackground,
                     contentDescription = "Background Image",
                     modifier = Modifier
                         .fillMaxSize()
-                        .blur(40.dp),
+                        .blur(25.dp),
                     contentScale = ContentScale.FillBounds,
                 )
             }
@@ -151,11 +151,11 @@ fun MainScreen(
                             colors = listOf(
 //                                Color.Black.copy(.9f),
 //                                Color.Black.copy(.9f)
-                                SoundScapeThemes.colorScheme.primary.copy(.9f),
-                                SoundScapeThemes.colorScheme.secondary.copy(.9f)
+                                SoundScapeThemes.colorScheme.primary.copy(.55f),
+                                SoundScapeThemes.colorScheme.secondary.copy(.55f)
                             ),
-                            start = Offset(0f, 0f), // Top-left corner
-                            end = Offset.Infinite // Bottom-right corner
+                            start = Offset(0f, 0f),
+                            end = Offset.Infinite
                         )
                     )
                     .padding(bottom = it.calculateBottomPadding())

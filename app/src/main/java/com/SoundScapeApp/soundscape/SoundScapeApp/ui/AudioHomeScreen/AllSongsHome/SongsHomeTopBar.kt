@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -82,6 +83,7 @@ fun SongsHomeTopAppBar(
 
     Box {
         TopAppBar(
+            modifier = Modifier.height(94.dp),
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent
             ),
@@ -97,6 +99,8 @@ fun SongsHomeTopAppBar(
                         Text(
                             text = "SoundScape",
                             color = White90,
+                            fontSize = 20.sp,
+
                         )
                     } else {
                         BasicTextField(
@@ -245,6 +249,7 @@ fun SongsHomeTopAppBar(
         )
         if (isPlaylistSelected) {
             TopAppBar(
+                modifier = Modifier.height(94.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SoundScapeThemes.colorScheme.secondary
                 ),
@@ -308,6 +313,7 @@ fun SongsHomeTopAppBar(
         }
         if (isSongSelected) {
             TopAppBar(
+                modifier = Modifier.height(94.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SoundScapeThemes.colorScheme.secondary
                 ),

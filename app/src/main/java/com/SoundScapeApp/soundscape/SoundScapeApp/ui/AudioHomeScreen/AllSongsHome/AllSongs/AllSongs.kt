@@ -290,7 +290,8 @@ fun AllSongs(
                                     Spring.DampingRatioLowBouncy,
                                     Spring.StiffnessLow
                                 )
-                            )
+                            ),
+                        songDuration = song.duration.toLong()
 
                     )
                 }

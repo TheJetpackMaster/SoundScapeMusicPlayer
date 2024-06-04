@@ -22,6 +22,7 @@ import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabPosition
@@ -78,6 +80,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -114,6 +117,8 @@ import com.SoundScapeApp.soundscape.ui.theme.PurpleGrey80
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.SoundScapeApp.soundscape.ui.theme.color1
+import com.SoundScapeApp.soundscape.ui.theme.color2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.security.Permission
@@ -259,7 +264,6 @@ fun SongsHome(
     val selectedSongIds = remember { mutableStateListOf<Long>() }
 
 
-
     // Showing Playing bar
     val songs = viewModel.scannedAudioList.collectAsState()
     val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
@@ -267,7 +271,8 @@ fun SongsHome(
     val lastPlayedSongId = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
     val isAvailable = audioList.any { it.id == lastPlayedSongId }
 
-    val showPlayingBar = viewModel.retrievePlaybackState().lastPlayedSong != "0" && isPermissionGranted.value && nowPlaying != null && isAvailable
+    val showPlayingBar =
+        viewModel.retrievePlaybackState().lastPlayedSong != "0" && isPermissionGranted.value && nowPlaying != null && isAvailable
 
 
     Scaffold(
@@ -528,114 +533,162 @@ fun MainPlayingBar(
     val isPlaying = remember {
         mutableStateOf(false)
     }
+    val songDuration = remember { mutableStateOf(0L) }
+
     LaunchedEffect(player.currentMediaItem, player.isPlaying) {
         current.value = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
         isPlaying.value = player.isPlaying
+        songDuration.value = player.duration
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(62.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(
-                onClick = {
-                    val playbackState = viewModel.retrievePlaybackState()
-                    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
-                            context
-                        )
-                    ) {
-                        // Resume playback from the last saved position
-                        viewModel.restorePlaybackState(playbackState, context = context)
-                        player.pause()
-                        isPlaying.value = !isPlaying.value
-                        shouldReloadPlay.value = true
-                    }
-                    if (navController.currentBackStackEntry?.lifecycle?.currentState
-                        == Lifecycle.State.RESUMED
-                    ) {
-                        navController.navigate(ScreenRoute.NowPlayingScreen.route)
-                    }
-                })
-            .background(SoundScapeThemes.colorScheme.primary)
-            .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
-            RotatingImage(
-                painter = painter,
-                player = player,
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(
-            modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = currentPlayingSong?.displayName ?: "No song playing",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = White90,
-                modifier = Modifier.width(160.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Text(
-                text = currentPlayingSong?.artist ?: "Unknown",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = White50,
-                modifier = Modifier.width(160.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(
+    val songProgressValue = remember {
+        mutableStateOf(0f)
+    }
+    Box {
+        Row(
             modifier = Modifier
-                .fillMaxHeight()
-                .size(50.dp)
-                .clip(CircleShape)
-                .clickable(onClick = {
-                    val playbackState = viewModel.retrievePlaybackState()
-                    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
-                            context
+                .fillMaxWidth()
+                .height(62.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(
+                    onClick = {
+                        val playbackState = viewModel.retrievePlaybackState()
+                        if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+                                context
+                            )
+                        ) {
+                            // Resume playback from the last saved position
+                            viewModel.restorePlaybackState(playbackState, context = context)
+                            player.pause()
+                            isPlaying.value = !isPlaying.value
+                            shouldReloadPlay.value = true
+                        }
+                        if (navController.currentBackStackEntry?.lifecycle?.currentState
+                            == Lifecycle.State.RESUMED
+                        ) {
+                            navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                        }
+                    })
+                .background(
+//                    SoundScapeThemes.colorScheme.primary
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            SoundScapeThemes.colorScheme.primary,
+                            SoundScapeThemes.colorScheme.primary,
                         )
-                    ) {
-                        // Resume playback from the last saved position
-                        viewModel.restorePlaybackState(playbackState, context = context)
-                        player.play()
-                        isPlaying.value = !isPlaying.value
-                        startService(context)
-                        shouldReloadPlay.value = true
-                    } else {
-                        onStart()
-                        isPlaying.value = player.isPlaying
-                    }
-                }),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
-                contentDescription = "play pause button",
-                modifier = Modifier.size(18.dp),
-                tint = White90
-            )
+                    )
+                )
+                .border(.1.dp, White50.copy(.2f), RoundedCornerShape(10.dp)),
 
-            CustomCircularProgressIndicator(
-                player = player,
-                viewModel = viewModel,
-                currentPlayingSong,
-                isPermissionGranted = isPermissionGranted
-            )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(62.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(
+                    onClick = {
+                        val playbackState = viewModel.retrievePlaybackState()
+                        if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+                                context
+                            )
+                        ) {
+                            // Resume playback from the last saved position
+                            viewModel.restorePlaybackState(playbackState, context = context)
+                            player.pause()
+                            isPlaying.value = !isPlaying.value
+                            shouldReloadPlay.value = true
+                        }
+                        if (navController.currentBackStackEntry?.lifecycle?.currentState
+                            == Lifecycle.State.RESUMED
+                        ) {
+                            navController.navigate(ScreenRoute.NowPlayingScreen.route)
+                        }
+                    })
+                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                RotatingImage(
+                    painter = painter,
+                    player = player,
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = currentPlayingSong?.displayName ?: "No song playing",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = White90,
+                    modifier = Modifier.width(160.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Text(
+                    text = currentPlayingSong?.artist ?: "Unknown",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = White50,
+                    modifier = Modifier.width(160.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = {
+                        val playbackState = viewModel.retrievePlaybackState()
+                        if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+                                context
+                            )
+                        ) {
+                            // Resume playback from the last saved position
+                            viewModel.restorePlaybackState(playbackState, context = context)
+                            player.play()
+                            isPlaying.value = !isPlaying.value
+                            startService(context)
+                            shouldReloadPlay.value = true
+                        } else {
+                            onStart()
+                            isPlaying.value = player.isPlaying
+                        }
+                    }),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
+                    contentDescription = "play pause button",
+                    modifier = Modifier.size(18.dp),
+                    tint = White90
+                )
+
+                CustomCircularProgressIndicator(
+                    player = player,
+                    viewModel = viewModel,
+                    currentPlayingSong,
+                    isPermissionGranted = isPermissionGranted,
+                    songProgressValue = songProgressValue
+                )
+            }
         }
     }
 }
@@ -646,7 +699,8 @@ fun CustomCircularProgressIndicator(
     player: ExoPlayer,
     viewModel: AudioViewModel,
     currentPlayingSong: Audio?,
-    isPermissionGranted: MutableState<Boolean>
+    isPermissionGranted: MutableState<Boolean>,
+    songProgressValue: MutableState<Float>
 ) {
 
     val playbackState = viewModel.retrievePlaybackState()
@@ -671,6 +725,7 @@ fun CustomCircularProgressIndicator(
         LaunchedEffect(viewModel.progress) {
             songProgress.floatValue =
                 (player.currentPosition.toFloat() / player.duration.toFloat())
+            songProgressValue.value = (player.currentPosition.toFloat() / player.duration.toFloat())
         }
     }
 
@@ -909,3 +964,110 @@ fun isPermissionGranted(context: Context, permission: String): Boolean {
         permission
     ) == PackageManager.PERMISSION_GRANTED
 }
+
+//
+//Row(
+//modifier = Modifier
+//.fillMaxWidth()
+//.height(62.dp)
+//.clip(RoundedCornerShape(10.dp))
+//.clickable(
+//onClick = {
+//    val playbackState = viewModel.retrievePlaybackState()
+//    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+//            context
+//        )
+//    ) {
+//        // Resume playback from the last saved position
+//        viewModel.restorePlaybackState(playbackState, context = context)
+//        player.pause()
+//        isPlaying.value = !isPlaying.value
+//        shouldReloadPlay.value = true
+//    }
+//    if (navController.currentBackStackEntry?.lifecycle?.currentState
+//        == Lifecycle.State.RESUMED
+//    ) {
+//        navController.navigate(ScreenRoute.NowPlayingScreen.route)
+//    }
+//})
+//.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+//verticalAlignment = Alignment.CenterVertically
+//) {
+//    Box(
+//        contentAlignment = Alignment.Center
+//    ) {
+//        RotatingImage(
+//            painter = painter,
+//            player = player,
+//        )
+//    }
+//    Spacer(modifier = Modifier.width(12.dp))
+//
+//    Column(
+//        modifier = Modifier.fillMaxHeight(),
+//        verticalArrangement = Arrangement.Center,
+//        horizontalAlignment = Alignment.Start
+//    ) {
+//        Text(
+//            text = currentPlayingSong?.displayName ?: "No song playing",
+//            fontSize = 14.sp,
+//            fontWeight = FontWeight.Medium,
+//            color = White90,
+//            modifier = Modifier.width(160.dp),
+//            maxLines = 1,
+//            overflow = TextOverflow.Ellipsis,
+//        )
+//
+//        Text(
+//            text = currentPlayingSong?.artist ?: "Unknown",
+//            fontSize = 13.sp,
+//            fontWeight = FontWeight.Medium,
+//            color = White50,
+//            modifier = Modifier.width(160.dp),
+//            maxLines = 1,
+//            overflow = TextOverflow.Ellipsis
+//        )
+//    }
+//
+//    Spacer(modifier = Modifier.weight(1f))
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxHeight()
+//            .size(50.dp)
+//            .clip(CircleShape)
+//            .clickable(onClick = {
+//                val playbackState = viewModel.retrievePlaybackState()
+//                if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+//                        context
+//                    )
+//                ) {
+//                    // Resume playback from the last saved position
+//                    viewModel.restorePlaybackState(playbackState, context = context)
+//                    player.play()
+//                    isPlaying.value = !isPlaying.value
+//                    startService(context)
+//                    shouldReloadPlay.value = true
+//                } else {
+//                    onStart()
+//                    isPlaying.value = player.isPlaying
+//                }
+//            }),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        Icon(
+//            painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
+//            contentDescription = "play pause button",
+//            modifier = Modifier.size(18.dp),
+//            tint = White90
+//        )
+//
+//        CustomCircularProgressIndicator(
+//            player = player,
+//            viewModel = viewModel,
+//            currentPlayingSong,
+//            isPermissionGranted = isPermissionGranted,
+//            songProgressValue = songProgressValue
+//        )
+//    }
+//}

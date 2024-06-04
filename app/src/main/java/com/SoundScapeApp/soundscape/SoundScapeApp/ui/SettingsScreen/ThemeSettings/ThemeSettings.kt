@@ -182,7 +182,7 @@ fun ThemeSettings(
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                     val blurredBitmap =
-                        BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
+                        BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
                     Image(
                         bitmap = blurredBitmap.asImageBitmap(),
                         contentDescription = "Background image",
@@ -191,7 +191,7 @@ fun ThemeSettings(
                     )
                 } else {
                     GlideImage(
-                        model = R.drawable.naturesbg,
+                        model = R.drawable.themebackground,
                         contentDescription = "Background Image",
                         modifier = Modifier
                             .fillMaxSize()
@@ -206,8 +206,8 @@ fun ThemeSettings(
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    SoundScapeThemes.colorScheme.primary.copy(.9f),
-                                    SoundScapeThemes.colorScheme.secondary.copy(.9f)
+                                    SoundScapeThemes.colorScheme.primary.copy(.55f),
+                                    SoundScapeThemes.colorScheme.secondary.copy(.55f)
                                 ),
                                 start = Offset(0f, 0f), // Top-left corner
                                 end = Offset.Infinite // Bottom-right corner
@@ -392,12 +392,12 @@ fun ThemeSettings(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .width(25.dp)
-                                    .clip(CircleShape),
+                                    .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.FillBounds
                             )
 
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -450,12 +450,12 @@ fun ThemeSettings(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .width(25.dp)
-                                    .clip(CircleShape),
+                                    .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.FillBounds
                             )
 
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -508,12 +508,12 @@ fun ThemeSettings(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .width(25.dp)
-                                    .clip(CircleShape),
+                                    .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.FillBounds
                             )
 
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -566,12 +566,12 @@ fun ThemeSettings(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .width(25.dp)
-                                    .clip(CircleShape),
+                                    .clip(RoundedCornerShape(8.dp)),
                                 contentScale = ContentScale.FillBounds
                             )
 
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
 
                             Column(
                                 modifier = Modifier.weight(1f),
@@ -618,8 +618,10 @@ fun ThemeSettings(
                                 .fillMaxWidth()
                                 .height(38.dp)
                                 .padding(start = 8.dp, end = 8.dp)
-                                .clip(CircleShape)
-                                .background(SoundScapeThemes.colorScheme.primary),
+                                .clip(RoundedCornerShape(10.dp))
+                                .border(.2.dp, White50.copy(.4f), RoundedCornerShape(10.dp))
+                                .background(SoundScapeThemes.colorScheme.primary)
+                                ,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
@@ -802,7 +804,7 @@ fun ColorThemeRow(
             ) {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                     val blurredBitmap =
-                        BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
+                        BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
                     Image(
                         bitmap = blurredBitmap.asImageBitmap(),
                         contentDescription = "Background image",
@@ -811,11 +813,11 @@ fun ColorThemeRow(
                     )
                 } else {
                     GlideImage(
-                        model = R.drawable.naturesbg,
+                        model = R.drawable.themebackground,
                         contentDescription = "Background Image",
                         modifier = Modifier
                             .fillMaxSize()
-                            .blur(40.dp),
+                            .blur(15.dp),
                         contentScale = ContentScale.FillBounds,
                     )
                 }
@@ -826,11 +828,9 @@ fun ColorThemeRow(
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    color1.copy(.8f),
-                                    color2.copy(.8f)
+                                    color1.copy(.55f),
+                                    color2.copy(.55f)
                                 ),
-                                start = Offset(0f, 0f), // Top-left corner
-                                end = Offset.Infinite // Bottom-right corner
                             )
                         )
                         .border(

@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape
 
+import android.Manifest
 import android.app.Activity
 import android.app.AppOpsManager
 import android.app.NotificationManager
@@ -24,17 +25,26 @@ import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -45,9 +55,11 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.openAppSettings
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeColorScheme
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeTheme
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
+import com.SoundScapeApp.soundscape.ui.theme.White90
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -71,8 +83,22 @@ class PlayerActivity : ComponentActivity() {
         )
 
         val dataUri = intent.data
+        val isPermissionGranted =
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+                isPermissionGranted(
+                    this,
+                    Manifest.permission.READ_MEDIA_VIDEO
+                )
+            } else {
+                isPermissionGranted(
+                    this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                )
+            }
 
-        if (dataUri != null) {
+
+
+        if (dataUri != null && isPermissionGranted) {
             videoViewModel.onIntent(dataUri)
         }
 
@@ -98,21 +124,27 @@ class PlayerActivity : ComponentActivity() {
                     modifier = Modifier
                         .background(Color.Black)
                 ) {
-                    if (dataUri != null) {
+                    if (dataUri != null && isPermissionGranted) {
                         VideoPlayingScreen(viewModel = videoViewModel,
                             navController = rememberNavController(),
                             onPipClick = {
                                 val packageManager = this@PlayerActivity.packageManager
                                 val pipModeSupported = packageManager.hasSystemFeature(
-                                    PackageManager.FEATURE_PICTURE_IN_PICTURE)
+                                    PackageManager.FEATURE_PICTURE_IN_PICTURE
+                                )
 
                                 if (pipModeSupported) {
                                     if (isPipModeEnabled(this@PlayerActivity)) {
-                                       enterPiPMode()
-                                    }else{
-                                        this@PlayerActivity.openPipSettings() }
+                                        enterPiPMode()
+                                    } else {
+                                        this@PlayerActivity.openPipSettings()
+                                    }
                                 } else {
-                                    Toast.makeText(this@PlayerActivity, "Picture-in-Picture mode is not supported on this device.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        this@PlayerActivity,
+                                        "Picture-in-Picture mode is not supported on this device.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             },
                             isMainActivity = false,
@@ -120,6 +152,25 @@ class PlayerActivity : ComponentActivity() {
                                 finish()
                             }
                         )
+                    } else {
+                        Column( 
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(SoundScapeThemes.colorScheme.secondary),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = "Media Permissions Required",
+                                color = White90)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = {
+                                this@PlayerActivity.openAppSettings()
+                            })
+                            {
+                                Text(text = "Grant Permissions")
+                            }
+                        }
                     }
                 }
             }
@@ -141,14 +192,15 @@ class PlayerActivity : ComponentActivity() {
 
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
 
-        if(videoViewModel.videoMediaSession == null) {
+        if (videoViewModel.videoMediaSession == null) {
             videoViewModel.createVideoMediaSession(this)
         }
 
         if (isInPictureInPictureMode) {
             stopService(Intent(this, MusicService::class.java))
             // Cancel the notification
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(101)
         }
     }
@@ -166,8 +218,8 @@ class PlayerActivity : ComponentActivity() {
             videoViewModel.destroyVideoMediaSession()
         }
 
-        if(isInPictureInPictureMode){
-            if(videoViewModel.videoMediaSession == null){
+        if (isInPictureInPictureMode) {
+            if (videoViewModel.videoMediaSession == null) {
                 videoViewModel.createVideoMediaSession(this)
             }
         }
@@ -177,4 +229,11 @@ class PlayerActivity : ComponentActivity() {
         super.onDestroy()
         videoViewModel.exoPlayer.pause()
     }
+}
+
+fun isPermissionGranted(context: Context, permission: String): Boolean {
+    return ContextCompat.checkSelfPermission(
+        context,
+        permission
+    ) == PackageManager.PERMISSION_GRANTED
 }
