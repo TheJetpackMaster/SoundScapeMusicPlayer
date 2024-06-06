@@ -98,3 +98,13 @@ val Theme13Secondary = Color(0xFFA58D72)
 
 val color1 = Color(0XFF30283d)
 val color2 = Color(0XFF4f4776)
+
+val test1 = Color(0XFF9f6540)
+val test2 = Color(0XFF492c1a)
+val test3 = Color(0XFFecbd8f)
+
+val secondTest1 = Color(0xFF306D61)
+val secondTest2 = Color(0xFF264B43)
+
+val thirdTest1 = Color(0XFF496d79)
+val thirdTest2 = Color(0XFF222b2d)

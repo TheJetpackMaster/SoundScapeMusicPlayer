@@ -17,6 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.SoundScapeApp.soundscape.MainActivity
@@ -219,6 +221,28 @@ private val LargeTypography = SoundScapeTypography(
     )
 )
 
+// Sizes
+private val smallSizes = SoundScapeSizes(
+    large = 325.dp,
+    medium = 265.dp,
+    normal = 0.dp,
+    small = 0.dp
+)
+
+private val mediumSizes = SoundScapeSizes(
+    large = 370.dp,
+    medium = 300.dp,
+    normal = 0.dp,
+    small = 0.dp
+)
+
+private val largeSizes = SoundScapeSizes(
+    large = 425.dp,
+    medium = 340.dp,
+    normal = 0.dp,
+    small = 0.dp
+)
+
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun SoundScapeThemes(
@@ -252,6 +276,7 @@ fun SoundScapeThemes(
             if (config.screenWidthDp <= 360) {
                 SmallTypography
 
+
             } else if (config.screenWidthDp <= 411) {
                 MediumTypography
 
@@ -264,12 +289,31 @@ fun SoundScapeThemes(
             LargeTypography // Default typography for other size classes
         }
 
+    }
+
+    val sizes = when (windows.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            if (config.screenWidthDp <= 360) {
+                smallSizes
+
+            } else if (config.screenWidthDp <= 411) {
+                mediumSizes
+
+            } else {
+                largeSizes
+            }
+        }
+
+        else -> {
+            largeSizes
+        }
 
     }
 
     CompositionLocalProvider(
         localSoundScapeColorScheme provides colorScheme,
         localSoundScapeTypography provides typography,
+        localSoundScapeSize provides sizes,
         LocalIndication provides rippleIndication,
         content = content
     )
@@ -292,6 +336,9 @@ object SoundScapeThemes {
 
     val typography: SoundScapeTypography
         @Composable get() = localSoundScapeTypography.current
+
+    val sizes:SoundScapeSizes
+        @Composable get() = localSoundScapeSize.current
 }
 
 

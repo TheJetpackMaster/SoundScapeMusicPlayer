@@ -225,7 +225,7 @@ fun SongItem(
                 bottom = 2.dp,
             )
             .background(
-                if (isSelected) SoundScapeThemes.colorScheme.primary else SoundScapeThemes.colorScheme.primary.copy(.01f)
+                if (isSelected) SoundScapeThemes.colorScheme.primary else Color.Transparent
             )
             .padding(
                 top = 6.dp,
@@ -250,7 +250,7 @@ fun SongItem(
                 ),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(50.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
@@ -283,7 +283,7 @@ fun SongItem(
                     ),
                 overflow = TextOverflow.Ellipsis,
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -292,7 +292,8 @@ fun SongItem(
                     text = if (song.artist == "<unknown>") "Unknown Artist" else song.artist,
 //                    style = SoundScapeThemes.typography.bodyMedium,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Medium
+                    ,
                     color = White50,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

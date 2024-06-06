@@ -9,10 +9,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +36,7 @@ import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.ui.theme.BrightGray
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.SoundScapeApp.soundscape.ui.theme.test1
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -60,7 +65,7 @@ fun SongControlButtons(
         }
     }
 
-    
+
     val playPauseButtonSize = remember { mutableStateOf(60.dp) }
     val playPauseIconSize = remember{ mutableStateOf(24.dp) }
 
@@ -163,6 +168,174 @@ fun SongControlButtons(
                 ),
                 contentDescription = null,
                 tint = White90,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+
+@Composable
+fun DoubleRowSongControlButtons(
+    onShuffleClick: () -> Unit,
+    shuffleMode: MutableState<Boolean>,
+    onPreviousClick: () -> Unit,
+    onNextClick: () -> Unit,
+    onPlayPauseClick: () -> Unit,
+    isPlaying: MutableState<Boolean>,
+    onRepeatClick: () -> Unit,
+    repeatMode: MutableIntState,
+    player:ExoPlayer,
+    isMainActivity:Boolean
+
+) {
+
+    LaunchedEffect(player.isPlaying) {
+        if(isMainActivity) {
+            isPlaying.value = player.isPlaying
+        }
+        else{
+            isPlaying.value = true
+        }
+    }
+
+
+    val playPauseButtonSize = remember { mutableStateOf(60.dp) }
+    val playPauseIconSize = remember{ mutableStateOf(24.dp) }
+
+    val coroutineScope = rememberCoroutineScope()
+
+
+    val animatedButtonSize by animateDpAsState(
+        targetValue = playPauseButtonSize.value,
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
+    )
+    val animatedPlayPauseIconSize by animateDpAsState(
+        targetValue = playPauseIconSize.value,
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
+    )
+
+    // First Row
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .padding(start = 14.dp, end = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        IconButton(
+            onClick = {
+                onShuffleClick()
+            })
+        {
+            Icon(
+                painterResource(
+                    id = if (shuffleMode.value) R.drawable.shuffle1
+                    else R.drawable.noshuffle
+                ),
+                contentDescription = null,
+                tint = White90.copy(.75f),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+
+        IconButton(onClick = {
+            onPreviousClick()
+        })
+        {
+            Icon(
+                painterResource(id = R.drawable.skippreviousicon),
+                contentDescription = null,
+                tint = White90,
+                modifier = Modifier.size(24.dp)
+
+            )
+        }
+
+
+        Box(
+            modifier = Modifier
+                .size(animatedButtonSize)
+                .clip(CircleShape)
+                .background(test1.copy(.8f))
+                .clickable {
+                    coroutineScope.launch {
+                        playPauseButtonSize.value = 80.dp
+                        playPauseIconSize.value = 34.dp
+                        delay(50)
+                        playPauseButtonSize.value = 60.dp
+                        playPauseIconSize.value = 24.dp
+                    }
+                    onPlayPauseClick()
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
+                contentDescription = null,
+                tint = White90,
+                modifier = Modifier.size(animatedPlayPauseIconSize)
+            )
+        }
+
+        IconButton(onClick = {
+            onNextClick() })
+        {
+            Icon(
+                painterResource(id = R.drawable.skipnexticon),
+                contentDescription = null,
+                tint = White90,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+
+
+        IconButton(onClick = {
+            onRepeatClick() })
+        {
+            Icon(
+                painterResource(
+                    id =
+                    when (repeatMode.intValue) {
+                        1 -> R.drawable.repeatone
+                        2 -> R.drawable.repeatall
+                        else -> {
+                            R.drawable.notrepeat
+                        }
+                    }
+                ),
+                contentDescription = null,
+                tint = White90.copy(.75f),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+
+// Second Row
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .padding(start = 14.dp, end = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        IconButton(
+            onClick = {
+
+            })
+        {
+            Icon(
+                imageVector = Icons.Default.FavoriteBorder,
+                contentDescription = null,
+                tint = White90.copy(.75f),
                 modifier = Modifier.size(24.dp)
             )
         }

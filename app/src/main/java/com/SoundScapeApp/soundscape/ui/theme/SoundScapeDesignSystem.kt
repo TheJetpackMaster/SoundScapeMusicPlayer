@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.ui.theme
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 
 
 //Color
@@ -32,12 +33,12 @@ data class SoundScapeTypography(
 //Shapes
 
 //Size
-//data class SoundScapeSizes(
-//    val large: Dp,
-//    val medium: Dp,
-//    val normal: Dp,
-//    val small: Dp
-//)
+data class SoundScapeSizes(
+    val large: Dp,
+    val medium: Dp,
+    val normal: Dp,
+    val small: Dp
+)
 
 
 val localSoundScapeColorScheme = staticCompositionLocalOf {
@@ -64,11 +65,11 @@ val localSoundScapeTypography = staticCompositionLocalOf {
 }
 
 
-//val localSoundScapeSize = staticCompositionLocalOf {
-//    SoundScapeSizes(
-//        large = Dp.Unspecified,
-//        medium = Dp.Unspecified,
-//        normal = Dp.Unspecified,
-//        small = Dp.Unspecified
-//    )
-//}
+val localSoundScapeSize = staticCompositionLocalOf {
+    SoundScapeSizes(
+        large = Dp.Unspecified,
+        medium = Dp.Unspecified,
+        normal = Dp.Unspecified,
+        small = Dp.Unspecified
+    )
+}

@@ -188,6 +188,10 @@ class AudioViewModel @Inject constructor(
     private val _currentTheme = MutableStateFlow(1)
     val currentTheme: StateFlow<Int> = _currentTheme
 
+    //Audio playing screen design
+    private val _screenDesign = MutableStateFlow(1)
+    val screenDesign: StateFlow<Int> = _screenDesign
+
 
     //PERMISSIONS
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
@@ -553,6 +557,15 @@ class AudioViewModel @Inject constructor(
             player.seekTo(targetPosition)
         }
     }
+    fun onCircularProgressSeek(progress: Float) {
+        val totalDuration = player.duration.toFloat()
+        if (totalDuration > 0) {
+            val targetPosition = (progress / 300f * totalDuration).toLong()
+            player.seekTo(targetPosition)
+        }
+    }
+
+
 
 
     //    Shuffle Logic
@@ -1012,6 +1025,15 @@ class AudioViewModel @Inject constructor(
     fun getTheme() {
         _currentTheme.value = sharedPreferencesHelper.getTheme()
     }
+
+    // Audio playing screen
+    fun setScreenDesign(chooseDesign: Int) {
+        _screenDesign.value = chooseDesign
+    }
+
+//    fun getScreenDesign() {
+//        _currentTheme.value = sharedPreferencesHelper.getTheme()
+//    }
 
     fun setSelectedSongs(selectedSongs: List<Long>) {
         _selectedSongs.value = selectedSongs

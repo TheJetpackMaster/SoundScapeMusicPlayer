@@ -3,6 +3,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -52,6 +53,7 @@ import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
+@SuppressLint("NewApi")
 @OptIn(ExperimentalGlideComposeApi::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -151,8 +153,8 @@ fun MainScreen(
                             colors = listOf(
 //                                Color.Black.copy(.9f),
 //                                Color.Black.copy(.9f)
-                                SoundScapeThemes.colorScheme.primary.copy(.55f),
-                                SoundScapeThemes.colorScheme.secondary.copy(.55f)
+                                SoundScapeThemes.colorScheme.primary.copy(.65f),
+                                SoundScapeThemes.colorScheme.secondary.copy(.65f)
                             ),
                             start = Offset(0f, 0f),
                             end = Offset.Infinite

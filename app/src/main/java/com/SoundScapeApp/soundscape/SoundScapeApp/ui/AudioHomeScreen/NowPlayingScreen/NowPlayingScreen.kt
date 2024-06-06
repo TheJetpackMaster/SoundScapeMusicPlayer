@@ -77,6 +77,7 @@ import coil.request.ImageRequest
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.BlurHelpers
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.CustomSongSlider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.SongControlButtons
@@ -99,370 +100,38 @@ fun NowPlayingScreen(
     player: ExoPlayer,
     viewModel: AudioViewModel,
     isMainActivity: Boolean = true,
-    onBackClick:()->Unit = {}
+    onBackClick: () -> Unit = {}
 
 ) {
+    val currentDesign = viewModel.screenDesign.collectAsState()
 
-    val isPlaying = remember {
-        mutableStateOf(player.isPlaying)
+    if(currentDesign.value == 1){
+        AudioPlayingScreen2(
+            navController = navController,
+            context = context,
+            onProgress = onProgress,
+            audioList = audioList,
+            onStart =  onStart,
+            onNext = onNext,
+            onPrevious = onPrevious,
+            player = player,
+            viewModel = viewModel
+        )
+    }else{
+        AudioPlayingScreen1(
+            navController = navController,
+            context = context,
+            onProgress = onProgress,
+            audioList = audioList,
+            onStart =  onStart,
+            onNext = onNext,
+            onPrevious = onPrevious,
+            player = player,
+            viewModel = viewModel
+        )
     }
 
-    val currentPlayListSongs by viewModel.favoritesSongs.collectAsState()
-
-    val current = remember {
-        mutableLongStateOf(0L)
-    }
-
-    val repeatMode = remember {
-        mutableIntStateOf(0)
-    }
-    val shuffleMode = remember {
-        mutableStateOf(false)
-    }
-
-    val currentPlayingSong: Audio? by remember(audioList, current.longValue) {
-        derivedStateOf {
-            audioList.find { it.id == current.longValue }
-        }
-    }
-
-    val currentIntentMediaItem = viewModel.currentMediaItemAudio.collectAsState()
-
-    val dominantColor = remember {
-        mutableStateOf(BrightGray)
-    }
-
-
-    LaunchedEffect(player.currentMediaItem) {
-        current.longValue = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
-        shuffleMode.value = player.shuffleModeEnabled
-        repeatMode.intValue = player.repeatMode
-    }
-
-    LaunchedEffect(!isMainActivity){
-        startService(context)
-        isPlaying.value = true
-    }
-
-    DisposableEffect(currentPlayingSong?.artwork?.toUri()) {
-        if (currentPlayingSong?.artwork?.isNotEmpty() == true) {
-            try {
-                val bitmap = BitmapFactory.decodeStream(
-                    context.contentResolver.openInputStream(currentPlayingSong?.artwork?.toUri() as Uri)
-                )
-                Palette.from(bitmap).generate { palette ->
-                    val swatches = palette?.swatches.orEmpty()
-
-                    if (swatches.isNotEmpty()) {
-                        val mostUsedSwatch = swatches.maxByOrNull { it.population }
-
-                        if (mostUsedSwatch != null) {
-                            dominantColor.value = Color(mostUsedSwatch.rgb)
-                        }
-                    }
-                }
-
-                onDispose {
-                    bitmap.recycle()
-                }
-            } catch (e: FileNotFoundException) {
-                Log.e("PlayScreen", "Album art not found. Using fallback color.")
-                dominantColor.value = BrightGray
-            }
-        } else {
-            Log.e("PlayScreen", "Artwork URI is empty or null.")
-            dominantColor.value = BrightGray
-        }
-        onDispose {
-
-        }
-
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                ),
-                title = {},
-                actions = {
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (isMainActivity) {
-                            if (navController.currentBackStackEntry?.lifecycle?.currentState
-                                == Lifecycle.State.RESUMED
-                            ) {
-                                navController.popBackStack()
-                            }
-                        }else{
-                            onBackClick()
-                        }
-                    }){
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = White90,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            )
-        }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-//            val uri = currentPlayingSong?.artwork?.toUri()
-//            val blurredBitmap = uri?.let {
-//                val contextNonNull = context ?: return@let null // Ensure context is not null
-//                BlurHelpers.blur(contextNonNull, it, radius = 25f)
-//            }
-//
-//            if (blurredBitmap != null) {
-//                Image(
-//                    bitmap = blurredBitmap.asImageBitmap(),
-//                    contentDescription = null,
-//                    modifier = Modifier.fillMaxSize(),
-//                    contentScale = ContentScale.FillBounds,
-//                )
-//            } else {
-//               Image(painter = painterResource(id = R.drawable.sample), contentDescription = null)
-//            }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                val uri =
-                    if (isMainActivity) currentPlayingSong?.artwork?.toUri() else currentIntentMediaItem.value?.artwork?.toUri()
-                val blurredBitmap = uri?.let {
-                    try {
-                        val contextNonNull =
-                            context ?: return@let null // Ensure context is not null
-                        BlurHelpers.blur(contextNonNull, it, radius = 25f)
-                    } catch (e: FileNotFoundException) {
-                        null // Return null if image loading fails
-                    }
-                }
-
-                if (blurredBitmap != null) {
-                    Image(
-                        bitmap = blurredBitmap.asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                } else {
-                    // Use default image when album art is not found or loading fails
-                    val blurredBitmaps =
-                        BlurHelper.blur(context, drawableResId = R.drawable.sample, 25f)
-                    Image(
-                        bitmap = blurredBitmaps.asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                }
-            } else {
-                Image(
-                    painter = rememberAsyncImagePainter(
-                        ImageRequest.Builder(context)
-                            .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
-                            .apply(block = fun ImageRequest.Builder.() {
-                                error(R.drawable.sample)
-                            }
-                            ).build()
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(80.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            Column(
-                modifier = Modifier
-                    .background(dominantColor.value.copy(.5f))
-                    .padding(top = it.calculateTopPadding())
-                    .padding(top = 0.dp, start = 18.dp, end = 18.dp, bottom = 32.dp)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally
-
-            ) {
-                Card(
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp)
-                        .border(1.dp, Color.White, shape = RoundedCornerShape(16.dp))
-                        .weight(.9f)
-                ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context)
-                                .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
-                                .apply(block = fun ImageRequest.Builder.() {
-                                    error(R.drawable.sample)
-                                }
-                                ).build()
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentScale = ContentScale.Crop)
-                }
-                Spacer(modifier = Modifier.height(34.dp))
-
-                Text(
-                    text = if (isMainActivity) currentPlayingSong?.title
-                        ?: "Unknown Title" else currentIntentMediaItem.value?.title
-                        ?: "Unknown Title",
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 18.sp,
-                    color = White90,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .width(280.dp)
-                        .basicMarquee(
-                            animationMode = MarqueeAnimationMode.Immediately,
-                            iterations = 1000,
-                            initialDelayMillis = 1000,
-                            delayMillis = 2000,
-                            velocity = 30.dp
-                        )
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (isMainActivity) {
-                        if (currentPlayingSong?.artist == "<unknown>" || currentPlayingSong?.artist == null) "Unknown Artist" else currentPlayingSong!!.artist
-                    } else currentIntentMediaItem.value?.artist ?: "Unknown Artist",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = White50,
-                    modifier = Modifier
-                        .width(280.dp)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    IconButton(onClick = {
-                        viewModel.toggleFavorite(current.longValue)
-                        viewModel.getFavoritesSongs()
-                    })
-                    {
-                        Icon(
-                            imageVector = if (current.longValue in currentPlayListSongs) {
-                                Icons.Default.Favorite // Red heart icon
-                            } else {
-                                Icons.Default.FavoriteBorder // White heart icon
-                            },
-                            contentDescription = null,
-                            tint = if (current.longValue in currentPlayListSongs) Color.Red else White90,
-                        )
-                    }
-                }
-
-                CustomSongSlider(
-                    onProgress = onProgress,
-                    player = player,
-                    viewModel = viewModel,
-                    isMainActivity = isMainActivity
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                SongControlButtons(
-                    onShuffleClick = {
-                        viewModel.toggleShuffle()
-                        shuffleMode.value = !shuffleMode.value
-                    },
-                    shuffleMode = shuffleMode,
-                    onPreviousClick = {
-                        onPrevious()
-                        if (!player.isPlaying) {
-                            onStart()
-                        }
-                    },
-                    onNextClick = {
-                        onNext()
-                        if (!player.isPlaying) {
-                            onStart()
-                        }
-                    },
-                    onPlayPauseClick = {
-                        onStart()
-                        isPlaying.value = !isPlaying.value
-                    },
-                    isPlaying = isPlaying,
-                    onRepeatClick = {
-                        viewModel.toggleRepeat()
-                        repeatMode.intValue = player.repeatMode
-                    },
-                    repeatMode = repeatMode,
-                    player = player,
-                    isMainActivity = isMainActivity
-                )
-            }
-        }
-    }
 }
 
 
-object BlurHelpers {
-
-    fun blur(context: Context, uri: Uri, radius: Float): Bitmap {
-        val drawable = uriToDrawable(context, uri)
-        return blurBitmap(context, drawable, radius)
-    }
-
-    private fun uriToDrawable(context: Context, uri: Uri): Drawable {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        return BitmapDrawable(context.resources, BitmapFactory.decodeStream(inputStream))
-    }
-
-    @Suppress("DEPRECATION")
-    private fun blurBitmap(context: Context, drawable: Drawable, radius: Float): Bitmap {
-        val bitmap = drawableToBitmap(drawable)
-        val inputBitmap =
-            Bitmap.createScaledBitmap(bitmap, bitmap.width / 8, bitmap.height / 8, false)
-        val outputBitmap = Bitmap.createBitmap(inputBitmap)
-
-        val rs = RenderScript.create(context)
-        val script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))
-        val allocationIn = Allocation.createFromBitmap(rs, inputBitmap)
-        val allocationOut = Allocation.createFromBitmap(rs, outputBitmap)
-
-        script.setRadius(radius.coerceAtMost(25f)) // Limit radius to avoid crashes
-        script.setInput(allocationIn)
-        script.forEach(allocationOut)
-
-        allocationOut.copyTo(outputBitmap)
-        rs.destroy()
-
-        return outputBitmap
-    }
-
-    private fun drawableToBitmap(drawable: Drawable): Bitmap {
-        if (drawable is BitmapDrawable) {
-            return drawable.bitmap
-        }
-
-        val width = drawable.intrinsicWidth
-        val height = drawable.intrinsicHeight
-
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        drawable.setBounds(0, 0, canvas.width, canvas.height)
-        drawable.draw(canvas)
-
-        return bitmap
-    }
-}
 
