@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -65,6 +66,7 @@ fun MainBottomSheet(
     onPlayClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
     onDetailsClick: () -> Unit,
+    onShareClick:()->Unit = {},
     current: MutableLongState,
     currentPlayListSongs: List<Long>,
     isPlaylist:Boolean = false,
@@ -174,7 +176,7 @@ fun MainBottomSheet(
             ) {
                 OutlinedIconButton(
                     border = BorderStroke(1.dp, White90),
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(24.dp),
                     onClick = {
                         onPlayClick()
                     })
@@ -207,7 +209,7 @@ fun MainBottomSheet(
             ) {
                 OutlinedIconButton(
                     border = BorderStroke(1.dp, White90),
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(24.dp),
                     onClick = {
                         onAddToPlaylistClick()
                     })
@@ -228,6 +230,7 @@ fun MainBottomSheet(
                 )
             }
 
+
             if(isPlaylist) {
                 Row(
                     modifier = Modifier
@@ -241,7 +244,7 @@ fun MainBottomSheet(
                 ) {
                     OutlinedIconButton(
                         border = BorderStroke(1.dp, White90),
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(24.dp),
                         onClick = {
                             onRemoveClick()
                         })
@@ -274,7 +277,7 @@ fun MainBottomSheet(
             ) {
                 OutlinedIconButton(
                     border = BorderStroke(1.dp, White90),
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(24.dp),
                     onClick = {
                         onDetailsClick()
                     })
@@ -293,6 +296,41 @@ fun MainBottomSheet(
                     color = White90,
                     style = SoundScapeThemes.typography.bodyLarge
                 )
+            }
+
+            if(!isPlaylist){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clickable {
+                            onShareClick()
+                        }
+                        .padding(start = 12.dp, end = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedIconButton(
+                        border = BorderStroke(1.dp, White90),
+                        modifier = Modifier.size(24.dp),
+                        onClick = {
+                            onShareClick()
+                        })
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = White90,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Share",
+                        color = White90,
+                        style = SoundScapeThemes.typography.bodyLarge
+                    )
+                }
             }
         }
     }

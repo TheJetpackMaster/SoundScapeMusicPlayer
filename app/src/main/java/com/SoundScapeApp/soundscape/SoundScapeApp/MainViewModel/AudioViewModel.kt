@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
@@ -1179,6 +1180,31 @@ class AudioViewModel @Inject constructor(
 
     fun getCurrentPlayingArtist() {
         _currentPlayingArtist.value = sharedPreferencesHelper.getCurrentPlayingArtist()
+    }
+
+    //Share songs
+    fun shareAudio(context: Context, audioUri: Uri, audioTitle: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "audio/*"
+        shareIntent.putExtra(Intent.EXTRA_STREAM, audioUri)
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, audioTitle)
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(Intent.createChooser(shareIntent, "Share audio via"))
+    }
+
+    fun shareAudios(context: Context, audioUris: List<Uri>, audioTitles: List<String>) {
+        val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE)
+        shareIntent.type = "audio/*"
+
+        val uriArrayList = ArrayList<Uri>(audioUris)
+        val titleArrayList = ArrayList<String>(audioTitles)
+
+        shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uriArrayList)
+        shareIntent.putStringArrayListExtra(Intent.EXTRA_SUBJECT, titleArrayList)
+
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        context.startActivity(Intent.createChooser(shareIntent, "Share audio via"))
     }
 
 

@@ -467,7 +467,10 @@ fun AlbumsDetailScreen(
                     },
                     current = current,
                     currentPlayListSongs = currentFavSongs,
-                    selectedSong = selectedSong
+                    selectedSong = selectedSong,
+                    onShareClick = {
+
+                    }
                 )
             }
 

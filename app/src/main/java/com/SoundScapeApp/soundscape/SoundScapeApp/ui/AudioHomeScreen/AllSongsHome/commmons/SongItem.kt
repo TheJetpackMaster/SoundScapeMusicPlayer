@@ -203,7 +203,7 @@ fun SongItem(
     context: Context,
     onIconClick: () -> Unit,
     isPlaying: Boolean = false,
-    songDuration:Long = 0L,
+    songDuration: Long = 0L,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
 
@@ -285,32 +285,37 @@ fun SongItem(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(.95f),
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Text(
                     text = if (song.artist == "<unknown>") "Unknown Artist" else song.artist,
 //                    style = SoundScapeThemes.typography.bodyMedium,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                    ,
+                    fontWeight = FontWeight.Medium,
                     color = White50,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth(.95f)
+                )
+
+                Spacer(modifier = Modifier.width(5.dp))
+
+                Spacer(modifier = Modifier.size(4.dp)
+                    .clip(CircleShape)
+                    .background(White50)
+                )
+
+                Spacer(modifier = Modifier.width(5.dp))
+
+                Text(
+                    text = formatDuration(songDuration),
+                    color = White50,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1
                 )
             }
         }
-
-
-
-        Spacer(modifier = Modifier.width(3.dp))
-        Text(text = formatDuration(songDuration),
-            color = White90.copy(.8f),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1)
-        Spacer(modifier = Modifier.width(if(selectedSongs.any { it.value }) 8.dp else 0.dp))
 
         if (selectedSongs.any { it.value }) {
             OutlinedIconButton(

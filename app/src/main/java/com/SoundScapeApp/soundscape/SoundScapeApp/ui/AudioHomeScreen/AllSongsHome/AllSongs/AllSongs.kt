@@ -332,7 +332,11 @@ fun AllSongs(
                 },
                 current = current,
                 currentPlayListSongs = currentPlayListSongs,
-                selectedSong = selectedSong
+                selectedSong = selectedSong,
+                onShareClick = {
+                    showSheet.value = false
+                    viewModel.shareAudio(context,selectedSong!!.uri,selectedSong!!.title)
+                }
             )
         }
 

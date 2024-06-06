@@ -148,7 +148,7 @@ fun AudioPlayingScreen2(
     player: ExoPlayer,
     viewModel: AudioViewModel,
     isMainActivity: Boolean = true,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
 
 ) {
 
@@ -483,9 +483,9 @@ fun AudioPlayingScreen2(
                         CircularSlider(
                             modifier = Modifier
                                 .size(SoundScapeThemes.sizes.large),
-                            foreGroundStroke = 14f,
-                            backgroundStroke = 11f,
-                            thumbStroke = 18f,
+                            foreGroundStroke = 11f,
+                            backgroundStroke = 10f,
+                            thumbStroke = 15f,
                             backgroundColor = White90.copy(.2f),
                             progressColor = test3,
                             cap = StrokeCap.Round,
@@ -588,7 +588,16 @@ fun AudioPlayingScreen2(
                     },
                     repeatMode = repeatMode,
                     player = player,
-                    isMainActivity = isMainActivity
+                    isMainActivity = isMainActivity,
+                    current = current,
+                    currentPlayListSongs = currentPlayListSongs,
+                    onFavoriteClick = {
+                        viewModel.toggleFavorite(current.longValue)
+                        viewModel.getFavoritesSongs()
+                    },
+                    onShareClick = {
+                        viewModel.shareAudio(context,currentPlayingSong!!.uri,currentPlayingSong!!.title)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

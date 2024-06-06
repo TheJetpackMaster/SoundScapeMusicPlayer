@@ -16,11 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableLongState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.ExoPlayer
@@ -52,7 +56,8 @@ fun SongControlButtons(
     onRepeatClick: () -> Unit,
     repeatMode: MutableIntState,
     player:ExoPlayer,
-    isMainActivity:Boolean
+    isMainActivity:Boolean,
+
 
 ) {
 
@@ -186,7 +191,11 @@ fun DoubleRowSongControlButtons(
     onRepeatClick: () -> Unit,
     repeatMode: MutableIntState,
     player:ExoPlayer,
-    isMainActivity:Boolean
+    isMainActivity:Boolean,
+    current:MutableLongState,
+    currentPlayListSongs:List<Long>,
+    onFavoriteClick:()->Unit,
+    onShareClick:()->Unit
 
 ) {
 
@@ -216,13 +225,11 @@ fun DoubleRowSongControlButtons(
     )
 
     // First Row
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
             .padding(start = 14.dp, end = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -241,7 +248,7 @@ fun DoubleRowSongControlButtons(
                 modifier = Modifier.size(24.dp)
             )
         }
-
+        Spacer(modifier = Modifier.weight(1f))
 
         IconButton(onClick = {
             onPreviousClick()
@@ -255,6 +262,8 @@ fun DoubleRowSongControlButtons(
 
             )
         }
+
+        Spacer(modifier = Modifier.weight(.7f))
 
 
         Box(
@@ -282,6 +291,8 @@ fun DoubleRowSongControlButtons(
             )
         }
 
+        Spacer(modifier = Modifier.weight(.7f))
+
         IconButton(onClick = {
             onNextClick() })
         {
@@ -292,8 +303,7 @@ fun DoubleRowSongControlButtons(
                 modifier = Modifier.size(24.dp)
             )
         }
-
-
+        Spacer(modifier = Modifier.weight(1f))
 
         IconButton(onClick = {
             onRepeatClick() })
@@ -323,20 +333,34 @@ fun DoubleRowSongControlButtons(
 
 // Second Row
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .padding(start = 14.dp, end = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        IconButton(
-            onClick = {
-
-            })
+        IconButton(onClick = {
+            onFavoriteClick()
+        })
         {
             Icon(
-                imageVector = Icons.Default.FavoriteBorder,
+                imageVector = if (current.longValue in currentPlayListSongs) {
+                    Icons.Default.Favorite // Red heart icon
+                } else {
+                    Icons.Default.FavoriteBorder // White heart icon
+                },
                 contentDescription = null,
-                tint = White90.copy(.75f),
-                modifier = Modifier.size(24.dp)
+                tint = if (current.longValue in currentPlayListSongs) Color.Red else White90,
+            )
+        }
+
+        IconButton(onClick = {
+            onShareClick()
+        })
+        {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = null,
+                tint = White90,
             )
         }
     }

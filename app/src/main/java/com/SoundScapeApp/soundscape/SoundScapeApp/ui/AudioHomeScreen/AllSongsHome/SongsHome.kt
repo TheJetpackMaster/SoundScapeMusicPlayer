@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHo
 import android.Manifest
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -19,11 +20,13 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.rememberSplineBasedDecay
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +57,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -80,11 +85,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -103,6 +111,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
@@ -111,6 +120,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.Artists.ArtistsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.PlayListsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.PurpleGrey80
@@ -271,8 +281,17 @@ fun SongsHome(
     val lastPlayedSongId = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
     val isAvailable = audioList.any { it.id == lastPlayedSongId }
 
+    val screens = listOf(
+        BottomNavScreenRoutes.SongsHome,
+        BottomNavScreenRoutes.VideosHome,
+        BottomNavScreenRoutes.Settings
+    )
+
     val showPlayingBar =
         viewModel.retrievePlaybackState().lastPlayedSong != "0" && isPermissionGranted.value && nowPlaying != null && isAvailable
+
+    val showBottomBar = navController
+        .currentBackStackEntryAsState().value?.destination?.route in screens.map { it.route }
 
 
     Scaffold(
@@ -312,9 +331,32 @@ fun SongsHome(
                     viewModel.setSelectedSongs(selectedSongIds.toMutableList())
                 },
                 navController = navController,
-                selectedSongsCount = selectedSongsCount
+                selectedSongsCount = selectedSongsCount,
+                onShareClick = {
+                    val selectedSongsList = selectedSongs
+                        .filter { it.value } // Filter out only the selected songs
+                        .map { it.key } // Extract the IDs of the selected songs
+
+                    val selectedSongURIs = audioList
+                        .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                        .map { song -> song.uri } // Map each song to its URI
+
+                    val selectedTitle = audioList
+                        .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                        .map { song -> song.title } // Map each song to its URI
+
+                    viewModel.shareAudios(context,selectedSongURIs,selectedTitle)
+                    selectedSongs.clear()
+                }
             )
-        })
+        },
+        bottomBar = {
+            if (!showBottomBar) {
+
+                CustomBottomNav(navController = navController, context = context)
+            }
+        }
+    )
     { innerPadding ->
         Column(
             modifier = Modifier
@@ -467,20 +509,11 @@ fun SongsHome(
                     }
                 }
 
-                val screens = listOf(
-                    BottomNavScreenRoutes.SongsHome,
-                    BottomNavScreenRoutes.VideosHome,
-                    BottomNavScreenRoutes.Settings
-                )
-                val showBottomBar = navController
-                    .currentBackStackEntryAsState().value?.destination?.route in screens.map { it.route }
-
-
                 Column(
                     modifier = Modifier
                         .align(alignment = Alignment.BottomCenter)
                         .padding(
-                            bottom = if (showBottomBar) 8.dp else 72.dp,
+                            bottom = if (showBottomBar) 8.dp else 61.dp,
                             start = 18.dp,
                             end = 18.dp
                         )
@@ -544,6 +577,34 @@ fun MainPlayingBar(
     val songProgressValue = remember {
         mutableStateOf(0f)
     }
+
+
+    val playbackState = viewModel.retrievePlaybackState()
+    val songs = viewModel.scannedAudioList.collectAsState()
+    val currentSong = playbackState.lastPlayedSong.toLongOrNull() ?: 0L
+
+
+    val nowPlaying = songs.value.firstOrNull { it.id == currentSong }
+
+    val songProgress = remember {
+        mutableFloatStateOf(
+            if (isPermissionGranted.value && nowPlaying != null) {
+                playbackState.lastPlaybackPosition.toFloat() / nowPlaying.duration
+            } else {
+                0f
+            }
+        )
+    }
+
+
+    if (player.isPlaying) {
+        LaunchedEffect(viewModel.progress) {
+            songProgress.floatValue =
+                (player.currentPosition.toFloat() / player.duration.toFloat())
+            songProgressValue.value = (player.currentPosition.toFloat() / player.duration.toFloat())
+        }
+    }
+
     Box {
         Row(
             modifier = Modifier
@@ -552,7 +613,7 @@ fun MainPlayingBar(
                 .clip(RoundedCornerShape(10.dp))
                 .clickable(
                     onClick = {
-                        val playbackState = viewModel.retrievePlaybackState()
+//                        val playbackState = viewModel.retrievePlaybackState()
                         if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
                                 context
                             )
@@ -582,8 +643,29 @@ fun MainPlayingBar(
 
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(62.dp)
 
+            ) {
+                val gradient = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color.White.copy(.1f),
+                        Color.White.copy(.4f)
+                    )
+                )
 
+                // Calculate the width of the progress based on song progress value
+                val progressWidth = size.width * songProgress.value
+
+                // Draw the gradient progress rectangle
+                drawRect(
+                    brush = gradient,
+                    topLeft = Offset.Zero,
+                    size = Size(progressWidth, size.height)
+                )
+            }
         }
         Row(
             modifier = Modifier
@@ -592,7 +674,7 @@ fun MainPlayingBar(
                 .clip(RoundedCornerShape(10.dp))
                 .clickable(
                     onClick = {
-                        val playbackState = viewModel.retrievePlaybackState()
+//                        val playbackState = viewModel.retrievePlaybackState()
                         if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
                                 context
                             )
@@ -609,7 +691,7 @@ fun MainPlayingBar(
                             navController.navigate(ScreenRoute.NowPlayingScreen.route)
                         }
                     })
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -623,7 +705,9 @@ fun MainPlayingBar(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(
-                modifier = Modifier.fillMaxHeight(),
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(.72f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ) {
@@ -631,18 +715,18 @@ fun MainPlayingBar(
                     text = currentPlayingSong?.displayName ?: "No song playing",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = White90,
-                    modifier = Modifier.width(160.dp),
+                    color = White90.copy(.9f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
 
+                Spacer(modifier = Modifier.height(3.dp))
+
                 Text(
                     text = currentPlayingSong?.artist ?: "Unknown",
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = White50,
-                    modifier = Modifier.width(160.dp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -650,43 +734,50 @@ fun MainPlayingBar(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = {
-                        val playbackState = viewModel.retrievePlaybackState()
-                        if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
-                                context
-                            )
-                        ) {
-                            // Resume playback from the last saved position
-                            viewModel.restorePlaybackState(playbackState, context = context)
-                            player.play()
-                            isPlaying.value = !isPlaying.value
-                            startService(context)
-                            shouldReloadPlay.value = true
-                        } else {
-                            onStart()
-                            isPlaying.value = player.isPlaying
-                        }
-                    }),
-                contentAlignment = Alignment.Center
-            ) {
+            IconButton(
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = SoundScapeThemes.colorScheme.secondary.copy(.4f)
+                ),
+                modifier = Modifier.size(38.dp),
+                onClick = {
+//                    val playbackState = viewModel.retrievePlaybackState()
+                    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
+                            context
+                        )
+                    ) {
+                        // Resume playback from the last saved position
+                        viewModel.restorePlaybackState(playbackState, context = context)
+                        player.play()
+                        isPlaying.value = !isPlaying.value
+                        startService(context)
+                        shouldReloadPlay.value = true
+                    } else {
+                        onStart()
+                        isPlaying.value = player.isPlaying
+                    }
+                })
+            {
                 Icon(
                     painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
                     contentDescription = "play pause button",
                     modifier = Modifier.size(18.dp),
                     tint = White90
                 )
+            }
 
-                CustomCircularProgressIndicator(
-                    player = player,
-                    viewModel = viewModel,
-                    currentPlayingSong,
-                    isPermissionGranted = isPermissionGranted,
-                    songProgressValue = songProgressValue
+            Spacer(modifier = Modifier.width(6.dp))
+
+            IconButton(
+                modifier = Modifier.size(38.dp),
+                onClick = {
+                    viewModel.onUiEvents(UIEvents.SeekToNext)
+                })
+            {
+                Icon(
+                    painterResource(id = R.drawable.skipnexticon),
+                    contentDescription = "play pause button",
+                    modifier = Modifier.size(18.dp),
+                    tint = White90
                 )
             }
         }
@@ -818,22 +909,6 @@ fun CustomTabIndicator(
 }
 
 
-//@Composable
-//fun RotatingImage(
-//    painter: Painter,
-//    modifier: Modifier = Modifier
-//) {
-//    Image(
-//        painter = painter,
-//        contentDescription = null,
-//        modifier = modifier
-//            .size(44.dp)
-//            .clip(CircleShape),
-//        contentScale = ContentScale.Crop
-//    )
-//}
-
-
 @Composable
 fun RotatingImage(
     painter: Painter,
@@ -944,6 +1019,11 @@ fun FastScrollButton(
         }
     }
 }
+
+
+
+
+
 
 @Suppress("DEPRECATION")
 private fun isMediaSessionServiceRunning(context: Context): Boolean {

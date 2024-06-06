@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,12 +42,14 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
+import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
@@ -69,7 +72,8 @@ fun SongsHomeTopAppBar(
     isPlaylistSelected: Boolean,
     isSongSelected: Boolean,
     navController: NavController,
-    selectedSongsCount: MutableState<Int>
+    selectedSongsCount: MutableState<Int>,
+    onShareClick:()->Unit
 ) {
 
     var search by remember {
@@ -152,7 +156,7 @@ fun SongsHomeTopAppBar(
                                         {
                                             Icon(
                                                 imageVector = Icons.Default.Search,
-                                                contentDescription = null,
+                                                contentDescription = stringResource(id = R.string.songearch_icon),
                                                 tint = White90
                                             )
                                         }
@@ -355,6 +359,18 @@ fun SongsHomeTopAppBar(
                             tint = White90.copy(.9f)
                         )
                     }
+
+                    IconButton(onClick = {
+                        onShareClick()
+                    })
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = White90.copy(.9f)
+                        )
+                    }
+
                     IconButton(onClick = {
                         showAllSongDropDown.value = !showAllSongDropDown.value
                     })

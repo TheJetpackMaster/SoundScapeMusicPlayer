@@ -2,4 +2,8 @@
     <string name="app_name">SoundScape Player</string>
     <string name="title_activity_player">SoundScape Video Player</string>
     <string name="title_activity_audio_player">SoundScape Music Player</string>
+
+
+    // icons and app Image names
+    <string name="songearch_icon">show search field</string>
 </resources>

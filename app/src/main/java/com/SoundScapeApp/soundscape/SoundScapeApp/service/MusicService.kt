@@ -68,12 +68,14 @@ class MusicService : MediaSessionService() {
         super.onDestroy()
         stopSelf()
 //        mediaSession.release()
-        exoPlayer.pause()
-        sharedPreferencesHelper.savePlaybackState(
-            exoPlayer.currentMediaItem!!.mediaId,
-            exoPlayer.currentPosition,
-            exoPlayer.isPlaying
-        )
+        exoPlayer.currentMediaItem?.let { mediaItem ->
+            exoPlayer.pause()
+            sharedPreferencesHelper.savePlaybackState(
+                mediaItem.mediaId,
+                exoPlayer.currentPosition,
+                exoPlayer.isPlaying
+            )
+        }
 
 //        val intent = Intent("com.SoundScapeApp.soundscape.FINISH_ACTIVITY")
 //        sendBroadcast(intent)
