@@ -5,6 +5,8 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -39,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -149,6 +154,26 @@ fun ArtistsDetailScreen(
 
     val playbackState = viewModel.retrievePlaybackState()
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+//    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    DisposableEffect(backDispatcher) {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+//                val currentNavDestination = navBackStackEntry?.destination?.route
+                if (selectedSongs.isNotEmpty() || selectedPlaylists.isNotEmpty()) {
+                    selectedSongs.clear()
+
+                } else {
+                    navController.popBackStack()
+                }
+            }
+        }
+
+        backDispatcher?.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -185,7 +210,7 @@ fun ArtistsDetailScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = null,
-                                tint = BrightGray
+                                tint = White90
                             )
                         }
                     }
@@ -201,6 +226,29 @@ fun ArtistsDetailScreen(
                                 tint = White90
                             )
                         }
+                        IconButton(onClick = {
+                            val selectedSongsList = selectedSongs
+                                .filter { it.value } // Filter out only the selected songs
+                                .map { it.key } // Extract the IDs of the selected songs
+
+                            val selectedSongURIs = audioList
+                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                                .map { song -> song.uri } // Map each song to its URI
+
+                            val selectedTitle = audioList
+                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                                .map { song -> song.title } // Map each song to its URI
+
+                            viewModel.shareAudios(context, selectedSongURIs, selectedTitle)
+                            selectedSongs.clear()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = null,
+                                tint = White90
+                            )
+                        }
+
                     }
                     if (selectedSongs.any { it.value }) {
                         IconButton(onClick = {
@@ -257,15 +305,16 @@ fun ArtistsDetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 12.dp, end = 12.dp),
+                    .padding(start = 14.dp, end = 14.dp)
+                    .height(110.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
                     painter = rememberAsyncImagePainter(
                         ImageRequest.Builder(context)
                             .data(
-                                data = if (currentArtistSongs.isEmpty()) {
-                                    audioList[0].artwork
+                                data = if (artistSongs.isEmpty()) {
+                                    R.drawable.sample
                                 } else {
                                     artistSongs[0].artwork
                                 }
@@ -275,31 +324,32 @@ fun ArtistsDetailScreen(
                             }
                             ).build()
                     ),
-                    contentDescription = "artists cover image",
+                    contentDescription = null,
                     modifier = Modifier
                         .size(110.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .border(.5.dp, White90, RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
+                Spacer(modifier = Modifier.width(16.dp))
 
-                Spacer(modifier = Modifier.width(24.dp))
-
-                Column {
+                Column(
+                    verticalArrangement = Arrangement.Top,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(top = 8.dp)
+                ) {
 
                     Text(
-                        text = "Title ${artistSongs[0].artist}",
+                        text = if(artistSongs[0].artist == "<unknown>") "Unknown" else artistSongs[0].artist,
                         color = White90,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-
+                        style = SoundScapeThemes.typography.bodyLarge
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Songs  ${artistSongs.size}",
-                        color = White90
+                        text = "${artistSongs.size} songs",
+                        color = White90,
+                        style = SoundScapeThemes.typography.bodyMedium
                     )
                 }
             }
@@ -446,6 +496,7 @@ fun ArtistsDetailScreen(
                         },
                         context = context,
                         isPlaying = (playbackState.lastPlayedSong.toLongOrNull() ?: 0L) == songId.id,
+                        songDuration = songId.duration.toLong()
                     )
                 }
             }
@@ -475,7 +526,11 @@ fun ArtistsDetailScreen(
                     },
                     current = current,
                     currentPlayListSongs = currentFavSongs,
-                    selectedSong = selectedSong
+                    selectedSong = selectedSong,
+                    onShareClick = {
+                        showSheet.value = false
+                        viewModel.shareAudio(context,selectedSong!!.uri,selectedSong!!.title)
+                    }
                 )
             }
 

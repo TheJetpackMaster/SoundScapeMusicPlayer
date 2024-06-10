@@ -388,14 +388,14 @@ fun AudioPlayingScreen2(
                         )
                     )
                     .padding(top = it.calculateTopPadding())
-                    .padding(top = 8.dp, start = 2.dp, end = 2.dp, bottom = 34.dp)
+                    .padding(top = 8.dp, start = 2.dp, end = 2.dp, bottom = 28.dp)
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
 
-                Spacer(modifier = Modifier.weight(.5f))
+                Spacer(modifier = Modifier.weight(1f))
 
                 Text(
                     text = if (isMainActivity) currentPlayingSong?.title
@@ -408,7 +408,7 @@ fun AudioPlayingScreen2(
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .width(280.dp)
+                        .fillMaxWidth(.7f)
                         .basicMarquee(
                             animationMode = MarqueeAnimationMode.Immediately,
                             iterations = 1000,
@@ -431,7 +431,7 @@ fun AudioPlayingScreen2(
                     overflow = TextOverflow.Ellipsis,
                     color = White50,
                     modifier = Modifier
-                        .width(280.dp)
+                        .fillMaxWidth(.5f)
                 )
 
 
@@ -448,7 +448,7 @@ fun AudioPlayingScreen2(
 //                    Text(text = "Switch")
 //                }
 
-                Spacer(modifier = Modifier.height(34.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
 
                 Row(
@@ -537,7 +537,7 @@ fun AudioPlayingScreen2(
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(.4f))
+                Spacer(modifier = Modifier.weight(1f))
 //
 //                Row(
 //                    modifier = Modifier.fillMaxWidth()

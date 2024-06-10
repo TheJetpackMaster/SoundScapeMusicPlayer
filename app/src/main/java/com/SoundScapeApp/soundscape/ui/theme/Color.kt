@@ -108,3 +108,18 @@ val secondTest2 = Color(0xFF264B43)
 
 val thirdTest1 = Color(0XFF496d79)
 val thirdTest2 = Color(0XFF222b2d)
+
+// Sliders color
+val sliderColor1 = Color(0XFF446266)
+val sliderColor2 = Color(0XFF39C0D4)
+
+
+//radient color
+val radialColor1 = Color(0XFF000000)
+val radialColor2 = Color(0XFF719BA2)
+val radialColor3 = Color(0XFF052428)
+
+val thumb = Color(0XFF00C2CB)
+
+// Equalizerbg
+val eqBg = Color(0XFF1E1E1E)

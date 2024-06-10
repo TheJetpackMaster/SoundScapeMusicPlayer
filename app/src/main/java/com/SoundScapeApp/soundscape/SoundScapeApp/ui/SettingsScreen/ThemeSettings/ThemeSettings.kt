@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,8 +40,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -76,12 +79,19 @@ import com.SoundScapeApp.soundscape.ui.theme.Theme12Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme13Primary
 import com.SoundScapeApp.soundscape.ui.theme.Theme13Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme1Primary
+import com.SoundScapeApp.soundscape.ui.theme.Theme1Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
+import com.SoundScapeApp.soundscape.ui.theme.Theme2Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme3Primary
+import com.SoundScapeApp.soundscape.ui.theme.Theme3Secondary
+import com.SoundScapeApp.soundscape.ui.theme.Theme4Primary
 import com.SoundScapeApp.soundscape.ui.theme.Theme4Secondary
+import com.SoundScapeApp.soundscape.ui.theme.Theme5Primary
 import com.SoundScapeApp.soundscape.ui.theme.Theme5Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme6Primary
+import com.SoundScapeApp.soundscape.ui.theme.Theme6Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme7Primary
+import com.SoundScapeApp.soundscape.ui.theme.Theme7Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme8Primary
 import com.SoundScapeApp.soundscape.ui.theme.Theme8Secondary
 import com.SoundScapeApp.soundscape.ui.theme.Theme9Primary
@@ -90,6 +100,7 @@ import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
@@ -105,8 +116,8 @@ fun ThemeSettings(
         Theme1Primary,
         Theme2Primary,
         Theme3Primary,
-        Theme4Secondary,
-        Theme5Secondary,
+        Theme4Primary,
+        Theme5Primary,
         Theme6Primary,
         Theme7Primary,
         Theme8Primary,
@@ -118,13 +129,13 @@ fun ThemeSettings(
     )
 
     val secondaryColors = listOf(
-        Theme1Primary,
-        Theme2Primary,
-        Theme3Primary,
+        Theme1Secondary,
+        Theme2Secondary,
+        Theme3Secondary,
         Theme4Secondary,
         Theme5Secondary,
-        Theme6Primary,
-        Theme7Primary,
+        Theme6Secondary,
+        Theme7Secondary,
         Theme8Secondary,
         Theme9Secondary,
         Theme10Secondary,
@@ -165,6 +176,17 @@ fun ThemeSettings(
     ) {
         val scrollState = rememberScrollState()
 
+        val brushGradient = Brush.linearGradient(
+            colors = listOf(
+//                                Color.Black.copy(.9f),
+//                                Color.Black.copy(.9f)
+                SoundScapeThemes.colorScheme.primary.copy(.65f),
+                SoundScapeThemes.colorScheme.secondary.copy(.65f)
+            ),
+            start = Offset(0f, 0f),
+            end = Offset.Infinite
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -179,39 +201,19 @@ fun ThemeSettings(
                     .weight(1f)
                     .fillMaxWidth(.6f)
             ) {
-
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                    val blurredBitmap =
-                        BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
-                    Image(
-                        bitmap = blurredBitmap.asImageBitmap(),
-                        contentDescription = "Background image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                } else {
-                    GlideImage(
-                        model = R.drawable.themebackground,
-                        contentDescription = "Background Image",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .blur(40.dp),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                }
+                GlideImage(
+                    model = R.drawable.themebackground,
+                    contentDescription = "Background Image",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                )
 
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    SoundScapeThemes.colorScheme.primary.copy(.55f),
-                                    SoundScapeThemes.colorScheme.secondary.copy(.55f)
-                                ),
-                                start = Offset(0f, 0f), // Top-left corner
-                                end = Offset.Infinite // Bottom-right corner
-                            )
+                            brush = brushGradient
                         ),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -620,8 +622,7 @@ fun ThemeSettings(
                                 .padding(start = 8.dp, end = 8.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .border(.2.dp, White50.copy(.4f), RoundedCornerShape(10.dp))
-                                .background(SoundScapeThemes.colorScheme.primary)
-                                ,
+                                .background(SoundScapeThemes.colorScheme.primary),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
@@ -779,12 +780,21 @@ fun ColorThemeRow(
     secondaryColorList: List<Color>,
     currentTheme: Int,
     onItemClick: (Int) -> Unit = {},
-    context:Context
+    context: Context
 ) {
 
-    val painter = painterResource(id = R.drawable.naturesbg)
+    val scope = rememberCoroutineScope()
+    val lazyRowState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            lazyRowState.scrollToItem(currentTheme)
+        }
+    }
+
 
     LazyRow(
+        state = lazyRowState,
         modifier = Modifier
             .fillMaxWidth()
             .height(160.dp)
@@ -793,8 +803,8 @@ fun ColorThemeRow(
     ) {
         items(primaryColorList.size) { index ->
             val isSelected = currentTheme == index + 1
-            val color1 = primaryColorList[index]
-            val color2 = secondaryColorList[index]
+            val color1 = secondaryColorList[index]
+            val color2 = primaryColorList[index]
             Box(
                 modifier = Modifier
                     .width(100.dp)
@@ -802,34 +812,22 @@ fun ColorThemeRow(
                     .clickable { onItemClick(index + 1) },
                 contentAlignment = Alignment.Center
             ) {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                    val blurredBitmap =
-                        BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
-                    Image(
-                        bitmap = blurredBitmap.asImageBitmap(),
-                        contentDescription = "Background image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                } else {
-                    GlideImage(
-                        model = R.drawable.themebackground,
-                        contentDescription = "Background Image",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .blur(15.dp),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                }
+                GlideImage(
+                    model = R.drawable.themebackground,
+                    contentDescription = "Background Image",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                )
 
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            brush = Brush.linearGradient(
+                            brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    color1.copy(.55f),
-                                    color2.copy(.55f)
+                                    color1.copy(.94f),
+                                    color2.copy(.94f)
                                 ),
                             )
                         )

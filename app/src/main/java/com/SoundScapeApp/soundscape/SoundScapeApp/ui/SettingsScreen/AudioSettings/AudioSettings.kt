@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
@@ -87,7 +88,7 @@ fun AudioSettings(
                 .fillMaxSize()
                 .padding(it)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -133,7 +134,36 @@ fun AudioSettings(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .clickable {
+                        navController.navigate(ScreenRoute.EqualizerSettings.route)
+                    }
+                    .padding(start = 12.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(.7f)
+                ) {
+                    Text(
+                        text = "Equalizer",
+                        style = SoundScapeThemes.typography.titleSmall,
+                        color = White90
+                    )
+                    Text(
+                        text = "Customize Music according to moods",
+                        style = SoundScapeThemes.typography.bodySmall,
+                        lineHeight = 18.sp,
+                        maxLines = 2,
+                        fontWeight = FontWeight.Normal,
+                        color = White50
+                    )
+                }
+            }
         }
     }
 

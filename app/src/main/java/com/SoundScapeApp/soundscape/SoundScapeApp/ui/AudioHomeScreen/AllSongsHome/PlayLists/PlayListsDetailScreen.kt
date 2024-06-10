@@ -2,11 +2,14 @@
 
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,6 +36,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -195,19 +199,39 @@ fun PlayListDetailsScreen(
     val scope = rememberCoroutineScope()
 
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+//    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    DisposableEffect(backDispatcher) {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+//                val currentNavDestination = navBackStackEntry?.destination?.route
+                if (selectedSongs.isNotEmpty() || selectedPlaylists.isNotEmpty()) {
+                    selectedSongs.clear()
+
+                } else {
+                    navController.popBackStack()
+                }
+            }
+        }
+
+        backDispatcher?.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                modifier = Modifier
-                    .height(80.dp)
-                    .padding(end = 0.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                ),
-                title = {},
-                navigationIcon = {
-                    if (selectedSongs.any { it.value }) {
+            if (selectedSongs.any { it.value }) {
+                TopAppBar(
+                    modifier = Modifier
+                        .padding(end = 0.dp),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = SoundScapeThemes.colorScheme.secondary
+                    ),
+                    title = {},
+                    navigationIcon = {
                         IconButton(onClick = {
                             selectedSongs.clear()
                         })
@@ -215,37 +239,11 @@ fun PlayListDetailsScreen(
                             Icon(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = null,
-                                tint = BrightGray
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = {
-                            if (navController.currentBackStackEntry?.lifecycle?.currentState
-                                == Lifecycle.State.RESUMED
-                            ) {
-                                navController.popBackStack()
-                            }
-                        })
-                        {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = null,
                                 tint = White90
                             )
                         }
-                    }
-                },
-                actions = {
-                    if (selectedSongs.any { it.value }) {
-                        IconButton(onClick = {
-                            showAddSongsToPlaylistDialog.value = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
+                    },
+                    actions = {
                         IconButton(onClick = {
                             showDeleteSongsDialog = true
                         }) {
@@ -255,8 +253,39 @@ fun PlayListDetailsScreen(
                                 tint = White90
                             )
                         }
-                    }
-                    if (selectedSongs.any { it.value }) {
+
+                        IconButton(onClick = {
+                            showAddSongsToPlaylistDialog.value = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = White90
+                            )
+                        }
+
+                        IconButton(onClick = {
+                            val selectedSongsList = selectedSongs
+                                .filter { it.value } // Filter out only the selected songs
+                                .map { it.key } // Extract the IDs of the selected songs
+
+                            val selectedSongURIs = audioList
+                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                                .map { song -> song.uri } // Map each song to its URI
+
+                            val selectedTitle = audioList
+                                .filter { selectedSongsList.contains(it.id) } // Filter selected songs
+                                .map { song -> song.title } // Map each song to its URI
+
+                            viewModel.shareAudios(context, selectedSongURIs, selectedTitle)
+                            selectedSongs.clear()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = null,
+                                tint = White90
+                            )
+                        }
                         IconButton(onClick = {
                             showSelectAllDropDown.value = !showSelectAllDropDown.value
                         })
@@ -293,11 +322,38 @@ fun PlayListDetailsScreen(
                                 }
                             }
                         }
-                    } else {
+                    }
+                )
+            } else {
+                TopAppBar(
+                    modifier = Modifier
+                        .padding(end = 0.dp),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    ),
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = {
+                                if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                    == Lifecycle.State.RESUMED
+                                ) {
+                                    navController.popBackStack()
+                                }
+                            })
+                            {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = null,
+                                    tint = White90
+                                )
+                            }
+
+                    },
+                    actions = {
 
                     }
-                }
-            )
+                )
+            }
         }
     ) {
         Column(
@@ -351,6 +407,7 @@ fun PlayListDetailsScreen(
                         color = White90,
                         style = SoundScapeThemes.typography.bodyLarge
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "${currentPlayListSongs.size} songs",
                         color = White90,
@@ -404,7 +461,7 @@ fun PlayListDetailsScreen(
                                 viewModel.setCurrentPlayingPlaylist(currentPlaylistId!!)
 
                                 viewModel.setMediaItemFlag(false)
-                                viewModel.setMediaItems(playListSongs,context)
+                                viewModel.setMediaItems(playListSongs, context)
                                 viewModel.onUiEvents(UIEvents.PlayPause)
 
                                 startService(context)
@@ -451,7 +508,7 @@ fun PlayListDetailsScreen(
                             viewModel.setCurrentPlayingPlaylist(currentPlaylistId!!)
 
                             viewModel.setMediaItemFlag(false)
-                            viewModel.setMediaItems(playListSongs,context)
+                            viewModel.setMediaItems(playListSongs, context)
                             viewModel.onUiEvents(UIEvents.PlayPause)
 
                             startService(context)
@@ -516,7 +573,7 @@ fun PlayListDetailsScreen(
 //                                        viewModel.setPlaylistMediaItems(currentPlayListSongs)
 //                                        viewModel.playFromPlaylist(index)
                                     selectedAudio.let {
-                                        viewModel.setMediaItems(playListSongs,context)
+                                        viewModel.setMediaItems(playListSongs, context)
                                         viewModel.play(playListSongs.indexOf(selectedAudio))
                                     }
 
@@ -552,7 +609,8 @@ fun PlayListDetailsScreen(
                                 dampingRatio = Spring.DampingRatioLowBouncy,
                                 stiffness = Spring.StiffnessLow
                             )
-                        )
+                        ),
+                        songDuration = song.duration.toLong()
                     )
                 }
             }
@@ -588,7 +646,11 @@ fun PlayListDetailsScreen(
                         showSheet.value = false
                         showDeleteSongDialog = true
                     },
-                    selectedSong = selectedSong
+                    selectedSong = selectedSong,
+                    onShareClick = {
+                        showSheet.value = false
+                        viewModel.shareAudio(context, selectedSong!!.uri, selectedSong!!.title)
+                    }
                 )
             }
 
@@ -729,8 +791,8 @@ private fun isMediaSessionServiceRunning(context: Context): Boolean {
 fun startService(context: Context) {
     val intent = Intent(context, MusicService::class.java)
     if (!isMediaSessionServiceRunning(context)) {
-        startForegroundService(context,intent)
-    }else{
+        startForegroundService(context, intent)
+    } else {
 //        startService(context)
     }
 }

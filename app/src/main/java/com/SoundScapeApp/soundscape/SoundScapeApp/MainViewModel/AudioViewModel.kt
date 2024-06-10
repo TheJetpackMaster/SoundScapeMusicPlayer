@@ -5,6 +5,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.audiofx.BassBoost
+import android.media.audiofx.Equalizer
+import android.media.audiofx.LoudnessEnhancer
+import android.media.audiofx.Virtualizer
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
@@ -15,18 +19,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.SavedStateHandleSaveableApi
 import androidx.lifecycle.viewmodel.compose.saveable
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
-import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -34,9 +40,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -85,7 +88,30 @@ class AudioViewModel @Inject constructor(
     audioStateHandle: SavedStateHandle,
     private val localMediaProvider: LocalMediaProvider
 
-    ) : ViewModel() {
+) : ViewModel() {
+
+
+    private var equalizer: Equalizer? = null
+    var bassBoost: BassBoost? = null
+    var virtualizer: Virtualizer? = null
+    var loudnessEnhancer:LoudnessEnhancer? = null
+
+    //setting bass
+    private val _currentBassLevel = MutableStateFlow(0f)
+    val currentBassLevel: StateFlow<Float> = _currentBassLevel
+
+    //setting virtualizer
+    private val _currentVirtualizerLevel = MutableStateFlow(0f)
+    val currentVirtualizerLevel: StateFlow<Float> = _currentVirtualizerLevel
+
+    private val _equalizerBandLevels = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f))
+    val equalizerBandLevels: StateFlow<List<Float>>  = _equalizerBandLevels
+
+    private val _customEqualizerBandLevels = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f))
+    val customEqualizerBandLevels: StateFlow<List<Float>>  = _customEqualizerBandLevels
+
+    private val _selectedPreset = MutableStateFlow(Preset.NORMAL)
+    val selectedPreset : StateFlow<Preset> = _selectedPreset
 
 
     var duration by audioStateHandle.saveable { mutableStateOf(0L) }
@@ -276,6 +302,9 @@ class AudioViewModel @Inject constructor(
         getCurrentPlayingArtist()
 
         retrievePlaybackState()
+
+        setupAudioEffects()
+        setupEqualizer()
     }
 
 //    private val _audioData = MutableStateFlow<PagingData<Audio>>(PagingData.empty())
@@ -293,7 +322,8 @@ class AudioViewModel @Inject constructor(
 
                         val mediaId = player.currentMediaItem?.mediaId
 
-                        currentSelectedAudio = mediaId?.toLong() ?: (retrievePlaybackState().lastPlayedSong.toLongOrNull() ?: 0L)
+                        currentSelectedAudio = mediaId?.toLong()
+                            ?: (retrievePlaybackState().lastPlayedSong.toLongOrNull() ?: 0L)
 
                     }
 
@@ -558,6 +588,7 @@ class AudioViewModel @Inject constructor(
             player.seekTo(targetPosition)
         }
     }
+
     fun onCircularProgressSeek(progress: Float) {
         val totalDuration = player.duration.toFloat()
         if (totalDuration > 0) {
@@ -565,8 +596,6 @@ class AudioViewModel @Inject constructor(
             player.seekTo(targetPosition)
         }
     }
-
-
 
 
     //    Shuffle Logic
@@ -914,7 +943,6 @@ class AudioViewModel @Inject constructor(
     }
 
 
-
     //    ALBUMS SECTIONS
     fun albumClicked(albumId: Long) {
         _currentAlbumId.value = albumId
@@ -979,7 +1007,7 @@ class AudioViewModel @Inject constructor(
     }
 
     private fun updatePlaylists() {
-        if(isMainActivity.value) {
+        if (isMainActivity.value) {
             removeExtraIdsFromPlaylists()
             removeExtraIdsFromFavorites()
         }
@@ -1113,7 +1141,8 @@ class AudioViewModel @Inject constructor(
 
                         }
                     }
-                    4->{
+
+                    4 -> {
                         if (currentPlayingArtist.value != null && currentArtistSongsForResumption.value.isNotEmpty()) {
                             val artistSongs: List<Audio> =
                                 scannedAudioList.value.filter { audio ->
@@ -1147,11 +1176,11 @@ class AudioViewModel @Inject constructor(
         _currentPlayingSection.value = sharedPreferencesHelper.getCurrentPlayingSection()
     }
 
-    fun setMediaItemsFlags(setMediaItems:Boolean){
+    fun setMediaItemsFlags(setMediaItems: Boolean) {
         sharedPreferencesHelper.setMediaItemsFlag(setMediaItems)
     }
 
-    fun getMediaItemsFlags(){
+    fun getMediaItemsFlags() {
         setMediaItems = sharedPreferencesHelper.getMediaItemsFlag()
     }
 
@@ -1208,8 +1237,166 @@ class AudioViewModel @Inject constructor(
     }
 
 
+    // Equalizers and bass Boosters
+    @androidx.annotation.OptIn(UnstableApi::class)
+    fun setupAudioEffects() {
+        val audioSessionId = player.audioSessionId
+        if (audioSessionId != C.INDEX_UNSET) {
+            equalizer = Equalizer(0, audioSessionId).apply { enabled = true }
+            bassBoost = BassBoost(0, audioSessionId).apply { enabled = true }
+            virtualizer = Virtualizer(0, audioSessionId).apply { enabled = true }
+            loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply { enabled = true }
+        }
+    }
+
+
+    fun adjustLoudnessEnhancer(gain: Float) {
+        // Ensure the input value is within the range [0, 1]
+        val clampedGain = gain.coerceIn(0f, 1f)
+
+        // Define the maximum gain value in millibels
+        val MAX_GAIN_MILLIBELS = 1000 // Adjust as needed
+
+        // Map the float value to the range of gain values (in millibels)
+        val desiredGain = (clampedGain * MAX_GAIN_MILLIBELS).toInt()
+
+        try {
+            loudnessEnhancer?.setTargetGain(desiredGain)
+        } catch (e: IllegalStateException) {
+            // Handle IllegalStateException
+        } catch (e: IllegalArgumentException) {
+            // Handle IllegalArgumentException
+        } catch (e: UnsupportedOperationException) {
+            // Handle UnsupportedOperationException
+        }
+    }
+
+
+    fun adjustBass(level: Float) {
+        val strength =
+            (level * 1000).toInt().toShort()
+        bassBoost?.setStrength(strength)
+        _currentBassLevel.value = level
+    }
+    fun adjustVirtualizer(level: Float) {
+        val strength =
+            (level * 1000).toInt().toShort()
+        virtualizer?.setStrength(strength)
+        _currentVirtualizerLevel.value = level
+    }
+
+    fun setBandLevel(band: Int, level: Float) {
+        val newLevels = _equalizerBandLevels.value.toMutableList().apply {
+            this[band] = level
+        }
+        _equalizerBandLevels.value = newLevels
+        _customEqualizerBandLevels.value = newLevels
+        applyEqualizerBandLevels(newLevels)
+    }
+
+
+    fun setPreset(preset: Preset) {
+        Log.d("AudioViewModel", "Setting preset: ${preset.name}")
+        val presetLevels = when (preset) {
+            Preset.NORMAL -> listOf(0.4f, 0.4f, 0.4f, 0.4f, 0.4f)
+            Preset.JAZZ -> listOf(0.4f, 0.6f, 0.8f, 0.6f, 0.4f)
+            Preset.POP -> listOf(0.8f, 0.6f, 0.4f, 0.6f, 0.8f)
+            Preset.CLASSIC -> listOf(0.4f, 0.1f, 0.3f, 0.2f, 0.2f)
+            Preset.CUSTOM -> _customEqualizerBandLevels.value
+        }
+
+        _equalizerBandLevels.value = presetLevels
+        _selectedPreset.value = preset
+        applyEqualizerBandLevels(presetLevels)
+    }
+
+
+    private fun setupEqualizer() {
+        equalizer?.let {
+            val bands = List(it.numberOfBands.toInt()) { index ->
+                val level = it.getBandLevel(index.toShort()).toFloat()
+                val minLevel = it.bandLevelRange[0].toFloat()
+                val maxLevel = it.bandLevelRange[1].toFloat()
+                (level - minLevel) / (maxLevel - minLevel)
+            }
+            _equalizerBandLevels.value = bands
+        }
+    }
+
+    private fun applyEqualizerBandLevels(levels: List<Float>) {
+        equalizer?.let { eq ->
+            val minLevel = eq.bandLevelRange[0]
+            val maxLevel = eq.bandLevelRange[1]
+
+            levels.forEachIndexed { index, level ->
+                try {
+                    // Map slider value to the range between minLevel and maxLevel
+                    var bandLevel = ((level * (maxLevel - minLevel)) + minLevel).toInt().toShort()
+
+                    // Ensure bandLevel stays within the valid range
+                    bandLevel = bandLevel.coerceIn(minLevel, maxLevel)
+
+                    // Set the band level
+                    eq.setBandLevel(index.toShort(), bandLevel)
+                } catch (e: IllegalArgumentException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+
+//    fun setPreset(preset: Preset) {
+//        when (preset) {
+//            Preset.NO_BASS -> {
+//                adjustBass(0f)
+//                // Set equalizer bands for No Bass
+//                equalizer?.numberOfBands?.let { bands ->
+//                    for (i in 0 until bands) {
+//                        adjustEqualizer(i.toShort(), 0f)
+//                    }
+//                }
+//            }
+//            Preset.JAZZ -> {
+//                adjustBass(0.5f)
+//                // Set equalizer bands for Jazz
+//                equalizer?.numberOfBands?.let { bands ->
+//                    for (i in 0 until bands) {
+//                        val level = when (i.toShort()) {
+//                            0.toShort() -> 0.2f
+//                            1.toShort() -> 0.3f
+//                            2.toShort() -> 0.4f
+//                            3.toShort() -> 0.5f
+//                            4.toShort() -> 0.6f
+//                            else -> 0.5f
+//                        }
+//                        adjustEqualizer(i.toShort(), level)
+//                    }
+//                }
+//            }
+//            Preset.POP -> {
+//                adjustBass(0.8f)
+//                // Set equalizer bands for Pop
+//                equalizer?.numberOfBands?.let { bands ->
+//                    for (i in 0 until bands) {
+//                        val level = when (i.toShort()) {
+//                            0.toShort() -> 0.5f
+//                            1.toShort() -> 0.6f
+//                            2.toShort() -> 0.7f
+//                            3.toShort() -> 0.8f
+//                            4.toShort() -> 0.9f
+//                            else -> 0.8f
+//                        }
+//                        adjustEqualizer(i.toShort(), level)
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+
     // Play From Intent
-    private fun setMediaItem(uri: Uri, displayName: String,id:String) {
+    private fun setMediaItem(uri: Uri, displayName: String, id: String) {
         player.apply {
             addMediaItem(
                 MediaItem.Builder()
@@ -1224,11 +1411,11 @@ class AudioViewModel @Inject constructor(
         }
     }
 
-    private fun updateCurrentAudioItem(audioItem:Audio) {
+    private fun updateCurrentAudioItem(audioItem: Audio) {
         player.clearMediaItems()
         setMediaItemFlag(false)
         _currentMediaItem.value = audioItem
-        setMediaItem(audioItem.uri,audioItem.displayName,audioItem.id.toString())
+        setMediaItem(audioItem.uri, audioItem.displayName, audioItem.id.toString())
     }
 
     fun onIntent(uri: Uri) {
@@ -1243,7 +1430,7 @@ class AudioViewModel @Inject constructor(
         }
     }
 
-    fun setIsMainActivity(isMainActivity:Boolean){
+    fun setIsMainActivity(isMainActivity: Boolean) {
         _isMainActivity.value = isMainActivity
     }
 
@@ -1270,3 +1457,10 @@ sealed class UIState {
     data object Ready : UIState()
 }
 
+enum class Preset {
+    CUSTOM,
+    NORMAL,
+    JAZZ,
+    POP,
+    CLASSIC,
+}

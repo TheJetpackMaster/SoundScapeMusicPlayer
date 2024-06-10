@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -54,7 +55,6 @@ import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainBottomSheet(
@@ -66,14 +66,14 @@ fun MainBottomSheet(
     onPlayClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
     onDetailsClick: () -> Unit,
-    onShareClick:()->Unit = {},
+    onShareClick: () -> Unit = {},
     current: MutableLongState,
     currentPlayListSongs: List<Long>,
-    isPlaylist:Boolean = false,
-    onRemoveClick:()->Unit = {},
-    sheetBackgroundColor:Color = SoundScapeThemes.colorScheme.secondary
+    isPlaylist: Boolean = false,
+    onRemoveClick: () -> Unit = {},
+    sheetBackgroundColor: Color = SoundScapeThemes.colorScheme.secondary
 
-    ) {
+) {
     ModalBottomSheet(
         containerColor = sheetBackgroundColor,
         dragHandle = {},
@@ -111,7 +111,7 @@ fun MainBottomSheet(
                             contentDescription = null,
                             modifier = Modifier
                                 .size(46.dp)
-                                .clip(CircleShape),
+                                .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
                     }
@@ -133,7 +133,7 @@ fun MainBottomSheet(
                     )
                     Text(
                         text = selectedSong.artist,
-                        style = SoundScapeThemes.typography.titleSmall,
+                        style = SoundScapeThemes.typography.bodyMedium,
                         color = White50,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -158,7 +158,7 @@ fun MainBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             HorizontalDivider(
-                color = White90,
+                color = White90.copy(.7f),
                 thickness = 1.dp
             )
 
@@ -231,7 +231,7 @@ fun MainBottomSheet(
             }
 
 
-            if(isPlaylist) {
+            if (isPlaylist) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -270,6 +270,40 @@ fun MainBottomSheet(
                     .fillMaxWidth()
                     .height(48.dp)
                     .clickable {
+                        onShareClick()
+                    }
+                    .padding(start = 12.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedIconButton(
+                    border = BorderStroke(1.dp, White90),
+                    modifier = Modifier.size(24.dp),
+                    onClick = {
+                        onShareClick()
+                    })
+                {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = null,
+                        tint = White90,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Share",
+                    color = White90,
+                    style = SoundScapeThemes.typography.bodyLarge
+                )
+
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clickable {
                         onDetailsClick()
                     }
                     .padding(start = 12.dp, end = 12.dp),
@@ -298,40 +332,6 @@ fun MainBottomSheet(
                 )
             }
 
-            if(!isPlaylist){
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clickable {
-                            onShareClick()
-                        }
-                        .padding(start = 12.dp, end = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedIconButton(
-                        border = BorderStroke(1.dp, White90),
-                        modifier = Modifier.size(24.dp),
-                        onClick = {
-                            onShareClick()
-                        })
-                    {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = null,
-                            tint = White90,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Share",
-                        color = White90,
-                        style = SoundScapeThemes.typography.bodyLarge
-                    )
-                }
-            }
         }
     }
 }

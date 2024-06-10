@@ -169,35 +169,35 @@ private val SmallTypography = SoundScapeTypography(
 
 private val MediumTypography = SoundScapeTypography(
     titleLarge = TextStyle(
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
     ),
     titleMedium = TextStyle(
         fontSize = 16.sp,
         fontWeight = FontWeight.Medium
     ),
     titleSmall = TextStyle(
-        fontSize = 14.sp,
+        fontSize = 15.sp,
         fontWeight = FontWeight.Medium
     ),
     bodyLarge = TextStyle(
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Medium
-    ),
-    bodyMedium = TextStyle(
-        fontSize = 16.sp,
+        fontSize = 14.sp,
         fontWeight = FontWeight.Normal
     ),
+    bodyMedium = TextStyle(
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium
+    ),
     bodySmall = TextStyle(
-        fontSize = 14.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.Normal
     )
 )
 
 private val LargeTypography = SoundScapeTypography(
     titleLarge = TextStyle(
-        fontSize = 20.sp,
-        fontWeight = FontWeight.SemiBold
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
     ),
     titleMedium = TextStyle(
         fontSize = 18.sp,
@@ -208,39 +208,39 @@ private val LargeTypography = SoundScapeTypography(
         fontWeight = FontWeight.Medium
     ),
     bodyLarge = TextStyle(
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Medium
-    ),
-    bodyMedium = TextStyle(
-        fontSize = 18.sp,
+        fontSize = 16.sp,
         fontWeight = FontWeight.Normal
     ),
+    bodyMedium = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium
+    ),
     bodySmall = TextStyle(
-        fontSize = 16.sp,
+        fontSize = 13.sp,
         fontWeight = FontWeight.Normal
     )
 )
 
 // Sizes
 private val smallSizes = SoundScapeSizes(
-    large = 325.dp,
-    medium = 265.dp,
-    normal = 0.dp,
-    small = 0.dp
+    large = 300.dp,
+    medium = 245.dp,
+    normal = 44.dp,
+    small = 12.dp
 )
 
 private val mediumSizes = SoundScapeSizes(
-    large = 370.dp,
-    medium = 300.dp,
-    normal = 0.dp,
-    small = 0.dp
+    large = 340.dp,
+    medium = 280.dp,
+    normal = 52.dp,
+    small = 18.dp
 )
 
 private val largeSizes = SoundScapeSizes(
-    large = 425.dp,
-    medium = 340.dp,
-    normal = 0.dp,
-    small = 0.dp
+    large = 380.dp,
+    medium = 305.dp,
+    normal = 60.dp,
+    small = 24.dp
 )
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

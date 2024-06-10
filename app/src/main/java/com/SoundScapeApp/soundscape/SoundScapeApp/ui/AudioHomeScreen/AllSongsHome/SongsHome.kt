@@ -1,6 +1,7 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome
 
 import android.Manifest
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
@@ -8,6 +9,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -66,6 +70,7 @@ import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -158,6 +163,7 @@ fun SongsHome(
             }
         )
     }
+
 
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
@@ -293,6 +299,30 @@ fun SongsHome(
     val showBottomBar = navController
         .currentBackStackEntryAsState().value?.destination?.route in screens.map { it.route }
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+//    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+    DisposableEffect(backDispatcher) {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+//                val currentNavDestination = navBackStackEntry?.destination?.route
+                if (selectedSongs.isNotEmpty() || selectedPlaylists.isNotEmpty()) {
+                    selectedSongs.clear()
+                    selectedPlaylists.clear()
+                    viewModel.setIsSongSelected(false)
+                    viewModel.setIsPlaylistSelected(false)
+
+                } else {
+                    (context as? Activity)?.finish()
+                }
+            }
+        }
+
+        backDispatcher?.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -353,7 +383,7 @@ fun SongsHome(
         bottomBar = {
             if (!showBottomBar) {
 
-                CustomBottomNav(navController = navController, context = context)
+                CustomBottomNav(navController = navController, context = context,viewModel)
             }
         }
     )
@@ -639,7 +669,7 @@ fun MainPlayingBar(
                         )
                     )
                 )
-                .border(.1.dp, White50.copy(.2f), RoundedCornerShape(10.dp)),
+                .border(.2.dp, White50.copy(.2f), RoundedCornerShape(10.dp)),
 
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -657,7 +687,7 @@ fun MainPlayingBar(
                 )
 
                 // Calculate the width of the progress based on song progress value
-                val progressWidth = size.width * songProgress.value
+                val progressWidth = size.width * songProgress.floatValue
 
                 // Draw the gradient progress rectangle
                 drawRect(

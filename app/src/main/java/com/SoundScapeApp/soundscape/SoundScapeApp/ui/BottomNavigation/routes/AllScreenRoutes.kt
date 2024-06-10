@@ -28,6 +28,7 @@ sealed class ScreenRoute(val route:String){
 
     data object VideoSettings:ScreenRoute(route = "videomainsettings")
     data object AudioSettings:ScreenRoute(route = "audiomainsettings")
+    data object EqualizerSettings:ScreenRoute(route = "equalizersettings")
     data object ThemeSettings:ScreenRoute(route = "thememainsettings")
     data object AboutUs:ScreenRoute(route = "aboutusscreen")
 }

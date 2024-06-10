@@ -79,8 +79,8 @@ fun MainScreen(
     mediaSession: MediaSession,
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit,
-    onDeleteSong:(List<Uri>)->Unit,
-    onVideoDelete:(List<Uri>)->Unit
+    onDeleteSong: (List<Uri>) -> Unit,
+    onVideoDelete: (List<Uri>) -> Unit
 ) {
 
     val systemUiController = rememberSystemUiController()
@@ -111,8 +111,8 @@ fun MainScreen(
             .navigationBarsPadding(),
         containerColor = Color.Transparent,
         bottomBar = {
-            if(showBottomBar){
-                CustomBottomNav(navController = navController, context)
+            if (showBottomBar) {
+                CustomBottomNav(navController = navController, context, viewModel = audioViewModel)
             }
         }
     ) {
@@ -129,41 +129,41 @@ fun MainScreen(
 //                contentScale = ContentScale.FillBounds,
 //            )
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                val blurredBitmap =
-                    BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
-                Image(
-                    bitmap = blurredBitmap.asImageBitmap(),
-                    contentDescription = "Background image",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.FillBounds,
-                )
-            } else {
-//
-                GlideImage(
-                    model = R.drawable.themebackground,
-                    contentDescription = "Background Image",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(25.dp),
-                    contentScale = ContentScale.FillBounds,
-                )
-            }
+            val brushGradient = Brush.linearGradient(
+                colors = listOf(
+                    SoundScapeThemes.colorScheme.primary.copy(.6f),
+                    SoundScapeThemes.colorScheme.secondary.copy(.6f),
+                    SoundScapeThemes.colorScheme.primary.copy(.6f)
+
+                ),
+                start = Offset(0f, 0f),
+                end = Offset.Infinite
+            )
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+//                val blurredBitmap =
+//                    BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
+//                Image(
+//                    bitmap = blurredBitmap.asImageBitmap(),
+//                    contentDescription = "Background image",
+//                    modifier = Modifier.fillMaxSize(),
+//                    contentScale = ContentScale.FillBounds,
+//                )
+//            } else {
+////
+            GlideImage(
+                model = R.drawable.themebackground,
+                contentDescription = "Background Image",
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentScale = ContentScale.FillBounds,
+            )
+
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-//                                Color.Black.copy(.9f),
-//                                Color.Black.copy(.9f)
-                                SoundScapeThemes.colorScheme.primary.copy(.65f),
-                                SoundScapeThemes.colorScheme.secondary.copy(.65f)
-                            ),
-                            start = Offset(0f, 0f),
-                            end = Offset.Infinite
-                        )
+                        brush = brushGradient
                     )
                     .padding(bottom = it.calculateBottomPadding())
             ) {

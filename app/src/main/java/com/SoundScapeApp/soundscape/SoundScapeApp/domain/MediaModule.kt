@@ -3,6 +3,9 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.domain
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.media.audiofx.BassBoost
+import android.media.audiofx.Equalizer
+import android.media.audiofx.PresetReverb
 import android.preference.PreferenceManager
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -128,5 +131,23 @@ object MediaModule {
     fun provideLocalMediaProvider(application: Application): LocalMediaProvider = LocalMediaProvider(
         applicationContext = application
     )
+
+    @Provides
+    @Singleton
+    fun provideEqualizer(): Equalizer {
+        return Equalizer(0, 0).apply { enabled = true }
+    }
+
+    @Provides
+    @Singleton
+    fun provideBassBoost(): BassBoost {
+        return BassBoost(0, 0).apply { enabled = true }
+    }
+
+    @Provides
+    @Singleton
+    fun providePresetReverb(): PresetReverb {
+        return PresetReverb(0, 0).apply { enabled = true }
+    }
 
 }

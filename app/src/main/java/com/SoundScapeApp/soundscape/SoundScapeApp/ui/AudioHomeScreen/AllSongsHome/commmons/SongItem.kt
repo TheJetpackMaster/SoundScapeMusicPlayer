@@ -250,7 +250,7 @@ fun SongItem(
                 ),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(SoundScapeThemes.sizes.normal)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
@@ -271,9 +271,7 @@ fun SongItem(
         ) {
             Text(
                 text = song.title,
-//                style = SoundScapeThemes.typography.titleSmall,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                style = SoundScapeThemes.typography.titleSmall,
                 color = if (isPlaying) playingSongBg else White90,
                 maxLines = 1,
                 modifier = Modifier
@@ -283,16 +281,16 @@ fun SongItem(
                     ),
                 overflow = TextOverflow.Ellipsis,
             )
+
             Spacer(modifier = Modifier.height(4.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(.95f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = if (song.artist == "<unknown>") "Unknown Artist" else song.artist,
-//                    style = SoundScapeThemes.typography.bodyMedium,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = SoundScapeThemes.typography.bodyMedium,
                     color = White50,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

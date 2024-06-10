@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.navGraph
 
+import EqualizerScreen
 import android.content.Context
 import android.net.Uri
 import android.os.Build
@@ -61,10 +62,10 @@ fun BottomNavGraph(
     NavHost(navController = navController,
         startDestination = BottomNavScreenRoutes.SongsHome.route,
         enterTransition = {
-            fadeIn(animationSpec = tween(200))
+            fadeIn(animationSpec = tween(250))
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(200))
+            fadeOut(animationSpec = tween(250))
         }
     ) {
 
@@ -224,6 +225,14 @@ fun BottomNavGraph(
 //        Audio Settings main screen
         composable(ScreenRoute.AudioSettings.route) {
             AudioSettings(navController, audioViewModel)
+        }
+
+        //Equalizer settings
+        composable(ScreenRoute.EqualizerSettings.route){
+            EqualizerScreen(
+                viewModel = audioViewModel,
+                navController = navController
+            )
         }
 
         //        Theme Settings main screen

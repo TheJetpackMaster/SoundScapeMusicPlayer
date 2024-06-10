@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.ui.theme.GrayIcons
 import com.SoundScapeApp.soundscape.ui.theme.PurpleIcons
@@ -33,39 +34,21 @@ import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 
 @Composable
-fun CustomBottomNav(navController: NavController, context: Context) {
+fun CustomBottomNav(navController: NavController, context: Context,
+                    viewModel: AudioViewModel) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
 
-    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    DisposableEffect(backDispatcher) {
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val currentNavDestination = navBackStackEntry?.destination?.route
-
-                if (currentNavDestination == BottomNavScreenRoutes.SongsHome.route) {
-
-                    (context as? Activity)?.finish()
-                } else {
-
-                    navController.popBackStack()
-                }
-            }
-        }
-
-        backDispatcher?.addCallback(callback)
-        onDispose {
-            callback.remove()
-        }
-    }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
-            .background(SoundScapeThemes.colorScheme.primary)
+            .background(
+                SoundScapeThemes.colorScheme.primary
+            )
             .padding(start = 24.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

@@ -87,7 +87,6 @@ fun SongsHomeTopAppBar(
 
     Box {
         TopAppBar(
-            modifier = Modifier.height(94.dp),
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent
             ),
@@ -253,7 +252,6 @@ fun SongsHomeTopAppBar(
         )
         if (isPlaylistSelected) {
             TopAppBar(
-                modifier = Modifier.height(94.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SoundScapeThemes.colorScheme.secondary
                 ),
@@ -317,7 +315,6 @@ fun SongsHomeTopAppBar(
         }
         if (isSongSelected) {
             TopAppBar(
-                modifier = Modifier.height(94.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SoundScapeThemes.colorScheme.secondary
                 ),
@@ -380,29 +377,29 @@ fun SongsHomeTopAppBar(
                             contentDescription = null,
                             tint = White90.copy(.9f)
                         )
-                    }
 
-                    if (showAllSongDropDown.value) {
-                        DropdownMenu(
-                            modifier = Modifier.background(SoundScapeThemes.colorScheme.primary),
-                            expanded = showAllSongDropDown.value,
-                            onDismissRequest = {
-                                showAllSongDropDown.value = !showAllSongDropDown.value
-                            })
-                        {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "Select All",
-                                        color = White90,
-                                        style = SoundScapeThemes.typography.bodyMedium
-                                    )
-                                },
-                                onClick = {
-                                    onSelectAllSongs()
-                                    showAllSongDropDown.value = false
-                                }
-                            )
+                        if (showAllSongDropDown.value) {
+                            DropdownMenu(
+                                modifier = Modifier.background(SoundScapeThemes.colorScheme.primary),
+                                expanded = showAllSongDropDown.value,
+                                onDismissRequest = {
+                                    showAllSongDropDown.value = !showAllSongDropDown.value
+                                })
+                            {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = "Select All",
+                                            color = White90,
+                                            style = SoundScapeThemes.typography.bodyMedium
+                                        )
+                                    },
+                                    onClick = {
+                                        onSelectAllSongs()
+                                        showAllSongDropDown.value = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }

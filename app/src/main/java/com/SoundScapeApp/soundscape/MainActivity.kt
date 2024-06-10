@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape
 
+import EqualizerScreen
 import android.Manifest
 import android.Manifest.permission
 import android.app.Activity
@@ -345,6 +346,10 @@ class MainActivity : ComponentActivity() {
                     val audioList by audioViewModel.scannedAudioList.collectAsState()
                     val videoList by videoViewModel.scannedVideoList.collectAsState()
 
+//                    EqualizerScreen(
+//                        audioViewModel
+//                    )
+
 
                     RootNav(
                         navController = navController,
@@ -476,7 +481,7 @@ class MainActivity : ComponentActivity() {
 
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
 
-        if(videoViewModel.videoMediaSession == null) {
+        if (videoViewModel.videoMediaSession == null) {
             videoViewModel.createVideoMediaSession(this)
         }
 
@@ -484,7 +489,8 @@ class MainActivity : ComponentActivity() {
             stopService(Intent(this, MusicService::class.java))
 
             // Cancel the notification
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(101)
         }
     }
@@ -558,8 +564,8 @@ class MainActivity : ComponentActivity() {
         }
         videoViewModel.setPipModeEnabled(isInPictureInPictureMode)
 
-        if(isInPictureInPictureMode){
-            if(videoViewModel.videoMediaSession == null){
+        if (isInPictureInPictureMode) {
+            if (videoViewModel.videoMediaSession == null) {
                 videoViewModel.createVideoMediaSession(this)
             }
         }
@@ -569,7 +575,7 @@ class MainActivity : ComponentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (videoViewModel.autoPopupEnabled.value && videoViewModel.exoPlayer.playWhenReady) {
-            if(isPipModeEnabled(this)) {
+            if (isPipModeEnabled(this)) {
                 enterPiPMode()
             }
         }
