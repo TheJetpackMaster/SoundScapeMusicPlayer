@@ -14,6 +14,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerStorage
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
@@ -91,7 +92,10 @@ object MediaModule {
 
     @Provides
     @Singleton
-    fun provideServiceHandler(exoPlayer: ExoPlayer,sharedPreferencesHelper: SharedPreferencesHelper): MusicServiceHandler = MusicServiceHandler(
+    fun provideServiceHandler(
+        exoPlayer: ExoPlayer,
+        sharedPreferencesHelper: SharedPreferencesHelper
+    ): MusicServiceHandler = MusicServiceHandler(
         exoPlayer,
         sharedPreferencesHelper
     )
@@ -103,6 +107,15 @@ object MediaModule {
         sharedPreferences: SharedPreferences
     ): VideoPlaylistManager {
         return VideoPlaylistManager(context, sharedPreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEqualizerStorage(
+        @ApplicationContext context: Context,
+        sharedPreferences: SharedPreferences
+    ): EqualizerStorage {
+        return EqualizerStorage(context, sharedPreferences)
     }
 
 
@@ -122,15 +135,16 @@ object MediaModule {
 
     @Provides
     @Singleton
-    fun providesCoroutineScope():CoroutineScope{
+    fun providesCoroutineScope(): CoroutineScope {
         return CoroutineScope(Dispatchers.IO)
     }
 
     @Provides
     @Singleton
-    fun provideLocalMediaProvider(application: Application): LocalMediaProvider = LocalMediaProvider(
-        applicationContext = application
-    )
+    fun provideLocalMediaProvider(application: Application): LocalMediaProvider =
+        LocalMediaProvider(
+            applicationContext = application
+        )
 
     @Provides
     @Singleton

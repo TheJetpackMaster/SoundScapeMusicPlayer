@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
+import android.media.audiofx.PresetReverb
 import android.media.audiofx.Virtualizer
 import android.net.Uri
 import android.util.Log
@@ -29,6 +30,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerStorage
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
@@ -83,6 +85,7 @@ class AudioViewModel @Inject constructor(
     private val repository: MusicRepository,
     private val player: ExoPlayer,
     private val sharedPreferencesHelper: SharedPreferencesHelper,
+    private val equalizerStorage: EqualizerStorage,
     context: Context,
     sharedPreferences: SharedPreferences,
     audioStateHandle: SavedStateHandle,
@@ -95,6 +98,7 @@ class AudioViewModel @Inject constructor(
     var bassBoost: BassBoost? = null
     var virtualizer: Virtualizer? = null
     var loudnessEnhancer:LoudnessEnhancer? = null
+    var reverb:PresetReverb? = null
 
     //setting bass
     private val _currentBassLevel = MutableStateFlow(0f)
@@ -103,6 +107,10 @@ class AudioViewModel @Inject constructor(
     //setting virtualizer
     private val _currentVirtualizerLevel = MutableStateFlow(0f)
     val currentVirtualizerLevel: StateFlow<Float> = _currentVirtualizerLevel
+
+    //setting loudness booster
+    private val _currentLoudnessLevel = MutableStateFlow(0f)
+    val currentLoudnessLevel: StateFlow<Float> = _currentLoudnessLevel
 
     private val _equalizerBandLevels = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f))
     val equalizerBandLevels: StateFlow<List<Float>>  = _equalizerBandLevels
@@ -300,11 +308,15 @@ class AudioViewModel @Inject constructor(
         getCurrentPlayingPlaylist()
         getCurrentPlayingAlbum()
         getCurrentPlayingArtist()
-
         retrievePlaybackState()
 
         setupAudioEffects()
         setupEqualizer()
+
+        getBassLevel()
+        getVirtualizerLevel()
+        getLoudnessLevel()
+        getCurrentPreset()
     }
 
 //    private val _audioData = MutableStateFlow<PagingData<Audio>>(PagingData.empty())
@@ -1246,6 +1258,9 @@ class AudioViewModel @Inject constructor(
             bassBoost = BassBoost(0, audioSessionId).apply { enabled = true }
             virtualizer = Virtualizer(0, audioSessionId).apply { enabled = true }
             loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply { enabled = true }
+//            reverb = PresetReverb(0,audioSessionId).apply { enabled = true }
+//
+//            reverb?.preset = 5
         }
     }
 
@@ -1269,6 +1284,9 @@ class AudioViewModel @Inject constructor(
         } catch (e: UnsupportedOperationException) {
             // Handle UnsupportedOperationException
         }
+
+        _currentLoudnessLevel.value = gain
+        setLoudnessLevel(gain)
     }
 
 
@@ -1277,12 +1295,15 @@ class AudioViewModel @Inject constructor(
             (level * 1000).toInt().toShort()
         bassBoost?.setStrength(strength)
         _currentBassLevel.value = level
+        setBassLevel(level)
     }
+
     fun adjustVirtualizer(level: Float) {
         val strength =
             (level * 1000).toInt().toShort()
         virtualizer?.setStrength(strength)
         _currentVirtualizerLevel.value = level
+        setVirtualizerLevel(level)
     }
 
     fun setBandLevel(band: Int, level: Float) {
@@ -1290,7 +1311,8 @@ class AudioViewModel @Inject constructor(
             this[band] = level
         }
         _equalizerBandLevels.value = newLevels
-        _customEqualizerBandLevels.value = newLevels
+        equalizerStorage.saveCustomEqualizerBandLevels(newLevels)
+
         applyEqualizerBandLevels(newLevels)
     }
 
@@ -1298,15 +1320,14 @@ class AudioViewModel @Inject constructor(
     fun setPreset(preset: Preset) {
         Log.d("AudioViewModel", "Setting preset: ${preset.name}")
         val presetLevels = when (preset) {
-            Preset.NORMAL -> listOf(0.4f, 0.4f, 0.4f, 0.4f, 0.4f)
+            Preset.NORMAL -> {listOf(0.6f, .5f, .5f, .5f, 0.6f)}
             Preset.JAZZ -> listOf(0.4f, 0.6f, 0.8f, 0.6f, 0.4f)
             Preset.POP -> listOf(0.8f, 0.6f, 0.4f, 0.6f, 0.8f)
             Preset.CLASSIC -> listOf(0.4f, 0.1f, 0.3f, 0.2f, 0.2f)
-            Preset.CUSTOM -> _customEqualizerBandLevels.value
+            Preset.CUSTOM -> equalizerStorage.getCustomEqualizerBandLevels()
         }
-
         _equalizerBandLevels.value = presetLevels
-        _selectedPreset.value = preset
+        equalizerStorage.saveCustomEqualizerBandLevels(presetLevels)
         applyEqualizerBandLevels(presetLevels)
     }
 
@@ -1345,54 +1366,66 @@ class AudioViewModel @Inject constructor(
         }
     }
 
-
-//    fun setPreset(preset: Preset) {
-//        when (preset) {
-//            Preset.NO_BASS -> {
-//                adjustBass(0f)
-//                // Set equalizer bands for No Bass
-//                equalizer?.numberOfBands?.let { bands ->
-//                    for (i in 0 until bands) {
-//                        adjustEqualizer(i.toShort(), 0f)
-//                    }
-//                }
+//    fun getNormalBandLevels() {
+//        _customEqualizerBandLevels.value = equalizer?.let {
+//            List(it.numberOfBands.toInt()) { index ->
+//                val level = it.getBandLevel(index.toShort()).toFloat()
+//                val minLevel = it.bandLevelRange[0].toFloat()
+//                val maxLevel = it.bandLevelRange[1].toFloat()
+//                // Normalize the level to range [0, 1]
+//                (level - minLevel) / (maxLevel - minLevel)
 //            }
-//            Preset.JAZZ -> {
-//                adjustBass(0.5f)
-//                // Set equalizer bands for Jazz
-//                equalizer?.numberOfBands?.let { bands ->
-//                    for (i in 0 until bands) {
-//                        val level = when (i.toShort()) {
-//                            0.toShort() -> 0.2f
-//                            1.toShort() -> 0.3f
-//                            2.toShort() -> 0.4f
-//                            3.toShort() -> 0.5f
-//                            4.toShort() -> 0.6f
-//                            else -> 0.5f
-//                        }
-//                        adjustEqualizer(i.toShort(), level)
-//                    }
-//                }
-//            }
-//            Preset.POP -> {
-//                adjustBass(0.8f)
-//                // Set equalizer bands for Pop
-//                equalizer?.numberOfBands?.let { bands ->
-//                    for (i in 0 until bands) {
-//                        val level = when (i.toShort()) {
-//                            0.toShort() -> 0.5f
-//                            1.toShort() -> 0.6f
-//                            2.toShort() -> 0.7f
-//                            3.toShort() -> 0.8f
-//                            4.toShort() -> 0.9f
-//                            else -> 0.8f
-//                        }
-//                        adjustEqualizer(i.toShort(), level)
-//                    }
-//                }
-//            }
-//        }
+//        } ?: emptyList()
 //    }
+
+
+
+
+
+    //Saving equalizer data
+    //Set bass level
+    private fun setBassLevel(bassLevel:Float){
+        equalizerStorage.setBaseLevel(bassLevel)
+    }
+
+    //Get bass level
+    private fun getBassLevel(){
+        val bassLevel = equalizerStorage.getBaseLevel()
+        adjustBass(bassLevel)
+    }
+
+    private fun setVirtualizerLevel(virtualizerLevel:Float){
+        equalizerStorage.setVirtualizerLevel(virtualizerLevel)
+    }
+
+    //Get bass level
+    private fun getVirtualizerLevel(){
+        val virtualizerLevel = equalizerStorage.getVirtualizerLevel()
+        adjustVirtualizer(virtualizerLevel)
+    }
+
+    private fun setLoudnessLevel(loudnessLevel:Float){
+        equalizerStorage.setLoudnessLevel(loudnessLevel)
+    }
+
+    //Get bass level
+    private fun getLoudnessLevel(){
+        val loudnessLevel = equalizerStorage.getLoudnessLevel()
+        adjustLoudnessEnhancer(loudnessLevel)
+    }
+
+    fun setCurrentPreset(preset:Preset){
+        setPreset(preset)
+        _selectedPreset.value = preset
+        equalizerStorage.setCurrentPreset(preset)
+
+    }
+
+    private fun getCurrentPreset() {
+        val preset = equalizerStorage.getCurrentPreset()
+        _selectedPreset.value = preset
+        setPreset(preset)
+    }
 
 
     // Play From Intent

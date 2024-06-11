@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,8 +60,10 @@ fun EqualizerScreen(
     viewModel: AudioViewModel,
     navController: NavController
 ) {
-    val selectedPreset by viewModel.selectedPreset.collectAsState()
 
+    val context = LocalContext.current
+
+    val selectedPreset by viewModel.selectedPreset.collectAsState()
     val selectedPresetBrush = Brush.verticalGradient(listOf(sliderColor1, sliderColor2))
 
     val sliderValues by viewModel.equalizerBandLevels.collectAsState()
@@ -68,11 +71,15 @@ fun EqualizerScreen(
 
     val currentBassLevel by viewModel.currentBassLevel.collectAsState()
     val currentVirtualizerLevel by viewModel.currentVirtualizerLevel.collectAsState()
+    val currentLoudnessValue by viewModel.currentLoudnessLevel.collectAsState()
 
     var bassValue by remember { mutableStateOf(currentBassLevel) }
     var virtualizerValue by remember { mutableStateOf(currentVirtualizerLevel) }
+    var loudnessValue by remember { mutableStateOf(currentLoudnessValue) }
 
-    var loudnessValue by remember { mutableStateOf(.5f) }
+
+    val turnToCustom = remember{ mutableStateOf(false) }
+
 
     LaunchedEffect(bassValue) {
         viewModel.adjustBass(bassValue)
@@ -84,6 +91,12 @@ fun EqualizerScreen(
 
     LaunchedEffect(loudnessValue) {
         viewModel.adjustLoudnessEnhancer(loudnessValue)
+    }
+
+    LaunchedEffect(turnToCustom.value){
+        if(turnToCustom.value){
+            viewModel.setCurrentPreset(Preset.CUSTOM)
+        }
     }
 
 
@@ -130,7 +143,7 @@ fun EqualizerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+                    .horizontalScroll(rememberScrollState(initial = Preset.entries.indexOf(selectedPreset))),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Preset.entries.forEach { preset ->
@@ -139,7 +152,8 @@ fun EqualizerScreen(
                         color = selectedPresetBrush,
                         selected = selectedPreset == preset,
                         onClick = {
-                            viewModel.setPreset(preset)
+                            viewModel.setCurrentPreset(preset)
+                            turnToCustom.value = false
                         }
                     )
                 }
@@ -191,7 +205,8 @@ fun EqualizerScreen(
                                     }
                                 },
                                 enabled = selectedPreset.name == "CUSTOM",
-                                preset = selectedPreset
+                                preset = selectedPreset,
+                                turnToCustom = turnToCustom
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -229,6 +244,14 @@ fun EqualizerScreen(
                     value = loudnessValue,
                     onValueChange = {
                         loudnessValue = it
+
+                    },
+                    onValueChangeFinished = {
+                        Toast.makeText(
+                            context,
+                            "WARNING! Increasing loudness may make audio noisy.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     },
                     thumb = {
                         Box(
@@ -295,262 +318,6 @@ fun EqualizerScreen(
 }
 
 
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun EqualizerScreen(
-//    viewModel: AudioViewModel,
-//    navController: NavController
-//) {
-//
-//    var selectedPreset by remember { mutableStateOf(Preset.NORMAL) }
-//    val selectedPresetBrush = Brush.run {
-//        verticalGradient(
-//            listOf(
-//                sliderColor1,
-//                sliderColor2
-//            )
-//        )
-//    }
-//    var sliderValues by remember { mutableStateOf(List(7) { 0f }) }
-//    val hzValues = listOf(
-//        "60 Hz",
-//        "230 Hz",
-//        "910 Hz",
-//        "4 kHz",
-//        "14 khZ",
-//        "18 kHz",
-//        "36 kHz"
-//    )
-//
-//    val currentBassLevel by viewModel.currentBassLevel.collectAsState()
-//
-//    var bassValue by remember { mutableStateOf(0f) }
-//    var virtualizerValue by remember { mutableStateOf(0f) }
-//
-//    LaunchedEffect(bassValue){
-//        viewModel.adjustBass(bassValue)
-//        viewModel.setupAudioEffects()
-//    }
-//
-//    Scaffold(
-//        containerColor = Color.Transparent,
-//        topBar = {
-//            TopAppBar(
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Color.Transparent
-//                ),
-//                navigationIcon = {
-//                    IconButton(onClick = {
-//                        navController.popBackStack()
-//                    })
-//                    {
-//                        Icon(
-//                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-//                            contentDescription = "",
-//                            tint = White90
-//                        )
-//                    }
-//
-//                },
-//                title = {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                    ) {
-//                        Spacer(modifier = Modifier.width(24.dp))
-//                        Text(
-//                            text = "Equalizer",
-//                            color = White90
-//                        )
-//                    }
-//                }
-//            )
-//        }
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(it)
-////                .background(eqBg)
-//                .padding(16.dp)
-//                .verticalScroll(rememberScrollState()),
-//            verticalArrangement = Arrangement.spacedBy(16.dp)
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//            ) {
-//                Text(
-//                    text = "PRESETS",
-//                    fontWeight = FontWeight.Bold, fontSize = 18.sp,
-//                    color = White90.copy(.5f)
-//                )
-//            }
-//
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .horizontalScroll(rememberScrollState()),
-//                horizontalArrangement = Arrangement.spacedBy(12.dp)
-//            ) {
-//                PresetButton(
-//                    text = "Custom",
-//                    color = selectedPresetBrush,
-//                    selected = selectedPreset == Preset.CUSTOM,
-//                    onClick = {
-//                        selectedPreset = Preset.CUSTOM
-//                    }
-//                )
-//
-//                PresetButton(
-//                    text = "Normal",
-//                    color = selectedPresetBrush,
-//                    selected = selectedPreset == Preset.NORMAL,
-//                    onClick = {
-//                        selectedPreset = Preset.NORMAL
-//                    }
-//                )
-//
-//                PresetButton(
-//                    text = "Jazz",
-//                    color = selectedPresetBrush,
-//                    selected = selectedPreset == Preset.JAZZ,
-//                    onClick = {
-//                        selectedPreset = Preset.JAZZ
-//                    }
-//                )
-//
-//                PresetButton(
-//                    text = "Pop",
-//                    color = selectedPresetBrush,
-//                    selected = selectedPreset == Preset.POP,
-//                    onClick = {
-//                        selectedPreset = Preset.POP
-//                    }
-//                )
-//
-//                PresetButton(
-//                    text = "Classic",
-//                    color = selectedPresetBrush,
-//                    selected = selectedPreset == Preset.CLASSIC,
-//                    onClick = {
-//                        selectedPreset = Preset.CLASSIC
-//                    }
-//                )
-//            }
-//
-//            Spacer(modifier = Modifier.height(0.dp))
-//
-//            Box(
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .wrapContentHeight()
-//                        .padding(top = 4.dp),
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    Text(
-//                        text = "0",
-//                        color = sliderColor2
-//                    )
-//
-//                    HorizontalDivider(
-//                        color = sliderColor2
-//                    )
-//                }
-//
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .horizontalScroll(rememberScrollState())
-//                        .padding(start = 8.dp, end = 0.dp),
-//                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-//                ) {
-//                    sliderValues.forEachIndexed { index, value ->
-//                        Column(
-//                            modifier = Modifier.weight(1f),
-//                            horizontalAlignment = Alignment.CenterHorizontally
-//                        ) {
-//                            Text(
-//                                text = ((value * 10).toInt()).toString(),
-//                                color = White90,
-//                                fontSize = 12.sp,
-//                                fontWeight = FontWeight.Medium
-//                            )
-//
-//
-//                            Spacer(modifier = Modifier.height(10.dp))
-//
-//                            CustomVerticalSlider(
-//                                value = value,
-//                                onValueChange = {
-//                                    sliderValues =
-//                                        sliderValues.toMutableList().apply { set(index, it) }
-//                                    Log.d("new", it.toString())
-//                                },
-//                            )
-//
-//                            Spacer(modifier = Modifier.height(10.dp))
-//                            Text(
-//                                text = hzValues[index],
-//                                color = sliderColor2,
-//                                fontSize = 10.sp
-//                            )
-//                        }
-//                    }
-//                }
-//
-//            }
-//
-//            Spacer(modifier = Modifier.height(0.dp))
-//
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.Center
-//            ) {
-//                CustomCircularSlider(
-//                    value = bassValue,
-//                    onValueChange = {
-//                        bassValue = it
-//                    },
-//                    sliderSize = 140.dp
-//                )
-//
-//                Spacer(modifier = Modifier.weight(1f))
-//
-//                CustomCircularSlider(
-//                    value = virtualizerValue,
-//                    onValueChange = {
-//                        virtualizerValue = it
-//                    },
-//                    sliderSize = 140.dp
-//                )
-//            }
-//
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(start = 24.dp, end = 24.dp),
-//                horizontalArrangement = Arrangement.Center
-//            ) {
-//                Text(
-//                    text = "Bass Boost ${((bassValue * 100).toInt())}%",
-//                    color = sliderColor2
-//                )
-//
-//                Spacer(modifier = Modifier.weight(1f))
-//
-//                Text(
-//                    text = "Virtualizer ${((virtualizerValue * 100).toInt())}%",
-//                    color = sliderColor2
-//                )
-//
-//            }
-//        }
-//    }
-//}
-
 @Composable
 fun PresetButton(
     text: String,
@@ -602,7 +369,8 @@ fun CustomVerticalSlider(
     thumbColor: Color = Color.White,
     thumbRadius: Dp = 10.dp,
     enabled: Boolean,
-    preset: Preset
+    preset: Preset,
+    turnToCustom:MutableState<Boolean>
 ) {
     val sliderValue by remember { mutableStateOf(value) }
     val density = LocalDensity.current
@@ -630,6 +398,8 @@ fun CustomVerticalSlider(
                         sliderPosition = newValue.coerceIn(0f, 1f)
                         onValueChange(sliderPosition * 2 - 1)
                         change.consume()
+                    }else{
+                        turnToCustom.value = true
                     }
                 }
             }
@@ -639,6 +409,8 @@ fun CustomVerticalSlider(
                         val newValue = 1f - (tapOffset.y / canvasHeight)
                         sliderPosition = newValue.coerceIn(0f, 1f)
                         onValueChange(sliderPosition * 2 - 1)
+                    }else{
+                        turnToCustom.value = true
                     }
                 }
             }
