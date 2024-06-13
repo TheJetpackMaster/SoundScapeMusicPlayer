@@ -105,7 +105,7 @@ fun NowPlayingScreen(
 ) {
     val currentDesign = viewModel.screenDesign.collectAsState()
 
-    if(currentDesign.value == 1){
+    if(currentDesign.value == 0){
         AudioPlayingScreen2(
             navController = navController,
             context = context,

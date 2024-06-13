@@ -242,7 +242,7 @@ fun VideosHome(
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(
                                     page = index,
-                                    animationSpec = spring(stiffness = Spring.StiffnessLow)
+                                    animationSpec = spring(dampingRatio = 1f, stiffness = 500f)
                                 )
                             }
                         },

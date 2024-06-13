@@ -225,21 +225,21 @@ private val LargeTypography = SoundScapeTypography(
 private val smallSizes = SoundScapeSizes(
     large = 300.dp,
     medium = 245.dp,
-    normal = 44.dp,
+    normal = 46.dp,
     small = 12.dp
 )
 
 private val mediumSizes = SoundScapeSizes(
     large = 340.dp,
     medium = 280.dp,
-    normal = 52.dp,
+    normal = 54.dp,
     small = 18.dp
 )
 
 private val largeSizes = SoundScapeSizes(
     large = 380.dp,
     medium = 305.dp,
-    normal = 60.dp,
+    normal = 62.dp,
     small = 24.dp
 )
 

@@ -381,6 +381,10 @@ fun SongsHome(
                     viewModel.shareAudios(context, selectedSongURIs, selectedTitle)
                     viewModel.setIsSongSelected(false)
                     selectedSongs.clear()
+
+                },
+                onDrawer = {
+                    viewModel.setIsDrawerEnabled(true)
                 }
             )
         },

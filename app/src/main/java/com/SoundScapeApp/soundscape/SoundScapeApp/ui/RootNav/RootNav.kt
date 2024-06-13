@@ -63,7 +63,9 @@ fun RootNav(
             exitTransition = {
                 fadeOut(tween(200, easing = LinearEasing))
             }) {
-            SplashScreen(navController = navController)
+            SplashScreen(
+                navController = navController,
+                viewModel = audioViewModel)
         }
 
         composable(ScreenRoute.MainScreen.route,

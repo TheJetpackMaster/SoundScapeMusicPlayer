@@ -220,9 +220,6 @@ class AudioViewModel @Inject constructor(
     private val _currentTheme = MutableStateFlow(1)
     val currentTheme: StateFlow<Int> = _currentTheme
 
-    //Audio playing screen design
-    private val _screenDesign = MutableStateFlow(1)
-    val screenDesign: StateFlow<Int> = _screenDesign
 
 
     //PERMISSIONS
@@ -277,6 +274,19 @@ class AudioViewModel @Inject constructor(
     private val _isMainActivity = MutableStateFlow(false)
     val isMainActivity: StateFlow<Boolean> = _isMainActivity
 
+    //Drawer
+    private val _isDrawerEnabled = MutableStateFlow(false)
+    val isDrawerEnabled: StateFlow<Boolean> = _isDrawerEnabled
+
+
+    //Check if app opened for first time
+    private val _isFirstTime = MutableStateFlow(true)
+    val isFirstTime: StateFlow<Boolean> = _isFirstTime
+
+    //Audio playing screen design
+    private val _screenDesign = MutableStateFlow(0)
+    val screenDesign: StateFlow<Int> = _screenDesign
+
     init {
         viewModelScope.launch {
             loadPlaylists()
@@ -311,6 +321,11 @@ class AudioViewModel @Inject constructor(
         getVirtualizerLevel()
         getLoudnessLevel()
         getCurrentPreset()
+
+        if(isFirstTime.value){
+            getIsFirstTime()
+        }
+        getAudioScreenDesign()
     }
 
 //    private val _audioData = MutableStateFlow<PagingData<Audio>>(PagingData.empty())
@@ -1056,9 +1071,17 @@ class AudioViewModel @Inject constructor(
 
     // Audio playing screen
     fun setScreenDesign(chooseDesign: Int) {
-        _screenDesign.value = chooseDesign
+
     }
 
+    fun setAudioScreenDesign(design:Int){
+        sharedPreferencesHelper.setAudioScreenDesign(design)
+        _screenDesign.value = design
+    }
+
+    fun getAudioScreenDesign(){
+        _screenDesign.value = sharedPreferencesHelper.getAudioScreenDesign()
+    }
 //    fun getScreenDesign() {
 //        _currentTheme.value = sharedPreferencesHelper.getTheme()
 //    }
@@ -1452,6 +1475,19 @@ class AudioViewModel @Inject constructor(
 
     fun setIsMainActivity(isMainActivity: Boolean) {
         _isMainActivity.value = isMainActivity
+    }
+
+    fun setIsDrawerEnabled(isDrawerEnabled:Boolean){
+        _isDrawerEnabled.value = isDrawerEnabled
+    }
+
+    fun setIsFirstTime(isFirstTime:Boolean){
+        sharedPreferencesHelper.setIsFirstTime(isFirstTime)
+        _isFirstTime.value = isFirstTime
+    }
+
+    fun getIsFirstTime(){
+        _isFirstTime.value = sharedPreferencesHelper.getIsFirstTime()
     }
 
     override fun onCleared() {

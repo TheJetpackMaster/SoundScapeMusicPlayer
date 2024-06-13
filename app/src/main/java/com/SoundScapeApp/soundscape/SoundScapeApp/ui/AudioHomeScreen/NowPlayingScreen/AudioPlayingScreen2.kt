@@ -123,11 +123,14 @@ import kotlin.math.sin
 import android.view.MotionEvent
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.DoubleRowSongControlButtons
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.formatDuration
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.color1
 import com.SoundScapeApp.soundscape.ui.theme.secondTest1
 import com.SoundScapeApp.soundscape.ui.theme.secondTest2
@@ -150,7 +153,7 @@ fun AudioPlayingScreen2(
     isMainActivity: Boolean = true,
     onBackClick: () -> Unit = {},
 
-) {
+    ) {
 
     val isPlaying = remember {
         mutableStateOf(player.isPlaying)
@@ -248,6 +251,8 @@ fun AudioPlayingScreen2(
 
     }
 
+    var showMoreVertDropDown by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -272,13 +277,25 @@ fun AudioPlayingScreen2(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.setScreenDesign(2)
+                        showMoreVertDropDown = !showMoreVertDropDown
                     }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = null,
                             tint = White90
                         )
+                        DropdownMenu(expanded = showMoreVertDropDown,
+                            onDismissRequest = {
+                                showMoreVertDropDown = false
+                            })
+                        {
+                            DropdownMenuItem(text = {
+                                Text(text = "Choose Design")
+                            },
+                                onClick = {
+                                    navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
+                                })
+                        }
                     }
                 },
                 navigationIcon = {
@@ -596,7 +613,11 @@ fun AudioPlayingScreen2(
                         viewModel.getFavoritesSongs()
                     },
                     onShareClick = {
-                        viewModel.shareAudio(context,currentPlayingSong!!.uri,currentPlayingSong!!.title)
+                        viewModel.shareAudio(
+                            context,
+                            currentPlayingSong!!.uri,
+                            currentPlayingSong!!.title
+                        )
                     }
                 )
 
@@ -800,13 +821,13 @@ fun CircularSlider(
         last = a
         appliedAngle = a
 
-        if(down) {
+        if (down) {
             val newPosition = (a / 300f * player.duration).toLong()
             player.seekTo(newPosition)
         }
     }
     LaunchedEffect(key1 = appliedAngle) {
-        Log.d("applied",appliedAngle.toString())
+        Log.d("applied", appliedAngle.toString())
         onChange?.invoke(appliedAngle / 300f)
     }
     Canvas(

@@ -34,6 +34,9 @@ class SharedPreferencesHelper @Inject constructor(
     private val CURRENT_PLAYING_PLAYLIST_KEY = "current_playing_playlist"
     private val CURRENT_PLAYING_ARTIST_KEY = "current_playing_artist"
     private val CURRENT_PLAYING_ALBUM_KEY = "current_playing_album"
+    private val IS_FIRST_TIME_KEY = "is_first_time"
+    private val AUDIO_SCREEN_DESIGN_KEY = "audioplayingscreendesign"
+
 
 
 
@@ -377,6 +380,32 @@ class SharedPreferencesHelper @Inject constructor(
         return sharedPreferences.getString(CURRENT_PLAYING_ARTIST_KEY,"")
     }
 
+
+
+    fun setIsFirstTime(isFirstTime:Boolean){
+        sharedPreferences.edit().putBoolean(IS_FIRST_TIME_KEY,isFirstTime).apply()
+    }
+
+    fun getIsFirstTime():Boolean{
+        return sharedPreferences.getBoolean(IS_FIRST_TIME_KEY,true)
+    }
+
+
+    fun setAudioScreenDesign(design:Int){
+        sharedPreferences.edit().putInt(AUDIO_SCREEN_DESIGN_KEY,design).apply()
+    }
+
+    fun getAudioScreenDesign():Int{
+        return sharedPreferences.getInt(AUDIO_SCREEN_DESIGN_KEY,1)
+    }
+
+//    fun setIsFirstTimeScreenSetting(isFirstTime:Boolean){
+//        sharedPreferences.edit().putBoolean(IS_FIRST_TIME_KEY,isFirstTime).apply()
+//    }
+//
+//    fun getIsFirstTimeScreenSetting():Boolean{
+//        return sharedPreferences.getBoolean(IS_FIRST_TIME_KEY,true)
+//    }
 }
 
 data class PlaybackState(

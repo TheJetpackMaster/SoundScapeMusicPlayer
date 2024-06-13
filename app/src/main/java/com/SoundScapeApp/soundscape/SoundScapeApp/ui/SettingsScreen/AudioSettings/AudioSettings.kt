@@ -155,7 +155,38 @@ fun AudioSettings(
                         color = White90
                     )
                     Text(
-                        text = "Customize Music according to moods",
+                        text = "Customize Music according to your moods.",
+                        style = SoundScapeThemes.typography.bodySmall,
+                        lineHeight = 18.sp,
+                        maxLines = 2,
+                        fontWeight = FontWeight.Normal,
+                        color = White50
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .clickable {
+                        navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
+                    }
+                    .padding(start = 12.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(.7f)
+                ) {
+                    Text(
+                        text = "Playing screen design",
+                        style = SoundScapeThemes.typography.titleSmall,
+                        color = White90
+                    )
+                    Text(
+                        text = "Choose a design for audio playing screen.",
                         style = SoundScapeThemes.typography.bodySmall,
                         lineHeight = 18.sp,
                         maxLines = 2,

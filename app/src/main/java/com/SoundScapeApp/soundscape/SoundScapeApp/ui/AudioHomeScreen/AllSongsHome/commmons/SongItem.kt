@@ -228,9 +228,10 @@ fun SongItem(
             )
 
             .padding(
-                top = 6.dp,
-                bottom = 6.dp,
-                start = 8.dp, end = 8.dp
+                top = 5.dp,
+                bottom = 5.dp,
+                start = 8.dp,
+                end = 8.dp
             )
 //            .animateItemPlacement(
 //                animationSpec = tween(durationMillis = 400)

@@ -71,6 +71,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.BlurHelpers
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.CustomSongSlider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.SongControlButtons
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
 import com.SoundScapeApp.soundscape.ui.theme.BrightGray
 import com.SoundScapeApp.soundscape.ui.theme.White50
@@ -180,13 +181,14 @@ fun AudioPlayingScreen1(
                 title = {},
                 actions = {
                     IconButton(onClick = {
-                        viewModel.setScreenDesign(1)
+                       navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
                     }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = null,
                             tint = White90
                         )
+
                     }
                 },
                 navigationIcon = {

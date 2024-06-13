@@ -19,11 +19,20 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -93,22 +102,57 @@ fun MainScreen(
     )
     val showBottomBar = navController
         .currentBackStackEntryAsState().value?.destination?.route in screens.map { it.route }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val isDrawerEnabled by audioViewModel.isDrawerEnabled.collectAsState()
 
+//    LaunchedEffect(
+//        drawerState.isClosed
+//    ) {
+//        if(drawerState.isClosed) {
+//            audioViewModel.setIsDrawerEnabled(false)
+//        }
+//    }
+//    LaunchedEffect(isDrawerEnabled) {
+//        if(isDrawerEnabled) {
+//            drawerState.open()
+//        }else{
+//            drawerState.close()
+//        }
+//    }
 
-    Scaffold(
-        modifier = Modifier
-            .background(color = NavigationBarColor)
-            .navigationBarsPadding(),
-        containerColor = Color.Transparent,
-        bottomBar = {
-            if (showBottomBar) {
-                CustomBottomNav(navController = navController, context, viewModel = audioViewModel)
-            }
-        }
-    ) {
-        Box(
+//    ModalNavigationDrawer(
+//        drawerContent = {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth(.7f)
+//                    .fillMaxHeight()
+//                    .background(SoundScapeThemes.colorScheme.secondary)
+//            ) {
+//
+//            }
+//        },
+//        drawerState = drawerState
+//    ) {
+//
+//    }
+        Scaffold(
             modifier = Modifier
+                .background(color = NavigationBarColor)
+                .navigationBarsPadding(),
+            containerColor = Color.Transparent,
+            bottomBar = {
+                if (showBottomBar) {
+                    CustomBottomNav(
+                        navController = navController,
+                        context,
+                        viewModel = audioViewModel
+                    )
+                }
+            }
         ) {
+            Box(
+                modifier = Modifier
+            ) {
 
 
 //            val blurredBitmap = BlurHelper.blur(context, drawableResId = R.drawable.naturesbg, 25f)
@@ -119,17 +163,17 @@ fun MainScreen(
 //                contentScale = ContentScale.FillBounds,
 //            )
 
-            val brushGradient = Brush.linearGradient(
-                colors = listOf(
-                    SoundScapeThemes.colorScheme.primary.copy(.6f),
-                    SoundScapeThemes.colorScheme.secondary.copy(.6f),
-                    SoundScapeThemes.colorScheme.primary.copy(.6f)
+                val brushGradient = Brush.linearGradient(
+                    colors = listOf(
+                        SoundScapeThemes.colorScheme.primary.copy(.6f),
+                        SoundScapeThemes.colorScheme.secondary.copy(.6f),
+                        SoundScapeThemes.colorScheme.primary.copy(.6f)
 
 
-                ),
-                start = Offset(0f, 0f),
-                end = Offset.Infinite
-            )
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset.Infinite
+                )
 //            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
 //                val blurredBitmap =
 //                    BlurHelper.blur(context, drawableResId = R.drawable.themebackground, 25f)
@@ -141,44 +185,44 @@ fun MainScreen(
 //                )
 //            } else {
 ////
-            GlideImage(
-                model = R.drawable.themebackground,
-                contentDescription = "Background Image",
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentScale = ContentScale.FillBounds,
-            )
-
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = brushGradient
-                    )
-                    .padding(bottom = it.calculateBottomPadding())
-            ) {
-                BottomNavGraph(
-                    navController = navController,
-                    context = context,
-                    onProgress = onProgress,
-                    audioList = audioList,
-                    onStart = onStart,
-                    onItemClick = onItemClick,
-                    onNext = onNext,
-                    onPrevious = onPrevious,
-                    player = player,
-                    audioViewModel = audioViewModel,
-                    videoViewModel = videoViewModel,
-                    onPipClick = onPipClick,
-                    onVideoItemClick = onVideoItemClick,
-                    mediaSession = mediaSession,
-                    onDeleteSong = onDeleteSong,
-                    onVideoDelete = onVideoDelete
+                GlideImage(
+                    model = R.drawable.themebackground,
+                    contentDescription = "Background Image",
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
                 )
+
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = brushGradient
+                        )
+                        .padding(bottom = it.calculateBottomPadding())
+                ) {
+                    BottomNavGraph(
+                        navController = navController,
+                        context = context,
+                        onProgress = onProgress,
+                        audioList = audioList,
+                        onStart = onStart,
+                        onItemClick = onItemClick,
+                        onNext = onNext,
+                        onPrevious = onPrevious,
+                        player = player,
+                        audioViewModel = audioViewModel,
+                        videoViewModel = videoViewModel,
+                        onPipClick = onPipClick,
+                        onVideoItemClick = onVideoItemClick,
+                        mediaSession = mediaSession,
+                        onDeleteSong = onDeleteSong,
+                        onVideoDelete = onVideoDelete
+                    )
+                }
             }
         }
-    }
 }
 
 object BlurHelper {

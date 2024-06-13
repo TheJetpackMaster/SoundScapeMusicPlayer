@@ -10,6 +10,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
@@ -37,6 +39,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHo
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Playlists.VideoPlaylistDetailScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.VideosHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.ChooseAudioPlayingScreen
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(UnstableApi::class)
@@ -59,8 +62,12 @@ fun BottomNavGraph(
     onDeleteSong: (List<Uri>) -> Unit,
     onVideoDelete: (List<Uri>) -> Unit
 ) {
+    val isFirstTime by audioViewModel.isFirstTime.collectAsState()
+    val startDestination =
+        if (isFirstTime) ScreenRoute.ThemeSettings.route else BottomNavScreenRoutes.SongsHome.route
+
     NavHost(navController = navController,
-        startDestination = BottomNavScreenRoutes.SongsHome.route,
+        startDestination = startDestination,
         enterTransition = {
             fadeIn(animationSpec = tween(250))
         },
@@ -228,7 +235,7 @@ fun BottomNavGraph(
         }
 
         //Equalizer settings
-        composable(ScreenRoute.EqualizerSettings.route){
+        composable(ScreenRoute.EqualizerSettings.route) {
             EqualizerScreen(
                 viewModel = audioViewModel,
                 navController = navController
@@ -244,8 +251,18 @@ fun BottomNavGraph(
             )
         }
 
+        //About us
         composable(ScreenRoute.AboutUs.route) {
             AboutUs(navController = navController)
+        }
+
+
+        // Choose AudioPlaying Screen design
+        composable(ScreenRoute.ChooseAudioPlayingScreen.route) {
+            ChooseAudioPlayingScreen(
+                viewModel = audioViewModel,
+                navController = navController
+            )
         }
     }
 }

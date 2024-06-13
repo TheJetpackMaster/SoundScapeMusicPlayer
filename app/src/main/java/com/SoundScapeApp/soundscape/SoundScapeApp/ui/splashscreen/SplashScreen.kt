@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.SoundScapeApp.soundscape.R
+import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White90
@@ -35,7 +36,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: AudioViewModel
 ) {
 
     val logoAnimate = remember { mutableStateOf(false) }

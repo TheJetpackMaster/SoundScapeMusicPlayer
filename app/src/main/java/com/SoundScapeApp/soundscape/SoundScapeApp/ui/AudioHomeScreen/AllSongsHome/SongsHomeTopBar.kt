@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -73,7 +74,8 @@ fun SongsHomeTopAppBar(
     isSongSelected: Boolean,
     navController: NavController,
     selectedSongsCount: MutableState<Int>,
-    onShareClick:()->Unit
+    onShareClick: () -> Unit,
+    onDrawer:()->Unit
 ) {
 
     var search by remember {
@@ -90,6 +92,20 @@ fun SongsHomeTopAppBar(
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent
             ),
+            navigationIcon = {
+//                if (!search) {
+//                    IconButton(onClick = {
+//                        onDrawer()
+//                    })
+//                    {
+//                        Icon(
+//                            imageVector = Icons.Default.Menu,
+//                            contentDescription = "",
+//                            tint = White90
+//                        )
+//                    }
+//                }
+            },
             title = {
                 Row(
                     modifier = Modifier
@@ -104,7 +120,7 @@ fun SongsHomeTopAppBar(
                             color = White90,
                             fontSize = 20.sp,
 
-                        )
+                            )
                     } else {
                         BasicTextField(
                             modifier = Modifier

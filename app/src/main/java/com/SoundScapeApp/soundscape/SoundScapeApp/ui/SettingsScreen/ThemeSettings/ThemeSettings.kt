@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -65,6 +67,8 @@ import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
 import com.SoundScapeApp.soundscape.ui.theme.GrayIcons
 import com.SoundScapeApp.soundscape.ui.theme.Pink80
@@ -111,6 +115,7 @@ fun ThemeSettings(
 ) {
 
     val currentTheme by audioViewModel.currentTheme.collectAsState()
+    val isFirstTime by audioViewModel.isFirstTime.collectAsState()
 
     val primaryColors = listOf(
         Theme1Primary,
@@ -157,13 +162,16 @@ fun ThemeSettings(
                     Text(text = "Choose Theme", color = White90)
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (navController.currentBackStackEntry?.lifecycle?.currentState
-                            == Lifecycle.State.RESUMED
-                        ) {
-                            navController.popBackStack()
-                        }
-                    })
+                    IconButton(
+                        onClick = {
+                            if (navController.currentBackStackEntry?.lifecycle?.currentState
+                                == Lifecycle.State.RESUMED
+                            ) {
+                                navController.popBackStack()
+                            }
+                        },
+                        enabled = !isFirstTime
+                    )
                     {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
@@ -171,7 +179,27 @@ fun ThemeSettings(
                             tint = White50
                         )
                     }
-                })
+                },
+                actions = {
+                    if (isFirstTime) {
+                        Button(
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White.copy(.03f)
+                            ),
+                            onClick = {
+                                navController.popBackStack()
+                                navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
+                            })
+                        {
+                            Text(
+                                text = "Done",
+                                color = White90
+                            )
+                        }
+                    }
+                }
+            )
         }
     ) {
         val scrollState = rememberScrollState()
@@ -782,16 +810,7 @@ fun ColorThemeRow(
     onItemClick: (Int) -> Unit = {},
     context: Context
 ) {
-
-    val scope = rememberCoroutineScope()
     val lazyRowState = rememberLazyListState()
-
-    LaunchedEffect(Unit) {
-        scope.launch {
-            lazyRowState.scrollToItem(currentTheme)
-        }
-    }
-
 
     LazyRow(
         state = lazyRowState,
