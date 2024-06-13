@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -78,6 +79,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.video.PlaceholderSurface
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.PlayerActivity
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -92,6 +94,7 @@ import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.bumptech.glide.integration.compose.Placeholder
 import java.util.concurrent.TimeUnit
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -366,8 +369,9 @@ fun AllVideos(
                                     modifier = Modifier
                                         .width(125.dp)
                                         .fillMaxHeight()
-                                        .clip(RoundedCornerShape(4.dp)),
-                                    contentScale = ContentScale.Crop
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .border(.2.dp, White50, RoundedCornerShape(4.dp)),
+                                    contentScale = ContentScale.Crop,
                                 )
 
                                 Text(

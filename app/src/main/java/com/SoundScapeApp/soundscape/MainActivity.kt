@@ -1,18 +1,13 @@
 package com.SoundScapeApp.soundscape
 
-import EqualizerScreen
-import android.Manifest
 import android.Manifest.permission
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.app.NotificationManager
-import android.app.PictureInPictureParams
 import android.app.RecoverableSecurityException
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -20,13 +15,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.provider.Settings
 import android.util.Log
-import android.util.Rational
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -40,16 +32,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
@@ -57,22 +45,15 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.AudioPermissionTextProvider
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.ExternalStoragePermissionTextProvider
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.PermissionDialog
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.VideoPermissionTextProvider
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.openAppSettings
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -96,7 +77,7 @@ class MainActivity : ComponentActivity() {
     lateinit var mediaSession: MediaSession
 
     @Inject
-    lateinit var videoPlaylistManager: VideoPlaylistManager
+    lateinit var videoPlaylistManager: VideoSharedPreferencesHelper
 
     @Inject
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
@@ -188,46 +169,10 @@ class MainActivity : ComponentActivity() {
             val currentTheme by audioViewModel.currentTheme.collectAsState()
             val navController = rememberNavController()
 
-            val showPermissionDialog = navController
-                .currentBackStackEntryAsState().value?.destination?.route == BottomNavScreenRoutes.SongsHome.route
-
             SoundScapeThemes(
                 currentTheme,
                 this
             ) {
-
-                val dialogQueue = audioViewModel.visiblePermissionDialogQueue
-
-                val externalPermissionResultLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestPermission(),
-                    onResult = { isGranted ->
-                        audioViewModel.onPermissionResult(
-                            permission = permission.READ_EXTERNAL_STORAGE,
-                            isGranted = isGranted
-                        )
-                    }
-                )
-                val externalWritePermissionResultLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestPermission(),
-                    onResult = { isGranted ->
-                        audioViewModel.onPermissionResult(
-                            permission = permission.WRITE_EXTERNAL_STORAGE,
-                            isGranted = isGranted
-                        )
-                    }
-                )
-
-                val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestMultiplePermissions(),
-                    onResult = { permissions ->
-                        permissionsToRequest.forEach { permission ->
-                            audioViewModel.onPermissionResult(
-                                permission = permission,
-                                isGranted = permissions[permission] == true
-                            )
-                        }
-                    }
-                )
 
                 var lifecycle by remember {
                     mutableStateOf(Lifecycle.Event.ON_CREATE)
@@ -239,19 +184,7 @@ class MainActivity : ComponentActivity() {
                     val observer = LifecycleEventObserver { _, event ->
                         lifecycle = event
 
-                        if (event == Lifecycle.Event.ON_CREATE) {
-                            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-                                multiplePermissionResultLauncher.launch(permissionsToRequest)
-                            } else {
-                                externalPermissionResultLauncher.launch(
-                                    permission.READ_EXTERNAL_STORAGE
-                                )
-                                externalWritePermissionResultLauncher.launch(
-                                    permission.WRITE_EXTERNAL_STORAGE
-                                )
-
-                            }
-                        } else if (event == Lifecycle.Event.ON_RESUME) {
+                         if (event == Lifecycle.Event.ON_RESUME) {
                             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
                                 if (ContextCompat.checkSelfPermission(
                                         this@MainActivity,
@@ -297,59 +230,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-
-                dialogQueue.reversed()
-                    .forEach { permission ->
-                        PermissionDialog(
-                            permissionTextProvider = when (permission) {
-                                Manifest.permission.READ_MEDIA_AUDIO -> {
-                                    AudioPermissionTextProvider()
-                                }
-
-                                Manifest.permission.READ_MEDIA_VIDEO -> {
-                                    VideoPermissionTextProvider()
-                                }
-
-                                Manifest.permission.READ_EXTERNAL_STORAGE -> {
-                                    ExternalStoragePermissionTextProvider()
-                                }
-
-                                else -> return@forEach
-                            },
-                            isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
-                                permission
-                            ),
-                            onDismiss = audioViewModel::dismissDialog,
-                            onOkClick = {
-                                audioViewModel::dismissDialog
-                                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-                                    multiplePermissionResultLauncher.launch(
-                                        arrayOf(
-                                            permission
-                                        )
-                                    )
-                                } else {
-                                    externalPermissionResultLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-                                }
-                            },
-                            onGoToAppSettingsClick = {
-                                this.openAppSettings()
-                                audioViewModel::dismissDialog
-                            }
-                        )
-                    }
-
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val audioList by audioViewModel.scannedAudioList.collectAsState()
                     val videoList by videoViewModel.scannedVideoList.collectAsState()
-
-//                    EqualizerScreen(
-//                        audioViewModel
-//                    )
-
 
                     RootNav(
                         navController = navController,

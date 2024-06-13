@@ -95,9 +95,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
 
-//    implementation("androidx.paging:paging-compose:3.3.0-beta01")
-//    implementation("com.google.accompanist:accompanist-pager:0.27.1")
-//    implementation("com.google.accompanist:accompanist-pager-indicators:0.27.1")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.25.0")
 
     //   GLIDE

@@ -39,8 +39,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.CustomTabIndicator
@@ -59,6 +61,9 @@ fun VideosHome(
     onVideoItemClick: (Int, Long) -> Unit,
     onVideoDelete:(List<Uri>)->Unit
 ) {
+
+    val videoList by viewModel.videoList.collectAsState()
+    val context = LocalContext.current
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Videos", "Folders", "Playlists", "Movies")
@@ -82,28 +87,7 @@ fun VideosHome(
     var search by remember {
         mutableStateOf("")
     }
-//
-//    val filteredAudioList = if (search.isNotBlank()) {
-//        viewModel.isAppSearch(true)
-//        audioList.filter { audio ->
-//            audio.displayName.contains(search, ignoreCase = true) ||
-//                    audio.artist.contains(search, ignoreCase = true)
-//        }
-//    } else {
-//        viewModel.isAppSearch(false)
-//        audioList
-//    }
 
-//    val isFirstVisibleIndexGreaterThan15 = remember {
-//        derivedStateOf {
-//            listState.firstVisibleItemIndex in 16..filteredAudioList.size / 2
-//        }
-//    }
-//    val isFirstVisibleIndexLessThan15 = remember {
-//        derivedStateOf {
-//            listState.firstVisibleItemIndex in 16..filteredAudioList.size - 10
-//        }
-//    }
 
     val placeholderText = when (pagerState.currentPage) {
         0 -> {
@@ -204,7 +188,23 @@ fun VideosHome(
                 onSelectAllMovies = { selectAllMoviesClicked.value = true },
                 onSelectAllPlaylist = { selectAllPlaylistsClicked.value = true },
                 selectedVideosCount = selectedVideosCount,
+                onVideoShare = {
+                    val selectedVideosList = selectedVideos
+                        .filter { it.value } // Filter out only the selected songs
+                        .map { it.key } // Extract the IDs of the selected songs
 
+                    val selectedVideoURIs = videoList
+                        .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                        .map { video -> video.uri.toUri() } // Map each song to its URI
+
+                    val selectedTitle = videoList
+                        .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                        .map { video -> video.displayName } // Map each song to its URI
+
+                    viewModel.shareVideos(context, selectedVideoURIs, selectedTitle)
+                    viewModel.setIsVideoSelected(false)
+                    selectedVideos.clear()
+                }
                 )
         })
     { innerPadding ->

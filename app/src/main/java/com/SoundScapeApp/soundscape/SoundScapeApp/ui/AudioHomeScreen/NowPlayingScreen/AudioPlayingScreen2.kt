@@ -468,7 +468,7 @@ fun AudioPlayingScreen2(
                                 ImageRequest.Builder(context)
                                     .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
                                     .apply(block = fun ImageRequest.Builder.() {
-                                        error(R.drawable.naturesbg)
+                                        error(R.drawable.sample)
                                     }
                                     ).build()
                             ),

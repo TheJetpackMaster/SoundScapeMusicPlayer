@@ -84,7 +84,7 @@ class MusicNotificationManager @Inject constructor(
                 )
             )
             .setSmallIconResourceId(
-                R.drawable.soundscapelogo
+                R.drawable.notificationappicon
             )
             .setChannelImportance(NotificationUtil.IMPORTANCE_HIGH)
             .setNotificationListener(object : PlayerNotificationManager.NotificationListener {

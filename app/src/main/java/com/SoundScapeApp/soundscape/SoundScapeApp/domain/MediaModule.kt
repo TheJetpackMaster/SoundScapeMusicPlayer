@@ -14,10 +14,10 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerStorage
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicNotificationManager
 import dagger.Module
 import dagger.Provides
@@ -105,8 +105,8 @@ object MediaModule {
     fun provideVideoPlaylistManager(
         @ApplicationContext context: Context,
         sharedPreferences: SharedPreferences
-    ): VideoPlaylistManager {
-        return VideoPlaylistManager(context, sharedPreferences)
+    ): VideoSharedPreferencesHelper {
+        return VideoSharedPreferencesHelper(context, sharedPreferences)
     }
 
     @Provides
@@ -114,8 +114,8 @@ object MediaModule {
     fun provideEqualizerStorage(
         @ApplicationContext context: Context,
         sharedPreferences: SharedPreferences
-    ): EqualizerStorage {
-        return EqualizerStorage(context, sharedPreferences)
+    ): EqualizerSharedPreferencesHelper {
+        return EqualizerSharedPreferencesHelper(context, sharedPreferences)
     }
 
 

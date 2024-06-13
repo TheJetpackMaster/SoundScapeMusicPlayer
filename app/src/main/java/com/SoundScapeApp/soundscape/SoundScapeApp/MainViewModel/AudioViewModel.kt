@@ -4,7 +4,6 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
@@ -30,7 +29,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerStorage
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
@@ -85,9 +84,7 @@ class AudioViewModel @Inject constructor(
     private val repository: MusicRepository,
     private val player: ExoPlayer,
     private val sharedPreferencesHelper: SharedPreferencesHelper,
-    private val equalizerStorage: EqualizerStorage,
-    context: Context,
-    sharedPreferences: SharedPreferences,
+    private val equalizerSharedPreferencesHelper: EqualizerSharedPreferencesHelper,
     audioStateHandle: SavedStateHandle,
     private val localMediaProvider: LocalMediaProvider
 
@@ -281,9 +278,6 @@ class AudioViewModel @Inject constructor(
     val isMainActivity: StateFlow<Boolean> = _isMainActivity
 
     init {
-//        loadAudioData()
-//        loadVideoData()
-//        setupAudioStateHandler()
         viewModelScope.launch {
             loadPlaylists()
             if (currentPlayingPlaylistId.value == 123L) {
@@ -601,13 +595,6 @@ class AudioViewModel @Inject constructor(
         }
     }
 
-    fun onCircularProgressSeek(progress: Float) {
-        val totalDuration = player.duration.toFloat()
-        if (totalDuration > 0) {
-            val targetPosition = (progress / 300f * totalDuration).toLong()
-            player.seekTo(targetPosition)
-        }
-    }
 
 
     //    Shuffle Logic
@@ -1311,7 +1298,7 @@ class AudioViewModel @Inject constructor(
             this[band] = level
         }
         _equalizerBandLevels.value = newLevels
-        equalizerStorage.saveCustomEqualizerBandLevels(newLevels)
+        equalizerSharedPreferencesHelper.saveCustomEqualizerBandLevels(newLevels)
 
         applyEqualizerBandLevels(newLevels)
     }
@@ -1324,10 +1311,10 @@ class AudioViewModel @Inject constructor(
             Preset.JAZZ -> listOf(0.4f, 0.6f, 0.8f, 0.6f, 0.4f)
             Preset.POP -> listOf(0.8f, 0.6f, 0.4f, 0.6f, 0.8f)
             Preset.CLASSIC -> listOf(0.4f, 0.1f, 0.3f, 0.2f, 0.2f)
-            Preset.CUSTOM -> equalizerStorage.getCustomEqualizerBandLevels()
+            Preset.CUSTOM -> equalizerSharedPreferencesHelper.getCustomEqualizerBandLevels()
         }
         _equalizerBandLevels.value = presetLevels
-        equalizerStorage.saveCustomEqualizerBandLevels(presetLevels)
+        equalizerSharedPreferencesHelper.saveCustomEqualizerBandLevels(presetLevels)
         applyEqualizerBandLevels(presetLevels)
     }
 
@@ -1385,44 +1372,44 @@ class AudioViewModel @Inject constructor(
     //Saving equalizer data
     //Set bass level
     private fun setBassLevel(bassLevel:Float){
-        equalizerStorage.setBaseLevel(bassLevel)
+        equalizerSharedPreferencesHelper.setBaseLevel(bassLevel)
     }
 
     //Get bass level
     private fun getBassLevel(){
-        val bassLevel = equalizerStorage.getBaseLevel()
+        val bassLevel = equalizerSharedPreferencesHelper.getBaseLevel()
         adjustBass(bassLevel)
     }
 
     private fun setVirtualizerLevel(virtualizerLevel:Float){
-        equalizerStorage.setVirtualizerLevel(virtualizerLevel)
+        equalizerSharedPreferencesHelper.setVirtualizerLevel(virtualizerLevel)
     }
 
     //Get bass level
     private fun getVirtualizerLevel(){
-        val virtualizerLevel = equalizerStorage.getVirtualizerLevel()
+        val virtualizerLevel = equalizerSharedPreferencesHelper.getVirtualizerLevel()
         adjustVirtualizer(virtualizerLevel)
     }
 
     private fun setLoudnessLevel(loudnessLevel:Float){
-        equalizerStorage.setLoudnessLevel(loudnessLevel)
+        equalizerSharedPreferencesHelper.setLoudnessLevel(loudnessLevel)
     }
 
     //Get bass level
     private fun getLoudnessLevel(){
-        val loudnessLevel = equalizerStorage.getLoudnessLevel()
+        val loudnessLevel = equalizerSharedPreferencesHelper.getLoudnessLevel()
         adjustLoudnessEnhancer(loudnessLevel)
     }
 
     fun setCurrentPreset(preset:Preset){
         setPreset(preset)
         _selectedPreset.value = preset
-        equalizerStorage.setCurrentPreset(preset)
+        equalizerSharedPreferencesHelper.setCurrentPreset(preset)
 
     }
 
     private fun getCurrentPreset() {
-        val preset = equalizerStorage.getCurrentPreset()
+        val preset = equalizerSharedPreferencesHelper.getCurrentPreset()
         _selectedPreset.value = preset
         setPreset(preset)
     }

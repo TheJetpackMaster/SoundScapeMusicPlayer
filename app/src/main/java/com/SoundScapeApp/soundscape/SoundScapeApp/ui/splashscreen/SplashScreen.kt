@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,7 +77,7 @@ fun SplashScreen(
             exit = fadeOut(animationSpec = tween(250))
         ) {
             Image(
-                painter = painterResource(id = R.drawable.spalshscreenlogo),
+                painter = painterResource(id = R.drawable.splashscreenlogo),
                 contentDescription = "app logo"
             )
         }

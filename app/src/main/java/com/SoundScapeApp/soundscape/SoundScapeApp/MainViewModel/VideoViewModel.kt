@@ -2,6 +2,7 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 
 import Video
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
@@ -29,7 +30,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.ui.AspectRatioFrameLayout
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoPlaylistManager
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.videoPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
@@ -50,7 +51,7 @@ import javax.inject.Inject
 @HiltViewModel
 class VideoViewModel @Inject constructor(
     private val repository: MusicRepository,
-    private val videoPlaylistManager: VideoPlaylistManager,
+    private val videoPlaylistManager: VideoSharedPreferencesHelper,
     private val sharedPreferencesHelper: SharedPreferencesHelper,
     private val localMediaProvider: LocalMediaProvider,
     videoStateHandle: SavedStateHandle,
@@ -462,7 +463,6 @@ class VideoViewModel @Inject constructor(
     }
 
 
-    //SELECTIONS
     //SELECTION SECTION
     fun setIsPlaylistSelected(playlistSelected: Boolean) {
         _isPlaylistSelected.value = playlistSelected
@@ -995,6 +995,43 @@ class VideoViewModel @Inject constructor(
         _autoPopupEnabled.value = videoPlaylistManager.getAutoPopupEnabled()
     }
 
+    fun toggleVideoVolume(isMuted: MutableState<Boolean>) {
+        if (isMuted.value) {
+            exoPlayer.volume = 0f
+        } else {
+            exoPlayer.volume = 1f
+        }
+    }
+
+
+    fun CurrentVideoLooping(isVideoLooping: Boolean, exoPlayer: ExoPlayer) {
+        exoPlayer.repeatMode =
+            if (isVideoLooping) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
+    }
+
+
+    fun startTimer(duration: Long, onFinish: () -> Unit, exoPlayer: ExoPlayer) {
+        timer?.cancel() // Cancel any existing timer
+
+        timer = object : CountDownTimer(duration, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                // Update UI if necessary with the remaining time
+            }
+
+            override fun onFinish() {
+                onFinish()
+                exoPlayer.pause()
+            }
+        }.start()
+    }
+
+
+    fun setBrightness(brightness:Float){
+        _videoScreenBrightness.value = brightness
+    }
+
+
+
     fun setSelectedVideos(selectedVideos: List<Long>) {
         _selectedVideos.value = selectedVideos
     }
@@ -1019,13 +1056,36 @@ class VideoViewModel @Inject constructor(
         }
     }
 
-    //    private fun setMediaItem(uri: Uri) {
-//        exoPlayer.apply{
-//            addMediaItem(MediaItem.fromUri(uri))
-//            exoPlayer.prepare()
-//            exoPlayer.play()
-//        }
-//    }
+
+
+    fun shareVideo(context: Context, videoUri: Uri, videoTitle: String) {
+        val shareIntent = Intent(Intent.ACTION_SEND)
+        shareIntent.type = "video/*"
+        shareIntent.putExtra(Intent.EXTRA_STREAM, videoUri)
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, videoTitle)
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(Intent.createChooser(shareIntent, "Share video via"))
+    }
+
+    fun shareVideos(context: Context, videoUris: List<Uri>, videoTitles: List<String>) {
+        val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE)
+        shareIntent.type = "video/*"
+
+        val uriArrayList = ArrayList<Uri>(videoUris)
+        val titleArrayList = ArrayList<String>(videoTitles)
+
+        shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uriArrayList)
+        shareIntent.putStringArrayListExtra(Intent.EXTRA_SUBJECT, titleArrayList)
+
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+        context.startActivity(Intent.createChooser(shareIntent, "Share videos via"))
+    }
+
+
+
+
+    // Playing from Intent
     private fun setMediaItem(uri: Uri, displayName: String) {
         exoPlayer.apply {
             addMediaItem(
@@ -1061,40 +1121,6 @@ class VideoViewModel @Inject constructor(
         }
     }
 
-    fun toggleVideoVolume(isMuted: MutableState<Boolean>) {
-        if (isMuted.value) {
-            exoPlayer.volume = 0f
-        } else {
-            exoPlayer.volume = 1f
-        }
-    }
-
-
-    fun CurrentVideoLooping(isVideoLooping: Boolean, exoPlayer: ExoPlayer) {
-        exoPlayer.repeatMode =
-            if (isVideoLooping) ExoPlayer.REPEAT_MODE_ONE else ExoPlayer.REPEAT_MODE_OFF
-    }
-
-
-    fun startTimer(duration: Long, onFinish: () -> Unit, exoPlayer: ExoPlayer) {
-        timer?.cancel() // Cancel any existing timer
-
-        timer = object : CountDownTimer(duration, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                // Update UI if necessary with the remaining time
-            }
-
-            override fun onFinish() {
-                onFinish()
-                exoPlayer.pause()
-            }
-        }.start()
-    }
-
-
-    fun setBrightness(brightness:Float){
-        _videoScreenBrightness.value = brightness
-    }
 
 
     override fun onCleared() {

@@ -4,14 +4,15 @@ import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -30,7 +31,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,9 +61,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabPosition
@@ -97,7 +95,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -106,8 +103,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.navigation.NavController
@@ -118,7 +117,6 @@ import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.Albums.AlbumsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.AllSongs
@@ -128,15 +126,17 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.AudioPermissionTextProvider
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.ExternalStoragePermissionTextProvider
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.PermissionDialog
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.VideoPermissionTextProvider
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.openAppSettings
 import com.SoundScapeApp.soundscape.ui.theme.PurpleGrey80
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
-import com.SoundScapeApp.soundscape.ui.theme.color1
-import com.SoundScapeApp.soundscape.ui.theme.color2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.security.Permission
 
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -154,6 +154,7 @@ fun SongsHome(
     onSongDelete: (List<Uri>) -> Unit
 ) {
 
+
     val isPermissionGranted = remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
@@ -163,8 +164,6 @@ fun SongsHome(
             }
         )
     }
-
-
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Songs", "Playlists", "Albums", "Artists")
@@ -324,6 +323,10 @@ fun SongsHome(
         }
     }
 
+
+
+    RequestStoragePermissions(context = context, viewModel = viewModel)
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -375,15 +378,15 @@ fun SongsHome(
                         .filter { selectedSongsList.contains(it.id) } // Filter selected songs
                         .map { song -> song.title } // Map each song to its URI
 
-                    viewModel.shareAudios(context,selectedSongURIs,selectedTitle)
+                    viewModel.shareAudios(context, selectedSongURIs, selectedTitle)
+                    viewModel.setIsSongSelected(false)
                     selectedSongs.clear()
                 }
             )
         },
         bottomBar = {
             if (!showBottomBar) {
-
-                CustomBottomNav(navController = navController, context = context,viewModel)
+                CustomBottomNav(navController = navController, context = context, viewModel)
             }
         }
     )
@@ -1051,10 +1054,6 @@ fun FastScrollButton(
 }
 
 
-
-
-
-
 @Suppress("DEPRECATION")
 private fun isMediaSessionServiceRunning(context: Context): Boolean {
     val serviceClass = MusicService::class.java
@@ -1075,109 +1074,144 @@ fun isPermissionGranted(context: Context, permission: String): Boolean {
     ) == PackageManager.PERMISSION_GRANTED
 }
 
-//
-//Row(
-//modifier = Modifier
-//.fillMaxWidth()
-//.height(62.dp)
-//.clip(RoundedCornerShape(10.dp))
-//.clickable(
-//onClick = {
-//    val playbackState = viewModel.retrievePlaybackState()
-//    if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
-//            context
-//        )
-//    ) {
-//        // Resume playback from the last saved position
-//        viewModel.restorePlaybackState(playbackState, context = context)
-//        player.pause()
-//        isPlaying.value = !isPlaying.value
-//        shouldReloadPlay.value = true
-//    }
-//    if (navController.currentBackStackEntry?.lifecycle?.currentState
-//        == Lifecycle.State.RESUMED
-//    ) {
-//        navController.navigate(ScreenRoute.NowPlayingScreen.route)
-//    }
-//})
-//.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-//verticalAlignment = Alignment.CenterVertically
-//) {
-//    Box(
-//        contentAlignment = Alignment.Center
-//    ) {
-//        RotatingImage(
-//            painter = painter,
-//            player = player,
-//        )
-//    }
-//    Spacer(modifier = Modifier.width(12.dp))
-//
-//    Column(
-//        modifier = Modifier.fillMaxHeight(),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.Start
-//    ) {
-//        Text(
-//            text = currentPlayingSong?.displayName ?: "No song playing",
-//            fontSize = 14.sp,
-//            fontWeight = FontWeight.Medium,
-//            color = White90,
-//            modifier = Modifier.width(160.dp),
-//            maxLines = 1,
-//            overflow = TextOverflow.Ellipsis,
-//        )
-//
-//        Text(
-//            text = currentPlayingSong?.artist ?: "Unknown",
-//            fontSize = 13.sp,
-//            fontWeight = FontWeight.Medium,
-//            color = White50,
-//            modifier = Modifier.width(160.dp),
-//            maxLines = 1,
-//            overflow = TextOverflow.Ellipsis
-//        )
-//    }
-//
-//    Spacer(modifier = Modifier.weight(1f))
-//
-//    Box(
-//        modifier = Modifier
-//            .fillMaxHeight()
-//            .size(50.dp)
-//            .clip(CircleShape)
-//            .clickable(onClick = {
-//                val playbackState = viewModel.retrievePlaybackState()
-//                if (playbackState.lastPlayedSong != "0" && !shouldReloadPlay.value && !isMediaSessionServiceRunning(
-//                        context
-//                    )
-//                ) {
-//                    // Resume playback from the last saved position
-//                    viewModel.restorePlaybackState(playbackState, context = context)
-//                    player.play()
-//                    isPlaying.value = !isPlaying.value
-//                    startService(context)
-//                    shouldReloadPlay.value = true
-//                } else {
-//                    onStart()
-//                    isPlaying.value = player.isPlaying
-//                }
-//            }),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        Icon(
-//            painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
-//            contentDescription = "play pause button",
-//            modifier = Modifier.size(18.dp),
-//            tint = White90
-//        )
-//
-//        CustomCircularProgressIndicator(
-//            player = player,
-//            viewModel = viewModel,
-//            currentPlayingSong,
-//            isPermissionGranted = isPermissionGranted,
-//            songProgressValue = songProgressValue
-//        )
-//    }
-//}
+
+
+@Composable
+fun RequestStoragePermissions(
+    context: Context,
+    viewModel: AudioViewModel
+) {
+    val componentActivity = context as? ComponentActivity
+    val activity = context as Activity
+
+
+    val permissionsToRequest = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        permissionsToRequest.forEach { permission ->
+            viewModel.onPermissionResult(
+                permission = permission,
+                isGranted = permissions[permission] == true
+            )
+        }
+    }
+
+    val externalReadPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.onPermissionResult(
+            permission = Manifest.permission.READ_EXTERNAL_STORAGE,
+            isGranted = isGranted
+        )
+    }
+
+    val externalWritePermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.onPermissionResult(
+            permission = Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            isGranted = isGranted
+        )
+    }
+
+
+    if (componentActivity != null) {
+        RequestPermissions(
+            permissionsToRequest = permissionsToRequest,
+            externalPermissionResultLauncher = externalReadPermission,
+            externalWritePermissionResultLauncher = externalWritePermission,
+            viewModel = viewModel
+        )
+    }
+    val dialogQueue = viewModel.visiblePermissionDialogQueue
+
+    dialogQueue.reversed()
+        .forEach { permission ->
+            PermissionDialog(
+                permissionTextProvider = when (permission) {
+                    Manifest.permission.READ_MEDIA_AUDIO -> {
+                        AudioPermissionTextProvider()
+                    }
+
+                    Manifest.permission.READ_MEDIA_VIDEO -> {
+                        VideoPermissionTextProvider()
+                    }
+
+                    Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                        ExternalStoragePermissionTextProvider()
+                    }
+
+                    else -> return@forEach
+                },
+                isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
+                    activity,
+                    permission
+                ),
+                onDismiss = viewModel::dismissDialog,
+                onOkClick = {
+                    viewModel.dismissDialog()
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+                        multiplePermissionResultLauncher.launch(
+                            arrayOf(
+                                permission
+                            )
+                        )
+                    } else {
+                        externalReadPermission.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        externalWritePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    }
+                },
+                onGoToAppSettingsClick = {
+                    componentActivity?.openAppSettings()
+                    viewModel.dismissDialog()
+                }
+            )
+        }
+
+}
+
+
+@Composable
+fun RequestPermissions(
+    permissionsToRequest: Array<String>,
+    externalPermissionResultLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    externalWritePermissionResultLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    viewModel: AudioViewModel
+) {
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        permissionsToRequest.forEach { permission ->
+            viewModel.onPermissionResult(
+                permission = permission,
+                isGranted = permissions[permission] == true
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        activity?.lifecycle?.addObserver(
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_CREATE) {
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+                        multiplePermissionResultLauncher.launch(permissionsToRequest)
+                    } else {
+                        externalPermissionResultLauncher.launch(
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        )
+                        externalWritePermissionResultLauncher.launch(
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        )
+                    }
+                }
+            }
+        )
+    }
+}

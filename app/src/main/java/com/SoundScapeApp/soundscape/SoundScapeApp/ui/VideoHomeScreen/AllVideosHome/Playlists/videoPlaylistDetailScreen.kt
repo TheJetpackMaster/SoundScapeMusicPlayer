@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -74,6 +75,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -206,6 +208,17 @@ fun VideoPlaylistDetailScreen(
                 actions = {
                     if (selectedVideos.isNotEmpty()) {
                         IconButton(onClick = {
+                            showDeleteVideosDialog = true
+                        })
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = White90
+                            )
+                        }
+
+                        IconButton(onClick = {
                             showAddVideosToPlaylistDialog = true
                         })
                         {
@@ -217,11 +230,24 @@ fun VideoPlaylistDetailScreen(
                         }
 
                         IconButton(onClick = {
-                            showDeleteVideosDialog = true
+                            val selectedVideosList = selectedVideos
+                                .filter { it.value } // Filter out only the selected songs
+                                .map { it.key } // Extract the IDs of the selected songs
+
+                            val selectedVideoURIs = videoList
+                                .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                                .map { video -> video.uri.toUri() } // Map each song to its URI
+
+                            val selectedTitle = videoList
+                                .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                                .map { video -> video.displayName } // Map each song to its URI
+
+                            viewModel.shareVideos(context, selectedVideoURIs, selectedTitle)
+                            selectedVideos.clear()
                         })
                         {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = Icons.Default.Share,
                                 contentDescription = null,
                                 tint = White90
                             )

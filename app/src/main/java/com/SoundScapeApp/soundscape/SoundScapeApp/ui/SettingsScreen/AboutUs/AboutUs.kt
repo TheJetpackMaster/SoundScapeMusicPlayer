@@ -96,7 +96,7 @@ fun AboutUs(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Version 1.2.3",
+                text = "Version 1.3.0",
                 style = SoundScapeThemes.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
@@ -110,7 +110,7 @@ fun AboutUs(
                     .background(SoundScapeThemes.colorScheme.secondary.copy(.4f))
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.spalshscreenlogo),
+                    painter = painterResource(id = R.drawable.soundscapelogo),
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)

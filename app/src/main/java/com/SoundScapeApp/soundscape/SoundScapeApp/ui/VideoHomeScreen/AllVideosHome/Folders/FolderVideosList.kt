@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -70,12 +69,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.AllVideos.formatVideoDuration
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Folders.commons.FolderVideoListTopBar
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Secondary
@@ -149,70 +150,40 @@ fun FolderVideosList(
         mutableStateOf(false)
     }
 
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                ),
-                title = {
-                    if (selectedVideos.isEmpty()) {
-                        Text(
-                            text = folderVideos.firstOrNull()!!.bucketName ?: "Folder Name",
-                            color = White90
-                        )
-                    }
+            FolderVideoListTopBar(
+                isSelected = selectedVideos.isNotEmpty(),
+                title = folderVideos.firstOrNull()!!.bucketName ?: "Folder Name",
+                onBack = {
+                    navController.navigateUp()
                 },
-                navigationIcon = {
-                    if (selectedVideos.isEmpty()) {
-                        IconButton(onClick = {
-                            navController.popBackStack()
-                        })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
-                    } else {
-                        IconButton(onClick = {
-                            selectedVideos.clear()
-                        })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
-                    }
+                onClear = {
+                    selectedVideos.clear()
                 },
-                actions = {
-                    if (selectedVideos.isNotEmpty()) {
-                        IconButton(onClick = {
-                            showAddVideosToPlaylistDialog = true
-                        })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
+                onAdd = {
+                    showAddVideosToPlaylistDialog = !showAddVideosToPlaylistDialog
+                },
+                onMore = {
 
-                        IconButton(onClick = {
-                        })
-                        {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = null,
-                                tint = White90
-                            )
-                        }
+                },
+                onShare = {
+                    val selectedVideosList = selectedVideos
+                        .filter { it.value } // Filter out only the selected songs
+                        .map { it.key } // Extract the IDs of the selected songs
 
-                    }
+                    val selectedVideoURIs = videoList
+                        .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                        .map { video -> video.uri.toUri() } // Map each song to its URI
+
+                    val selectedTitle = videoList
+                        .filter { selectedVideosList.contains(it.id) } // Filter selected songs
+                        .map { video -> video.displayName } // Map each song to its URI
+
+                    viewModel.shareVideos(context, selectedVideoURIs, selectedTitle)
+                    selectedVideos.clear()
                 }
             )
         }

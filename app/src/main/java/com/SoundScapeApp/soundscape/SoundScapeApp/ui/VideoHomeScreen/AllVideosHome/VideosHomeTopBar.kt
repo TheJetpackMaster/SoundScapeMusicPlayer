@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,19 +56,20 @@ fun VideosHomeTopBar(
     searchValue: String,
     onValueChange: (String) -> Unit,
     placeholderText: String,
-    onPlaylistClear: () -> Unit = {} ,
+    onPlaylistClear: () -> Unit = {},
     onPlaylistDelete: () -> Unit = {},
     onVideoClear: () -> Unit = {},
     onAddVideo: () -> Unit = {},
     isPlaylistSelected: Boolean,
     isVideoSelected: Boolean,
     isMovieSelected: Boolean,
-    onMovieClear:()->Unit = {},
-    onMovieAdd:()->Unit = {},
+    onMovieClear: () -> Unit = {},
+    onMovieAdd: () -> Unit = {},
     onSelectAllVideos: () -> Unit = {},
     onSelectAllPlaylist: () -> Unit = {},
-    onSelectAllMovies:()->Unit = {},
-    onVideoDelete:()->Unit,
+    onSelectAllMovies: () -> Unit = {},
+    onVideoDelete: () -> Unit,
+    onVideoShare: () -> Unit,
     selectedVideosCount: MutableState<Int>,
     navController: NavController
 ) {
@@ -76,9 +78,9 @@ fun VideosHomeTopBar(
         mutableStateOf(false)
     }
 
-    val showAllPlaylistsDropDown = remember{ mutableStateOf(false) }
-    val showAllVideosDropDown = remember{ mutableStateOf(false) }
-    val showAllMoviesDropDown = remember{ mutableStateOf(false) }
+    val showAllPlaylistsDropDown = remember { mutableStateOf(false) }
+    val showAllVideosDropDown = remember { mutableStateOf(false) }
+    val showAllMoviesDropDown = remember { mutableStateOf(false) }
     val showMoreDropDown = remember { mutableStateOf(false) }
 
 
@@ -188,7 +190,8 @@ fun VideosHomeTopBar(
                         DropdownMenu(
                             expanded = showMoreDropDown.value,
                             onDismissRequest = {
-                                showMoreDropDown.value = false },
+                                showMoreDropDown.value = false
+                            },
                             modifier = Modifier.background(SoundScapeThemes.colorScheme.primary)
                         ) {
                             DropdownMenuItem(
@@ -310,9 +313,11 @@ fun VideosHomeTopBar(
                                 tint = White90.copy(.9f)
                             )
                         }
-                        Text(text = selectedVideosCount.value.toString(),
+                        Text(
+                            text = selectedVideosCount.value.toString(),
                             style = SoundScapeThemes.typography.titleLarge,
-                            color = White90)
+                            color = White90
+                        )
                     }
                 },
                 actions = {
@@ -329,6 +334,14 @@ fun VideosHomeTopBar(
                     {
                         Icon(
                             imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = White90.copy(.9f)
+                        )
+                    }
+
+                    IconButton(onClick = onVideoShare) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
                             contentDescription = null,
                             tint = White90.copy(.9f)
                         )

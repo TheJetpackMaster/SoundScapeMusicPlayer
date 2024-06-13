@@ -7,7 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 
-class EqualizerStorage(
+class EqualizerSharedPreferencesHelper(
     @ApplicationContext private val context: Context,
     private val sharedPreferences: SharedPreferences
 ){

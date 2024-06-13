@@ -12,7 +12,7 @@ import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class VideoPlaylistManager @Inject constructor(
+class VideoSharedPreferencesHelper @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sharedPreferences: SharedPreferences
 ) {

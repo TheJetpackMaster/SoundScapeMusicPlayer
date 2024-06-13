@@ -8,7 +8,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -227,6 +226,7 @@ fun SongItem(
             .background(
                 if (isSelected) SoundScapeThemes.colorScheme.primary else Color.Transparent
             )
+
             .padding(
                 top = 6.dp,
                 bottom = 6.dp,
