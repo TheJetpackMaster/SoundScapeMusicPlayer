@@ -38,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
@@ -49,7 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
@@ -80,13 +82,8 @@ class MainActivity : ComponentActivity() {
     lateinit var videoPlaylistManager: VideoSharedPreferencesHelper
 
     @Inject
-    lateinit var sharedPreferencesHelper: SharedPreferencesHelper
+    lateinit var audioSharedPreferencesHelper: AudioSharedPreferencesHelper
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private val permissionsToRequest = arrayOf(
-        permission.READ_MEDIA_VIDEO,
-        permission.READ_MEDIA_AUDIO
-    )
 
 
     //For deleting songs and videos
@@ -97,6 +94,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        installSplashScreen()
         audioViewModel.setIsMainActivity(true)
         audioViewModel.setMediaItemFlag(false)
 
@@ -496,7 +494,7 @@ class MainActivity : ComponentActivity() {
 //        unregisterReceiver(finishActivityReceiver)
 
         if (player.currentMediaItem != null) {
-            sharedPreferencesHelper.savePlaybackState(
+            audioSharedPreferencesHelper.savePlaybackState(
                 player.currentMediaItem!!.mediaId,
                 player.currentPosition,
                 player.isPlaying

@@ -6,9 +6,15 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,6 +46,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHo
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.VideosHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.ChooseAudioPlayingScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.splashscreen.OnBoardingScreen
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(UnstableApi::class)
@@ -64,15 +71,41 @@ fun BottomNavGraph(
 ) {
     val isFirstTime by audioViewModel.isFirstTime.collectAsState()
     val startDestination =
-        if (isFirstTime) ScreenRoute.ThemeSettings.route else BottomNavScreenRoutes.SongsHome.route
+        if (isFirstTime) ScreenRoute.OnBoardingScreen.route else BottomNavScreenRoutes.SongsHome.route
 
     NavHost(navController = navController,
         startDestination = startDestination,
+//        enterTransition = {
+//            fadeIn(animationSpec = tween(250))
+//        },
+//        exitTransition = {
+//            fadeOut(animationSpec = tween(250))
+//        }
+
         enterTransition = {
-            fadeIn(animationSpec = tween(250))
+            scaleIn(
+                initialScale = 0.95f,
+                animationSpec = tween(160)
+            ) + fadeIn(animationSpec = tween(100))
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(250))
+            scaleOut(
+                targetScale = .95f,
+                animationSpec = tween(160)
+            ) + fadeOut(animationSpec = tween(150))
+        },
+        popEnterTransition = {
+            scaleIn(initialScale = .95f, animationSpec = tween(160)) + fadeIn(
+                animationSpec = tween(
+                    100
+                )
+            )
+        },
+        popExitTransition = {
+            scaleOut(
+                targetScale = .95f,
+                animationSpec = tween(160)
+            ) + fadeOut(animationSpec = tween(150))
         }
     ) {
 
@@ -102,21 +135,7 @@ fun BottomNavGraph(
         }
 //        NowPlayingScreen
         composable(
-            ScreenRoute.NowPlayingScreen.route,
-//            enterTransition = {
-//                slideInVertically(
-//                    initialOffsetY = { fullHeight ->
-//                        fullHeight },
-//                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-//                ) + fadeIn()
-//            },
-//            exitTransition = {
-//                slideOutVertically(
-//                    targetOffsetY = { fullHeight ->
-//                        fullHeight },
-//                    animationSpec = tween(durationMillis = 200, easing = LinearEasing)
-//                ) + fadeOut()
-//            }
+            ScreenRoute.NowPlayingScreen.route
         ) {
             NowPlayingScreen(
                 navController = navController,
@@ -178,7 +197,14 @@ fun BottomNavGraph(
 
 
 //        VideosHome
-        composable(BottomNavScreenRoutes.VideosHome.route) {
+        composable(BottomNavScreenRoutes.VideosHome.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(200))
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(200))
+            }) {
+
             VideosHome(
                 navController = navController,
                 videoViewModel,
@@ -220,7 +246,13 @@ fun BottomNavGraph(
 
 
 //        SETTINGS
-        composable(BottomNavScreenRoutes.Settings.route) {
+        composable(BottomNavScreenRoutes.Settings.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(200))
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(200))
+            }) {
             Settings(navController = navController, videoViewModel, audioViewModel)
         }
 
@@ -256,13 +288,17 @@ fun BottomNavGraph(
             AboutUs(navController = navController)
         }
 
-
         // Choose AudioPlaying Screen design
         composable(ScreenRoute.ChooseAudioPlayingScreen.route) {
             ChooseAudioPlayingScreen(
                 viewModel = audioViewModel,
                 navController = navController
             )
+        }
+
+        //Onboarding
+        composable(ScreenRoute.OnBoardingScreen.route) {
+            OnBoardingScreen(navController = navController)
         }
     }
 }

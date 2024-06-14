@@ -28,6 +28,9 @@ val White50 = Color(0x80F9F8FF)
 val playingSongBg = Color(0xFFDB5A17)
 val NavigationBarColor = Color(0xFF18031B)
 
+//Splashscreen color
+val splashScreenColor = Color(0XFF271F1F)
+
 
 //THEME ONE
 val Theme1Primary = Color(0xFF11152E)

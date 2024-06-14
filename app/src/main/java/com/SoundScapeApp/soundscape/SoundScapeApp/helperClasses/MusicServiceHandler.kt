@@ -21,7 +21,7 @@ import javax.inject.Inject
 @OptIn(DelicateCoroutinesApi::class)
 class MusicServiceHandler @Inject constructor(
     private val exoPlayer: ExoPlayer,
-    private val sharedPreferencesHelper: SharedPreferencesHelper
+    private val audioSharedPreferencesHelper: AudioSharedPreferencesHelper
 ) : Player.Listener {
 
     private val coroutineScope = CoroutineScope(Job() + Dispatchers.Main)
@@ -121,7 +121,7 @@ class MusicServiceHandler @Inject constructor(
         when (playbackState) {
             ExoPlayer.STATE_BUFFERING -> {
                 _audioState.value = AudioState.Buffering(exoPlayer.currentPosition)
-                sharedPreferencesHelper.savePlaybackState(
+                audioSharedPreferencesHelper.savePlaybackState(
                     exoPlayer.currentMediaItem!!.mediaId,
                     exoPlayer.currentPosition,
                     exoPlayer.isPlaying
@@ -158,7 +158,7 @@ class MusicServiceHandler @Inject constructor(
 
             _audioState.value = AudioState.CurrentPlaying(mediaIdLong)
 
-            sharedPreferencesHelper.savePlaybackState(
+            audioSharedPreferencesHelper.savePlaybackState(
                 mediaItem.mediaId,
                 exoPlayer.currentPosition,
                 exoPlayer.isPlaying

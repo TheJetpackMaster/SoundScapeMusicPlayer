@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.SoundScapeApp.soundscape.ui.theme.splashScreenColor
 import kotlinx.coroutines.delay
 
 @Composable
@@ -66,6 +68,7 @@ fun SplashScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(splashScreenColor)
             .padding(top = 40.dp,bottom = 24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -96,6 +99,6 @@ fun SplashScreen(
         Spacer(modifier = Modifier.height(120.dp))
         Text(
             text = "By KP Creative Labs",
-            color = SoundScapeThemes.colorScheme.primary)
+            color = White90)
     }
 }

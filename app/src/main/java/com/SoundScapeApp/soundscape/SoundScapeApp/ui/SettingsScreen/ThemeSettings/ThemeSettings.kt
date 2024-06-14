@@ -117,6 +117,9 @@ fun ThemeSettings(
     val currentTheme by audioViewModel.currentTheme.collectAsState()
     val isFirstTime by audioViewModel.isFirstTime.collectAsState()
 
+
+
+
     val primaryColors = listOf(
         Theme1Primary,
         Theme2Primary,
@@ -811,6 +814,12 @@ fun ColorThemeRow(
     context: Context
 ) {
     val lazyRowState = rememberLazyListState()
+
+    LaunchedEffect(Unit){
+        if(currentTheme>=3) {
+            lazyRowState.scrollToItem(currentTheme - 2)
+        }
+    }
 
     LazyRow(
         state = lazyRowState,

@@ -34,7 +34,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPrefe
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.videoPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoServiceHandler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +52,7 @@ import javax.inject.Inject
 class VideoViewModel @Inject constructor(
     private val repository: MusicRepository,
     private val videoPlaylistManager: VideoSharedPreferencesHelper,
-    private val sharedPreferencesHelper: SharedPreferencesHelper,
+    private val audioSharedPreferencesHelper: AudioSharedPreferencesHelper,
     private val localMediaProvider: LocalMediaProvider,
     videoStateHandle: SavedStateHandle,
     context: Context,
@@ -1038,7 +1038,7 @@ class VideoViewModel @Inject constructor(
 
 
     fun getTheme() {
-        _currentTheme.value = sharedPreferencesHelper.getTheme()
+        _currentTheme.value = audioSharedPreferencesHelper.getTheme()
     }
 
     // DELETION

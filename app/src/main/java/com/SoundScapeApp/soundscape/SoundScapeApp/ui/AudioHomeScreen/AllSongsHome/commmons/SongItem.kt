@@ -243,8 +243,8 @@ fun SongItem(
                 painter = rememberAsyncImagePainter(
                     ImageRequest.Builder(context)
                         .data(song.artwork)
-                        .placeholder(R.drawable.sample2)
-                        .error(R.drawable.sample2)
+                        .placeholder(R.drawable.sample)
+                        .error(R.drawable.sample)
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .build()

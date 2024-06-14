@@ -125,6 +125,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
@@ -284,15 +285,22 @@ fun AudioPlayingScreen2(
                             contentDescription = null,
                             tint = White90
                         )
-                        DropdownMenu(expanded = showMoreVertDropDown,
+                        DropdownMenu(
+                            modifier = Modifier.background(SoundScapeThemes.colorScheme.primary),
+                            expanded = showMoreVertDropDown,
                             onDismissRequest = {
                                 showMoreVertDropDown = false
                             })
                         {
-                            DropdownMenuItem(text = {
-                                Text(text = "Choose Design")
-                            },
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Choose Design",
+                                        color = White90
+                                    )
+                                },
                                 onClick = {
+                                    showMoreVertDropDown = false
                                     navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
                                 })
                         }
@@ -368,7 +376,7 @@ fun AudioPlayingScreen2(
                 } else {
                     // Use default image when album art is not found or loading fails
                     val blurredBitmaps =
-                        BlurHelper.blur(context, drawableResId = R.drawable.sample, 25f)
+                        BlurHelper.blur(context, drawableResId = R.drawable.roundsampleimage, 25f)
                     Image(
                         bitmap = blurredBitmaps.asImageBitmap(),
                         contentDescription = null,
@@ -382,7 +390,7 @@ fun AudioPlayingScreen2(
                         ImageRequest.Builder(context)
                             .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
                             .apply(block = fun ImageRequest.Builder.() {
-                                error(R.drawable.sample)
+                                error(R.drawable.roundsampleimage)
                             }
                             ).build()
                     ),
@@ -398,8 +406,8 @@ fun AudioPlayingScreen2(
                     .background(
                         brush = Brush.verticalGradient(
                             listOf(
-                                dominantColor.value.copy(.9f),
-                                secondTest2.copy(.9f),
+                                dominantColor.value.copy(.8f),
+                                secondTest2.copy(.8f),
 //                                dominantColor.value.copy(.8f)
                             )
                         )
@@ -485,14 +493,15 @@ fun AudioPlayingScreen2(
                                 ImageRequest.Builder(context)
                                     .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
                                     .apply(block = fun ImageRequest.Builder.() {
-                                        error(R.drawable.sample)
+                                        error(R.drawable.roundsampleimage)
+                                        placeholder(R.drawable.roundsampleimage)
                                     }
                                     ).build()
                             ),
                             contentDescription = null,
                             modifier = Modifier
                                 .size(SoundScapeThemes.sizes.medium)
-                                .border(.5.dp, Color.White, CircleShape)
+                                .border(.5.dp, Color.White.copy(.4f), CircleShape)
                                 .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )

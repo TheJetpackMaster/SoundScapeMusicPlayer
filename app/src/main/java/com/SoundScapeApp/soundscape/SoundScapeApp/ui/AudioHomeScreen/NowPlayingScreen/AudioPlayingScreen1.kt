@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,9 +48,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -74,8 +78,10 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingS
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
 import com.SoundScapeApp.soundscape.ui.theme.BrightGray
+import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
+import com.SoundScapeApp.soundscape.ui.theme.secondTest2
 import java.io.FileNotFoundException
 
 
@@ -172,6 +178,9 @@ fun AudioPlayingScreen1(
 
     }
 
+
+    var showMoreVertDropDown by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -181,14 +190,39 @@ fun AudioPlayingScreen1(
                 title = {},
                 actions = {
                     IconButton(onClick = {
-                       navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
                     }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = null,
                             tint = White90
                         )
-
+                        IconButton(onClick = {
+                            showMoreVertDropDown = !showMoreVertDropDown
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null,
+                                tint = White90
+                            )
+                            DropdownMenu(
+                                modifier = Modifier.background(SoundScapeThemes.colorScheme.primary),
+                                expanded = showMoreVertDropDown,
+                                onDismissRequest = {
+                                    showMoreVertDropDown = false
+                                })
+                            {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(text = "Choose Design",
+                                            color = White90)
+                                    },
+                                    onClick = {
+                                        showMoreVertDropDown = false
+                                        navController.navigate(ScreenRoute.ChooseAudioPlayingScreen.route)
+                                    }
+                                )
+                            }
+                        }
                     }
                 },
                 navigationIcon = {
@@ -272,6 +306,7 @@ fun AudioPlayingScreen1(
                             .data(data = if (isMainActivity) currentPlayingSong?.artwork else currentIntentMediaItem.value?.artwork)
                             .apply(block = fun ImageRequest.Builder.() {
                                 error(R.drawable.sample)
+                                placeholder(R.drawable.sample)
                             }
                             ).build()
                     ),
@@ -284,7 +319,15 @@ fun AudioPlayingScreen1(
             }
             Column(
                 modifier = Modifier
-                    .background(dominantColor.value.copy(.5f))
+                    .background(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                dominantColor.value.copy(.8f),
+                                secondTest2.copy(.8f),
+//                                dominantColor.value.copy(.8f)
+                            )
+                        )
+                    )
                     .padding(top = it.calculateTopPadding())
                     .padding(top = 0.dp, start = 18.dp, end = 18.dp, bottom = 32.dp)
                     .fillMaxSize(),
@@ -293,10 +336,10 @@ fun AudioPlayingScreen1(
 
             ) {
                 Card(
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .padding(start = 8.dp, end = 8.dp)
-                        .border(.5.dp, Color.White, shape = RoundedCornerShape(24.dp))
+                        .border(.5.dp, Color.White.copy(.4f), shape = RoundedCornerShape(12.dp))
                         .weight(.7f)
                 ) {
                     Image(

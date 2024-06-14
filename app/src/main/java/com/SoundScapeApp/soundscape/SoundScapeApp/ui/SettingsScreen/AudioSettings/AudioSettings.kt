@@ -76,7 +76,7 @@ fun AudioSettings(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = White90
+                            tint =  White50
                         )
                     }
                 }

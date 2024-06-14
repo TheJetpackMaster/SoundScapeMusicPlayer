@@ -634,12 +634,10 @@ fun MainPlayingBar(
     }
 
 
-    if (player.isPlaying) {
-        LaunchedEffect(viewModel.progress) {
-            songProgress.floatValue =
-                (player.currentPosition.toFloat() / player.duration.toFloat())
-            songProgressValue.value = (player.currentPosition.toFloat() / player.duration.toFloat())
-        }
+    LaunchedEffect(viewModel.progress) {
+        songProgress.floatValue =
+            (player.currentPosition.toFloat() / player.duration.toFloat())
+        songProgressValue.value = (player.currentPosition.toFloat() / player.duration.toFloat())
     }
 
     Box {
@@ -1077,7 +1075,6 @@ fun isPermissionGranted(context: Context, permission: String): Boolean {
         permission
     ) == PackageManager.PERMISSION_GRANTED
 }
-
 
 
 @Composable

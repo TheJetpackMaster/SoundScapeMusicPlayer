@@ -110,7 +110,7 @@ fun EqualizerScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = "",
-                            tint = White90
+                            tint = White50
                         )
                     }
                 },

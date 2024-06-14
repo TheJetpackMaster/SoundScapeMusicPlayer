@@ -92,9 +92,12 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.2.1")
 
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
 
+    //NavigationCompose
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+
+    implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.25.0")
 
     //   GLIDE

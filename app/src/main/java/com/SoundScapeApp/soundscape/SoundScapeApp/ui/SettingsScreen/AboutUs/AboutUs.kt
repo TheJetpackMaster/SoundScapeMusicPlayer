@@ -146,7 +146,12 @@ fun AboutUs(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "This app was crafted by Parvez Mayar and Khubaib Aziz, two tech enthusiasts from the heart of Lasbela (Balochistan), where the winds of innovation blow faintly. Despite the limited tech landscape, their passion for creating seamless experiences led them to embark on this journey. With SoundScape, they bring you a piece of their world, blending creativity with technology to redefine your audio experience. Join us on this sonic adventure, where every beat tells a story.",
+                text = "This app is crafted by Parvez Mayar and Khubaib Aziz, " +
+                        "two tech enthusiasts from the heart of Lasbela, Balochistan, " +
+                        "where the winds of innovation blow faintly. Despite the limited tech landscape, " +
+                        "their passion for creating seamless experiences led them to embark on this journey." +
+                        " With SoundScape, they bring you a piece of their world, blending creativity with technology to redefine your audio experience. " +
+                        "Join us on this sonic adventure,where every beat tells a story.",
                 style = SoundScapeThemes.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Justify,

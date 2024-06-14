@@ -32,4 +32,6 @@ sealed class ScreenRoute(val route: String) {
     data object EqualizerSettings : ScreenRoute(route = "equalizersettings")
     data object ThemeSettings : ScreenRoute(route = "thememainsettings")
     data object AboutUs : ScreenRoute(route = "aboutusscreen")
+
+    data object OnBoardingScreen:ScreenRoute(route = "onboardscreen")
 }

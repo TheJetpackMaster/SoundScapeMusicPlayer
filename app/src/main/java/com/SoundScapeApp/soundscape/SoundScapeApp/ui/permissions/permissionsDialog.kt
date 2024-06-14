@@ -28,7 +28,9 @@ fun PermissionDialog(
 ) {
     AlertDialog(
         shape = RectangleShape,
-        onDismissRequest = {onDismiss()},
+        onDismissRequest = {
+
+        },
         title = {
             Text(text = "Permission required")
         },

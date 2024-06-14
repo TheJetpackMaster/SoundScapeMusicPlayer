@@ -222,6 +222,15 @@ private val LargeTypography = SoundScapeTypography(
 )
 
 // Sizes
+
+
+private val smallestSizes = SoundScapeSizes(
+    large = 260.dp,
+    medium = 200.dp,
+    normal = 40.dp,
+    small = 12.dp
+)
+
 private val smallSizes = SoundScapeSizes(
     large = 300.dp,
     medium = 245.dp,
@@ -293,7 +302,10 @@ fun SoundScapeThemes(
 
     val sizes = when (windows.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
-            if (config.screenWidthDp <= 360) {
+            if (config.screenWidthDp < 360) {
+                smallestSizes
+
+            } else if(config.screenWidthDp == 360){
                 smallSizes
 
             } else if (config.screenWidthDp <= 411) {

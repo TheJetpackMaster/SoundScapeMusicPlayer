@@ -19,7 +19,7 @@ import androidx.media3.session.MediaSessionService
 import androidx.media3.ui.PlayerNotificationManager
 import com.SoundScapeApp.soundscape.MainActivity
 import com.SoundScapeApp.soundscape.R
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -31,7 +31,7 @@ private const val NOTIFICATION_CHANNEL_ID = "musicNotification id 1"
 class MusicNotificationManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val exoPlayer: ExoPlayer,
-    private val sharedPreferencesHelper: SharedPreferencesHelper
+    private val audioSharedPreferencesHelper: AudioSharedPreferencesHelper
 
     ) {
     val notificationManager: NotificationManagerCompat =

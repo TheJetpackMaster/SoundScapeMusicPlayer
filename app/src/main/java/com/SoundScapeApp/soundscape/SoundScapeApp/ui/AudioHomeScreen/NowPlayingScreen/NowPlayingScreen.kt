@@ -115,7 +115,9 @@ fun NowPlayingScreen(
             onNext = onNext,
             onPrevious = onPrevious,
             player = player,
-            viewModel = viewModel
+            viewModel = viewModel,
+            onBackClick = onBackClick,
+            isMainActivity = isMainActivity
         )
     }else{
         AudioPlayingScreen1(
@@ -127,7 +129,9 @@ fun NowPlayingScreen(
             onNext = onNext,
             onPrevious = onPrevious,
             player = player,
-            viewModel = viewModel
+            viewModel = viewModel,
+            onBackClick = onBackClick,
+            isMainActivity = isMainActivity
         )
     }
 

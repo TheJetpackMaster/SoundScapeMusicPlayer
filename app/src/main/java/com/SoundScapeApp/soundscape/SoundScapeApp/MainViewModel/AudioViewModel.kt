@@ -27,13 +27,13 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.PlayerEvent
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -83,7 +83,7 @@ class AudioViewModel @Inject constructor(
     private val audioServiceHandler: MusicServiceHandler,
     private val repository: MusicRepository,
     private val player: ExoPlayer,
-    private val sharedPreferencesHelper: SharedPreferencesHelper,
+    private val audioSharedPreferencesHelper: AudioSharedPreferencesHelper,
     private val equalizerSharedPreferencesHelper: EqualizerSharedPreferencesHelper,
     audioStateHandle: SavedStateHandle,
     private val localMediaProvider: LocalMediaProvider
@@ -375,7 +375,7 @@ class AudioViewModel @Inject constructor(
     // AUDIOS
     fun sortAudioList(sortType: SortType) {
         currentSortType = sortType
-        sharedPreferencesHelper.setCurrentSortType(sortType)
+        audioSharedPreferencesHelper.setCurrentSortType(sortType)
 
         val sortedList = when (sortType) {
             SortType.DATE_ADDED_ASC -> scannedAudioList.value.sortedBy { it.dateAdded }
@@ -614,11 +614,11 @@ class AudioViewModel @Inject constructor(
 
     //    Shuffle Logic
     private fun isShuffleEnabled(): Boolean {
-        return sharedPreferencesHelper.isShuffleEnabled()
+        return audioSharedPreferencesHelper.isShuffleEnabled()
     }
 
     private fun setShuffleEnabled(isShuffleEnabled: Boolean) {
-        sharedPreferencesHelper.setShuffleEnabled(isShuffleEnabled)
+        audioSharedPreferencesHelper.setShuffleEnabled(isShuffleEnabled)
     }
 
     fun toggleShuffle() {
@@ -640,7 +640,7 @@ class AudioViewModel @Inject constructor(
     //    PLAYLISTS LOGICS
     private suspend fun loadPlaylists() {
         delay(1000)
-        _playlists.value = sharedPreferencesHelper.getPlaylists().toMutableList()
+        _playlists.value = audioSharedPreferencesHelper.getPlaylists().toMutableList()
 
         updatePlaylists()
     }
@@ -658,7 +658,7 @@ class AudioViewModel @Inject constructor(
         _currentCreatedPlaylistId.value = newPlaylist.id
         Log.d("yesnewklsd", newPlaylist.id.toString())
 
-        sharedPreferencesHelper.savePlaylists(existingPlaylists)
+        audioSharedPreferencesHelper.savePlaylists(existingPlaylists)
 
         _playlists.value = existingPlaylists
     }
@@ -666,7 +666,7 @@ class AudioViewModel @Inject constructor(
 
     //    Edit playlist Name
     fun editPlaylistName(playlistId: Long, newName: String) {
-        sharedPreferencesHelper.editPlaylistName(playlistId, newName)
+        audioSharedPreferencesHelper.editPlaylistName(playlistId, newName)
 
         // Update the UI by updating the playlists LiveData
         val updatedPlaylists = _playlists.value.map { playlist ->
@@ -716,7 +716,7 @@ class AudioViewModel @Inject constructor(
         if (currentPlaylistId != null) {
             // Update the playlist in SharedPreferencesHelper
             viewModelScope.launch {
-                sharedPreferencesHelper.addSongsToPlaylist(
+                audioSharedPreferencesHelper.addSongsToPlaylist(
                     currentPlaylistId,
                     songIds,
                     context
@@ -725,7 +725,7 @@ class AudioViewModel @Inject constructor(
             // Update the current playlist songs
             viewModelScope.launch {
                 val currentPlaylistSongs =
-                    sharedPreferencesHelper.getSongsByPlaylistId(currentPlaylistId)
+                    audioSharedPreferencesHelper.getSongsByPlaylistId(currentPlaylistId)
                 _currentPlaylistSongs.value = currentPlaylistSongs
             }
 
@@ -750,7 +750,7 @@ class AudioViewModel @Inject constructor(
     fun addSongToDifferentPlaylist(playlistId: Long, songIds: List<Long>, context: Context) {
 
         viewModelScope.launch {
-            sharedPreferencesHelper.addSongsToPlaylist(playlistId, songIds, context = context)
+            audioSharedPreferencesHelper.addSongsToPlaylist(playlistId, songIds, context = context)
         }
 
         val updatedPlaylist = _playlists.value.find { it.id == playlistId }
@@ -773,7 +773,7 @@ class AudioViewModel @Inject constructor(
     fun createAndAddSongToPlaylist(songIds: List<Long>, context: Context) {
         val playlistId = currentCreatedPlaylistId.value
         viewModelScope.launch {
-            sharedPreferencesHelper.addSongsToPlaylist(playlistId!!, songIds, context = context)
+            audioSharedPreferencesHelper.addSongsToPlaylist(playlistId!!, songIds, context = context)
         }
 
         val updatedPlaylist = _playlists.value.find { it.id == playlistId }
@@ -796,21 +796,21 @@ class AudioViewModel @Inject constructor(
     //   Load songs from playlist
     suspend fun loadSongsForCurrentPlaylist(playlistId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = sharedPreferencesHelper.getSongsByPlaylistId(playlistId)
+            val songs = audioSharedPreferencesHelper.getSongsByPlaylistId(playlistId)
             _currentPlaylistSongs.value = songs
         }
     }
 
     suspend fun loadSongsForCurrentPlaylistResumption(playlistId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val songs = sharedPreferencesHelper.getSongsByPlaylistId(playlistId)
+            val songs = audioSharedPreferencesHelper.getSongsByPlaylistId(playlistId)
             _currentPlaylistSongsForResumption.value = songs
         }
     }
 
 
     fun deletePlaylist(playlistId: Long) {
-        sharedPreferencesHelper.deletePlaylist(playlistId)
+        audioSharedPreferencesHelper.deletePlaylist(playlistId)
 
         if (_currentPlaylistId.value == playlistId) {
             _currentPlaylistId.value = null
@@ -818,13 +818,13 @@ class AudioViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _playlists.value = sharedPreferencesHelper.getPlaylists().toMutableList()
+            _playlists.value = audioSharedPreferencesHelper.getPlaylists().toMutableList()
 
         }
     }
 
     fun deletePlaylists(playlistIds: List<Long>) {
-        sharedPreferencesHelper.deletePlaylists(playlistIds)
+        audioSharedPreferencesHelper.deletePlaylists(playlistIds)
         val deletedCurrentPlaylist = _currentPlaylistId.value in playlistIds
 
         if (deletedCurrentPlaylist) {
@@ -833,7 +833,7 @@ class AudioViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _playlists.value = sharedPreferencesHelper.getPlaylists().toMutableList()
+            _playlists.value = audioSharedPreferencesHelper.getPlaylists().toMutableList()
         }
     }
 
@@ -841,7 +841,7 @@ class AudioViewModel @Inject constructor(
         val playlistId = currentPlaylistId.value ?: return
 
         // Delete the songs from the shared preferences using the helper function
-        sharedPreferencesHelper.deleteSongsFromPlaylist(playlistId, songIds)
+        audioSharedPreferencesHelper.deleteSongsFromPlaylist(playlistId, songIds)
 
         // Update the UI or any other necessary operations in the ViewModel
         val updatedCurrentPlaylistSongs = _currentPlaylistSongs.value.toMutableList()
@@ -864,7 +864,7 @@ class AudioViewModel @Inject constructor(
 
     //    Clear Whole PlayList
     fun clearPlaylist(playlistId: Long) {
-        sharedPreferencesHelper.clearSongsFromPlaylist(playlistId)
+        audioSharedPreferencesHelper.clearSongsFromPlaylist(playlistId)
 
         // Update the UI or any other necessary operations in the ViewModel
         val updatedCurrentPlaylistSongs = emptyList<Long>()
@@ -885,12 +885,12 @@ class AudioViewModel @Inject constructor(
 
     //    Favorites Playlist section
     private fun addToFavorites(songId: Long) {
-        sharedPreferencesHelper.addToFavorites(songId)
+        audioSharedPreferencesHelper.addToFavorites(songId)
     }
 
     // Function to remove a song from favorites
     private fun removeFromFavorites(songId: Long) {
-        sharedPreferencesHelper.removeFromFavorites(songId)
+        audioSharedPreferencesHelper.removeFromFavorites(songId)
     }
 
     fun loadSongsForFavorites() {
@@ -914,12 +914,12 @@ class AudioViewModel @Inject constructor(
 
     // Function to get the list of favorite songs
     private fun getFavoriteSongs(): List<Long> {
-        return sharedPreferencesHelper.getFavoriteSongs()
+        return audioSharedPreferencesHelper.getFavoriteSongs()
     }
 
 
     fun toggleFavorite(songId: Long) {
-        val favoriteSongs = sharedPreferencesHelper.getFavoriteSongs()
+        val favoriteSongs = audioSharedPreferencesHelper.getFavoriteSongs()
         if (favoriteSongs.contains(songId)) {
             removeFromFavorites(songId)
 
@@ -938,7 +938,7 @@ class AudioViewModel @Inject constructor(
     }
 
     fun removeMultipleSongsFromFavorites(songIds: List<Long>) {
-        val favoriteSongs = sharedPreferencesHelper.getFavoriteSongs().toMutableList()
+        val favoriteSongs = audioSharedPreferencesHelper.getFavoriteSongs().toMutableList()
         val updatedCurrentPlaylistSongs = _currentPlaylistSongs.value.toMutableList()
 
         songIds.forEach { songId ->
@@ -1001,8 +1001,8 @@ class AudioViewModel @Inject constructor(
         }
 
         extraIdsMap.forEach { (_, extraIds) ->
-            sharedPreferencesHelper.removeDeletedSongsFromPlaylists(extraIds)
-            _playlists.value = sharedPreferencesHelper.getPlaylists()
+            audioSharedPreferencesHelper.removeDeletedSongsFromPlaylists(extraIds)
+            _playlists.value = audioSharedPreferencesHelper.getPlaylists()
         }
     }
 
@@ -1014,7 +1014,7 @@ class AudioViewModel @Inject constructor(
         val extraIds = favoriteIds.filterNot { audioIds.contains(it) }
 
 
-        sharedPreferencesHelper.removeDeletedSongsFromFavorites(extraIds)
+        audioSharedPreferencesHelper.removeDeletedSongsFromFavorites(extraIds)
 
         _favoritesSongs.value = getFavoriteSongs()
 
@@ -1029,11 +1029,11 @@ class AudioViewModel @Inject constructor(
     }
 
     fun setSortType(sortType: SortType) {
-        sharedPreferencesHelper.setCurrentSortType(sortType)
+        audioSharedPreferencesHelper.setCurrentSortType(sortType)
     }
 
     private fun getSortType(): SortType {
-        return sharedPreferencesHelper.getCurrentSortType()
+        return audioSharedPreferencesHelper.getCurrentSortType()
     }
 
 
@@ -1048,7 +1048,7 @@ class AudioViewModel @Inject constructor(
 
 
     fun setScanSongLengthTime(scanLength: Long) {
-        sharedPreferencesHelper.setScanSongLengthTime(scanLength)
+        audioSharedPreferencesHelper.setScanSongLengthTime(scanLength)
         _scanSongLengthTime.value = scanLength
 
         val length = scanLength * 1000
@@ -1057,16 +1057,16 @@ class AudioViewModel @Inject constructor(
     }
 
     fun getScanSongLengthTime() {
-        _scanSongLengthTime.value = sharedPreferencesHelper.getScanSongLengthTime()
+        _scanSongLengthTime.value = audioSharedPreferencesHelper.getScanSongLengthTime()
     }
 
     fun setTheme(chooseTheme: Int) {
-        sharedPreferencesHelper.setTheme(chooseTheme)
+        audioSharedPreferencesHelper.setTheme(chooseTheme)
         _currentTheme.value = chooseTheme
     }
 
     fun getTheme() {
-        _currentTheme.value = sharedPreferencesHelper.getTheme()
+        _currentTheme.value = audioSharedPreferencesHelper.getTheme()
     }
 
     // Audio playing screen
@@ -1075,12 +1075,12 @@ class AudioViewModel @Inject constructor(
     }
 
     fun setAudioScreenDesign(design:Int){
-        sharedPreferencesHelper.setAudioScreenDesign(design)
+        audioSharedPreferencesHelper.setAudioScreenDesign(design)
         _screenDesign.value = design
     }
 
     fun getAudioScreenDesign(){
-        _screenDesign.value = sharedPreferencesHelper.getAudioScreenDesign()
+        _screenDesign.value = audioSharedPreferencesHelper.getAudioScreenDesign()
     }
 //    fun getScreenDesign() {
 //        _currentTheme.value = sharedPreferencesHelper.getTheme()
@@ -1111,7 +1111,7 @@ class AudioViewModel @Inject constructor(
     }
 
     fun retrievePlaybackState(): PlaybackState {
-        return sharedPreferencesHelper.retrievePlaybackState()
+        return audioSharedPreferencesHelper.retrievePlaybackState()
     }
 
     fun restorePlaybackState(playbackState: PlaybackState, context: Context) {
@@ -1191,46 +1191,46 @@ class AudioViewModel @Inject constructor(
 
     fun setCurrentPlayingSection(playingFrom: Int) {
         _currentPlayingSection.value = playingFrom
-        sharedPreferencesHelper.setCurrentPlayingSection(playingFrom)
+        audioSharedPreferencesHelper.setCurrentPlayingSection(playingFrom)
     }
 
     fun getCurrentPlayingSection() {
-        _currentPlayingSection.value = sharedPreferencesHelper.getCurrentPlayingSection()
+        _currentPlayingSection.value = audioSharedPreferencesHelper.getCurrentPlayingSection()
     }
 
     fun setMediaItemsFlags(setMediaItems: Boolean) {
-        sharedPreferencesHelper.setMediaItemsFlag(setMediaItems)
+        audioSharedPreferencesHelper.setMediaItemsFlag(setMediaItems)
     }
 
     fun getMediaItemsFlags() {
-        setMediaItems = sharedPreferencesHelper.getMediaItemsFlag()
+        setMediaItems = audioSharedPreferencesHelper.getMediaItemsFlag()
     }
 
     fun setCurrentPlayingPlaylist(playlistId: Long) {
         _currentPlayingPlaylistId.value = playlistId
-        sharedPreferencesHelper.setCurrentPlayingPlaylist(playlistId)
+        audioSharedPreferencesHelper.setCurrentPlayingPlaylist(playlistId)
     }
 
     fun getCurrentPlayingPlaylist() {
-        _currentPlayingPlaylistId.value = sharedPreferencesHelper.getCurrentPlayingPlaylist()
+        _currentPlayingPlaylistId.value = audioSharedPreferencesHelper.getCurrentPlayingPlaylist()
     }
 
     fun setCurrentPlayingAlbum(albumId: Long) {
         _currentPlayingAlbumId.value = albumId
-        sharedPreferencesHelper.setCurrentPlayingAlbum(albumId)
+        audioSharedPreferencesHelper.setCurrentPlayingAlbum(albumId)
     }
 
     fun getCurrentPlayingAlbum() {
-        _currentPlayingAlbumId.value = sharedPreferencesHelper.getCurrentPlayingAlbum()
+        _currentPlayingAlbumId.value = audioSharedPreferencesHelper.getCurrentPlayingAlbum()
     }
 
     fun setCurrentPlayingArtist(artist: String) {
         _currentPlayingArtist.value = artist
-        sharedPreferencesHelper.setCurrentPlayingArtist(artist)
+        audioSharedPreferencesHelper.setCurrentPlayingArtist(artist)
     }
 
     fun getCurrentPlayingArtist() {
-        _currentPlayingArtist.value = sharedPreferencesHelper.getCurrentPlayingArtist()
+        _currentPlayingArtist.value = audioSharedPreferencesHelper.getCurrentPlayingArtist()
     }
 
     //Share songs
@@ -1482,12 +1482,12 @@ class AudioViewModel @Inject constructor(
     }
 
     fun setIsFirstTime(isFirstTime:Boolean){
-        sharedPreferencesHelper.setIsFirstTime(isFirstTime)
+        audioSharedPreferencesHelper.setIsFirstTime(isFirstTime)
         _isFirstTime.value = isFirstTime
     }
 
     fun getIsFirstTime(){
-        _isFirstTime.value = sharedPreferencesHelper.getIsFirstTime()
+        _isFirstTime.value = audioSharedPreferencesHelper.getIsFirstTime()
     }
 
     override fun onCleared() {

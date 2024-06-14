@@ -9,7 +9,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.MusicRepository
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +21,7 @@ class MainViewModel @Inject constructor(
     private val audioServiceHandler: MusicServiceHandler,
     private val repository: MusicRepository,
     private val player: ExoPlayer,
-    private val sharedPreferencesHelper: SharedPreferencesHelper,
+    private val audioSharedPreferencesHelper: AudioSharedPreferencesHelper,
     private val equalizerSharedPreferencesHelper: EqualizerSharedPreferencesHelper,
     audioStateHandle: SavedStateHandle,
     private val localMediaProvider: LocalMediaProvider
@@ -54,12 +54,12 @@ class MainViewModel @Inject constructor(
     }
 
     fun setTheme(chooseTheme: Int) {
-        sharedPreferencesHelper.setTheme(chooseTheme)
+        audioSharedPreferencesHelper.setTheme(chooseTheme)
         _currentTheme.value = chooseTheme
     }
 
     fun getTheme() {
-        _currentTheme.value = sharedPreferencesHelper.getTheme()
+        _currentTheme.value = audioSharedPreferencesHelper.getTheme()
     }
 
 

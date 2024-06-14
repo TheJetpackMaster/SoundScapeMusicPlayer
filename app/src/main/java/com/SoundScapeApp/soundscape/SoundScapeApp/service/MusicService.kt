@@ -1,6 +1,5 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.service
 
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -8,10 +7,9 @@ import androidx.annotation.RequiresApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import kotlin.system.exitProcess
 
 
 @Suppress("DEPRECATION")
@@ -31,7 +29,7 @@ class MusicService : MediaSessionService() {
     lateinit var context: Context
 
     @Inject
-    lateinit var sharedPreferencesHelper: SharedPreferencesHelper
+    lateinit var audioSharedPreferencesHelper: AudioSharedPreferencesHelper
 
 
     @RequiresApi(Build.VERSION_CODES.S)
@@ -70,7 +68,7 @@ class MusicService : MediaSessionService() {
 //        mediaSession.release()
         exoPlayer.currentMediaItem?.let { mediaItem ->
             exoPlayer.pause()
-            sharedPreferencesHelper.savePlaybackState(
+            audioSharedPreferencesHelper.savePlaybackState(
                 mediaItem.mediaId,
                 exoPlayer.currentPosition,
                 exoPlayer.isPlaying

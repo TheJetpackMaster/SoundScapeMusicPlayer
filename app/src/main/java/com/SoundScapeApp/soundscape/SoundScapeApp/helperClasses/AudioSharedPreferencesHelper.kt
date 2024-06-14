@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.core.content.edit
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.SortType
+import com.SoundScapeApp.soundscape.SoundScapeApp.data.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
 import com.google.gson.reflect.TypeToken
 import com.google.gson.Gson
@@ -13,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SharedPreferencesHelper @Inject constructor(
+class AudioSharedPreferencesHelper @Inject constructor(
     @ApplicationContext private val context: Context,
     private val sharedPreferences: SharedPreferences
 ) {
@@ -407,10 +408,4 @@ class SharedPreferencesHelper @Inject constructor(
 //        return sharedPreferences.getBoolean(IS_FIRST_TIME_KEY,true)
 //    }
 }
-
-data class PlaybackState(
-    val lastPlayedSong:String,
-    val lastPlaybackPosition:Long,
-    val isPlaying:Boolean
-)
 

@@ -22,14 +22,14 @@ class EqualizerSharedPreferencesHelper(
         sharedPreferences.edit().putFloat(BASS_LEVEL_KEY,bassLevel).apply()
     }
     fun getBaseLevel():Float{
-        return sharedPreferences.getFloat(BASS_LEVEL_KEY,.5f)
+        return sharedPreferences.getFloat(BASS_LEVEL_KEY,0f)
     }
 
     fun setVirtualizerLevel(virtualizerLevel:Float){
         sharedPreferences.edit().putFloat(VIRTUALIZER_LEVEL_KEY,virtualizerLevel).apply()
     }
     fun getVirtualizerLevel():Float{
-        return sharedPreferences.getFloat(VIRTUALIZER_LEVEL_KEY,.5f)
+        return sharedPreferences.getFloat(VIRTUALIZER_LEVEL_KEY,0f)
     }
 
     fun setLoudnessLevel(loudnessLevel:Float){

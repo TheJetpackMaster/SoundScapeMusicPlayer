@@ -16,7 +16,7 @@ import androidx.media3.session.MediaSession
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.LocalMediaProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.EqualizerSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.MusicServiceHandler
-import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.SharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicNotificationManager
 import dagger.Module
@@ -67,11 +67,11 @@ object MediaModule {
     fun provideNotificationManager(
         @ApplicationContext context: Context,
         player: ExoPlayer,
-        sharedPreferencesHelper: SharedPreferencesHelper
+        audioSharedPreferencesHelper: AudioSharedPreferencesHelper
     ): MusicNotificationManager = MusicNotificationManager(
         context = context,
         exoPlayer = player,
-        sharedPreferencesHelper = sharedPreferencesHelper
+        audioSharedPreferencesHelper = audioSharedPreferencesHelper
     )
 
     @Suppress("DEPRECATION")
@@ -86,18 +86,18 @@ object MediaModule {
     fun provideSharedPreferencesHelper(
         @ApplicationContext context: Context,
         sharedPreferences: SharedPreferences
-    ): SharedPreferencesHelper {
-        return SharedPreferencesHelper(context, sharedPreferences)
+    ): AudioSharedPreferencesHelper {
+        return AudioSharedPreferencesHelper(context, sharedPreferences)
     }
 
     @Provides
     @Singleton
     fun provideServiceHandler(
         exoPlayer: ExoPlayer,
-        sharedPreferencesHelper: SharedPreferencesHelper
+        audioSharedPreferencesHelper: AudioSharedPreferencesHelper
     ): MusicServiceHandler = MusicServiceHandler(
         exoPlayer,
-        sharedPreferencesHelper
+        audioSharedPreferencesHelper
     )
 
     @Provides

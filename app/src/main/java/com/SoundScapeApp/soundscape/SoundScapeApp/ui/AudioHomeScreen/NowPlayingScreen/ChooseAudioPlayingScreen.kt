@@ -158,10 +158,10 @@ fun ChooseAudioPlayingScreen(
                 },
             ) {
                 Text(
-                    text = "Confirm",
+                    text = "CONFIRM",
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
-                    color = White90
+                    color = White90.copy(.9f)
                 )
             }
         }
