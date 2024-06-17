@@ -1172,7 +1172,7 @@ fun RequestStoragePermissions(
 
                     else -> return@forEach
                 },
-                isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
+                isPermanentlyDeclined = shouldShowRequestPermissionRationale(
                     activity,
                     permission
                 ),
