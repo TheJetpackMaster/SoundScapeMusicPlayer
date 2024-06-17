@@ -57,7 +57,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -124,8 +126,8 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.PlayListsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.AudioPermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.ExternalStoragePermissionTextProvider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.permissions.PermissionDialog
@@ -325,7 +327,20 @@ fun SongsHome(
 
 
 
-    RequestStoragePermissions(context = context, viewModel = viewModel)
+    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+        if (!isPermissionGranted(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            RequestStoragePermissions(context = context, viewModel = viewModel)
+        }
+    } else {
+        if (!isPermissionGranted(
+                context,
+                Manifest.permission.READ_MEDIA_AUDIO
+            ) && !isPermissionGranted(context, Manifest.permission.READ_MEDIA_VIDEO)
+        ) {
+            RequestStoragePermissions(context = context, viewModel = viewModel)
+        }
+    }
+
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -392,7 +407,14 @@ fun SongsHome(
             if (!showBottomBar) {
                 CustomBottomNav(navController = navController, context = context, viewModel)
             }
-        }
+        },
+//        floatingActionButton = {
+//            FloatingActionButton(onClick = {
+//                navController.navigate("youtube")
+//            }) {
+//                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "")
+//            }
+//        }
     )
     { innerPadding ->
         Column(
@@ -1077,6 +1099,7 @@ fun isPermissionGranted(context: Context, permission: String): Boolean {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun RequestStoragePermissions(
     context: Context,
@@ -1087,8 +1110,8 @@ fun RequestStoragePermissions(
 
 
     val permissionsToRequest = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        Manifest.permission.READ_MEDIA_AUDIO,
+        Manifest.permission.READ_MEDIA_VIDEO
     )
 
     val multiplePermissionResultLauncher = rememberLauncherForActivityResult(

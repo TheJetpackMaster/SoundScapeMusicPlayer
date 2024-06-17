@@ -87,7 +87,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ShowSongDetailsDialog
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.SongItem
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.BrightGray
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.Theme2Primary

@@ -38,6 +38,7 @@ import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.Preset
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AudioSettings.commons.CustomCircularSwitchProgressIndicator
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
@@ -80,6 +81,7 @@ fun EqualizerScreen(
 
     val turnToCustom = remember{ mutableStateOf(false) }
 
+    var sliderValue by remember { mutableStateOf(0) }
 
     LaunchedEffect(bassValue) {
         viewModel.adjustBass(bassValue)
@@ -143,7 +145,13 @@ fun EqualizerScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState(initial = Preset.entries.indexOf(selectedPreset))),
+                    .horizontalScroll(
+                        rememberScrollState(
+                            initial = Preset.entries.indexOf(
+                                selectedPreset
+                            )
+                        )
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Preset.entries.forEach { preset ->
@@ -293,6 +301,16 @@ fun EqualizerScreen(
                     onValueChange = { virtualizerValue = it },
                     sliderSize = 140.dp,
                 )
+
+//                CustomCircularSwitchProgressIndicator(
+//                    initialValue = sliderValue,
+//                    primaryColor = Color.Red,
+//                    secondaryColor = Color.Green,
+//                    circleRadius = 230f,
+//                    onPositionChange = {
+//                        sliderValue = it
+//                    }
+//                )
             }
 
             Row(
@@ -398,7 +416,7 @@ fun CustomVerticalSlider(
                         sliderPosition = newValue.coerceIn(0f, 1f)
                         onValueChange(sliderPosition * 2 - 1)
                         change.consume()
-                    }else{
+                    } else {
                         turnToCustom.value = true
                     }
                 }
@@ -409,7 +427,7 @@ fun CustomVerticalSlider(
                         val newValue = 1f - (tapOffset.y / canvasHeight)
                         sliderPosition = newValue.coerceIn(0f, 1f)
                         onValueChange(sliderPosition * 2 - 1)
-                    }else{
+                    } else {
                         turnToCustom.value = true
                     }
                 }

@@ -68,7 +68,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.videoPlaylist
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90

@@ -67,8 +67,8 @@ import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.BlurHelper
 import com.SoundScapeApp.soundscape.ui.theme.GrayIcons
 import com.SoundScapeApp.soundscape.ui.theme.Pink80

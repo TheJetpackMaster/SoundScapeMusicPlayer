@@ -51,8 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90
@@ -101,7 +101,7 @@ fun SongsHomeTopAppBar(
 //                        Icon(
 //                            imageVector = Icons.Default.Menu,
 //                            contentDescription = "",
-//                            tint = White90
+//                            tint = White50
 //                        )
 //                    }
 //                }

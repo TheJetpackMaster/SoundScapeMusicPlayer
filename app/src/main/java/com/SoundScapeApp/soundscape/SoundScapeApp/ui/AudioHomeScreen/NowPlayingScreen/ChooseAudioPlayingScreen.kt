@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 import com.SoundScapeApp.soundscape.ui.theme.White90

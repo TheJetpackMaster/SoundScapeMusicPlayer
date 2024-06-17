@@ -17,7 +17,7 @@ import androidx.navigation.compose.composable
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.MainScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.splashscreen.SplashScreen
 
@@ -59,7 +59,8 @@ fun RootNav(
         }
     ) {
 
-        composable(ScreenRoute.SplashScreen.route,
+        composable(
+            ScreenRoute.SplashScreen.route,
             exitTransition = {
                 fadeOut(tween(200, easing = LinearEasing))
             }) {
@@ -68,7 +69,8 @@ fun RootNav(
                 viewModel = audioViewModel)
         }
 
-        composable(ScreenRoute.MainScreen.route,
+        composable(
+            ScreenRoute.MainScreen.route,
             enterTransition = {
                 fadeIn(tween(250, easing = LinearEasing))
             }

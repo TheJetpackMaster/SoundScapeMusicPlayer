@@ -233,12 +233,11 @@ fun VideoPlayingScreen(
 
     val activity = context as ComponentActivity
 
-    val requestedOrientation = activity?.requestedOrientation
+    val requestedOrientation = activity.requestedOrientation
 
     var delayJob: Job? = null
     var skipDelayJob: Job? = null
     val showControlDelayJob = remember { mutableStateOf<Job?>(null) }
-
 
 
     val videoList by viewModel.videoList.collectAsState()
@@ -622,12 +621,15 @@ fun VideoPlayingScreen(
                                 )
                             },
                             onScreenRotationClick = {
-                                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT) {
+                                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE ||
+                                    requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE ||
+                                    requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                                ) {
+                                    activity.requestedOrientation =
+                                        ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                                } else {
                                     activity.requestedOrientation =
                                         ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
-                                } else {
-                                    activity?.requestedOrientation =
-                                        ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
                                 }
 
                                 handleButtonClick(
@@ -1461,7 +1463,7 @@ fun VideoPlayingScreen(
                                     .weight(1f)
                                     .clickable {
                                         showMoreVertDialog = false
-                                       // showVideoInfoDialog = true
+                                        // showVideoInfoDialog = true
                                         showVideoInfoDialog = !showVideoInfoDialog
                                         exoPlayer.pause()
                                     }
@@ -1617,13 +1619,17 @@ fun VideoPlayingScreen(
         }
     }
 }
+
 @Composable
 fun DisplayVideoInfo(video: Video) {
     Column {
         Text(text = "Title: ${video.displayName}", color = Color.White)
         Text(text = "Path: ${video.uri}", color = Color.White)
         Text(text = "Date Added: ${video.dateAdded}", color = Color.White)
-        Text(text = "Duration: ${formatVideoDuration(video.duration.toLong())} seconds", color = Color.White)
+        Text(
+            text = "Duration: ${formatVideoDuration(video.duration.toLong())} seconds",
+            color = Color.White
+        )
         Text(text = "Size: ${video.sizeMB}", color = Color.White)
         Text(text = "Bucket Name: ${video.bucketName}", color = Color.White)
         // Add more fields as necessary

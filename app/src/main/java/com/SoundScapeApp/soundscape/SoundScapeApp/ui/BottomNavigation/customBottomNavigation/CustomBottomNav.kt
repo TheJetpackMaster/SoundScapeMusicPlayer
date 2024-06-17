@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.ui.theme.GrayIcons
 import com.SoundScapeApp.soundscape.ui.theme.PurpleIcons
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes

@@ -49,9 +49,10 @@ import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.MainDrawerMenu
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.navGraph.BottomNavGraph
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.navGraph.BottomNavGraph
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.ui.theme.NavigationBarColor
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -102,39 +103,32 @@ fun MainScreen(
     )
     val showBottomBar = navController
         .currentBackStackEntryAsState().value?.destination?.route in screens.map { it.route }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-//    val isDrawerEnabled by audioViewModel.isDrawerEnabled.collectAsState()
 
+
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val isDrawerEnabled by audioViewModel.isDrawerEnabled.collectAsState()
+//
 //    LaunchedEffect(
 //        drawerState.isClosed
 //    ) {
-//        if(drawerState.isClosed) {
+//        if (drawerState.isClosed) {
 //            audioViewModel.setIsDrawerEnabled(false)
 //        }
 //    }
 //    LaunchedEffect(isDrawerEnabled) {
-//        if(isDrawerEnabled) {
+//        if (isDrawerEnabled) {
 //            drawerState.open()
-//        }else{
+//        } else {
 //            drawerState.close()
 //        }
 //    }
 
 //    ModalNavigationDrawer(
 //        drawerContent = {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth(.7f)
-//                    .fillMaxHeight()
-//                    .background(SoundScapeThemes.colorScheme.secondary)
-//            ) {
-//
-//            }
+//            MainDrawerMenu()
 //        },
 //        drawerState = drawerState
 //    ) {
-//
-//    }
         Scaffold(
             modifier = Modifier
                 .background(color = NavigationBarColor)
@@ -223,6 +217,7 @@ fun MainScreen(
                 }
             }
         }
+//    }
 }
 
 object BlurHelper {

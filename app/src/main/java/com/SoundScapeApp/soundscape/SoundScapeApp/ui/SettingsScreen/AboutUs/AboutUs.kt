@@ -96,7 +96,7 @@ fun AboutUs(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Version 1.3.0",
+                text = "Version 1.3.1",
                 style = SoundScapeThemes.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center

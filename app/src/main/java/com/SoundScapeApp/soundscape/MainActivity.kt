@@ -25,6 +25,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +55,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import dagger.hilt.android.AndroidEntryPoint
@@ -90,7 +91,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    @androidx.annotation.OptIn(UnstableApi::class)
+    @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -98,7 +99,7 @@ class MainActivity : ComponentActivity() {
         audioViewModel.setIsMainActivity(true)
         audioViewModel.setMediaItemFlag(false)
 
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
         // DELETING MEDIA ITEMS
         intentSenderLauncher =

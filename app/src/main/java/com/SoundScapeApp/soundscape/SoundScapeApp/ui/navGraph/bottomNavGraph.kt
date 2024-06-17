@@ -1,4 +1,4 @@
-package com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.navGraph
+package com.SoundScapeApp.soundscape.SoundScapeApp.ui.navGraph
 
 import EqualizerScreen
 import android.content.Context
@@ -33,8 +33,8 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.PlayListDetailsScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.SongsHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.NowPlayingScreen
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.BottomNavScreenRoutes
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes.ScreenRoute
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AboutUs.AboutUs
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AudioSettings.AudioSettings
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.Settings
@@ -46,6 +46,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHo
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.VideosHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.ChooseAudioPlayingScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.YoutubeFeatures.YoutubeHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.splashscreen.OnBoardingScreen
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -197,7 +198,8 @@ fun BottomNavGraph(
 
 
 //        VideosHome
-        composable(BottomNavScreenRoutes.VideosHome.route,
+        composable(
+            BottomNavScreenRoutes.VideosHome.route,
             enterTransition = {
                 fadeIn(animationSpec = tween(200))
             },
@@ -246,7 +248,8 @@ fun BottomNavGraph(
 
 
 //        SETTINGS
-        composable(BottomNavScreenRoutes.Settings.route,
+        composable(
+            BottomNavScreenRoutes.Settings.route,
             enterTransition = {
                 fadeIn(animationSpec = tween(200))
             },
@@ -299,6 +302,12 @@ fun BottomNavGraph(
         //Onboarding
         composable(ScreenRoute.OnBoardingScreen.route) {
             OnBoardingScreen(navController = navController)
+        }
+
+
+        //YoutubeVideos Home
+        composable("youtube"){
+            YoutubeHome()
         }
     }
 }

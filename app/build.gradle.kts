@@ -14,8 +14,8 @@ android {
         applicationId = "com.SoundScapeApp.soundscape"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.3.0"
+        versionCode = 8
+        versionName = "1.3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -124,6 +124,9 @@ dependencies {
     // SPLASH SCREEN API
     implementation("androidx.core:core-splashscreen:1.0.1")
 
+
+    //WebView
+    implementation("androidx.webkit:webkit:1.11.0")
 
     //Pager
     implementation("com.google.accompanist:accompanist-pager:0.18.0")

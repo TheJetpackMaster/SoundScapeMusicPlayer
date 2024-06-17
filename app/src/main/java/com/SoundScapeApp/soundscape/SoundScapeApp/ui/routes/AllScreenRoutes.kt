@@ -1,4 +1,4 @@
-package com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.routes
+package com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes
 
 import com.SoundScapeApp.soundscape.R
 
@@ -33,5 +33,5 @@ sealed class ScreenRoute(val route: String) {
     data object ThemeSettings : ScreenRoute(route = "thememainsettings")
     data object AboutUs : ScreenRoute(route = "aboutusscreen")
 
-    data object OnBoardingScreen:ScreenRoute(route = "onboardscreen")
+    data object OnBoardingScreen: ScreenRoute(route = "onboardscreen")
 }
