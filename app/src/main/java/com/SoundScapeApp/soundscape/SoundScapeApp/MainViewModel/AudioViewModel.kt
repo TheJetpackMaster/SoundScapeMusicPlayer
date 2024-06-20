@@ -46,20 +46,6 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
-//private val audioDummy = Audio(
-//    uri = "".toUri(),
-//    displayName = "",
-//    id = 0L,
-//    artist = "",
-//    data = "",
-//    duration = 0,
-//    title = "",
-//    albumId = "",
-//    artwork = "",
-//    albumName = "",
-//)
-
-
 enum class SortType {
     DATE_ADDED_DESC,
     DATE_ADDED_ASC,
@@ -358,16 +344,15 @@ class AudioViewModel @Inject constructor(
     }
 
     //GRANT PERMISSIONS
-    fun dismissDialog() {
-        visiblePermissionDialogQueue.removeFirst()
-    }
-
-    fun onPermissionResult(
-        permission: String,
-        isGranted: Boolean
-    ) {
+    fun onPermissionResult(permission: String, isGranted: Boolean) {
         if (!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
             visiblePermissionDialogQueue.add(permission)
+        }
+    }
+
+    fun dismissDialog() {
+        if (visiblePermissionDialogQueue.isNotEmpty()) {
+            visiblePermissionDialogQueue.removeAt(visiblePermissionDialogQueue.size - 1)
         }
     }
 
@@ -1260,17 +1245,57 @@ class AudioViewModel @Inject constructor(
 
 
     // Equalizers and bass Boosters
+//    @androidx.annotation.OptIn(UnstableApi::class)
+//    fun setupAudioEffects() {
+//        val audioSessionId = player.audioSessionId
+//        if (audioSessionId != C.INDEX_UNSET) {
+//            equalizer = Equalizer(0, audioSessionId).apply { enabled = true }
+//            bassBoost = BassBoost(0, audioSessionId).apply { enabled = true }
+//            virtualizer = Virtualizer(0, audioSessionId).apply { enabled = true }
+//            loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply { enabled = true }
+////            reverb = PresetReverb(0,audioSessionId).apply { enabled = true }
+////
+////            reverb?.preset = 5
+//        }
+//    }
+
     @androidx.annotation.OptIn(UnstableApi::class)
     fun setupAudioEffects() {
         val audioSessionId = player.audioSessionId
         if (audioSessionId != C.INDEX_UNSET) {
-            equalizer = Equalizer(0, audioSessionId).apply { enabled = true }
-            bassBoost = BassBoost(0, audioSessionId).apply { enabled = true }
-            virtualizer = Virtualizer(0, audioSessionId).apply { enabled = true }
-            loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply { enabled = true }
-//            reverb = PresetReverb(0,audioSessionId).apply { enabled = true }
-//
-//            reverb?.preset = 5
+            try {
+                equalizer = Equalizer(0, audioSessionId).apply { enabled = true }
+            } catch (e: Exception) {
+                Log.e("AudioEffect", "Failed to initialize Equalizer", e)
+            }
+
+            try {
+                bassBoost = BassBoost(0, audioSessionId).apply { enabled = true }
+            } catch (e: Exception) {
+                Log.e("AudioEffect", "Failed to initialize BassBoost", e)
+            }
+
+            try {
+                virtualizer = Virtualizer(0, audioSessionId).apply { enabled = true }
+            } catch (e: Exception) {
+                Log.e("AudioEffect", "Failed to initialize Virtualizer", e)
+            }
+
+            try {
+                loudnessEnhancer = LoudnessEnhancer(audioSessionId).apply { enabled = true }
+            } catch (e: Exception) {
+                Log.e("AudioEffect", "Failed to initialize LoudnessEnhancer", e)
+            }
+
+            // Uncomment and wrap reverb initialization in try-catch if needed
+            // try {
+            //     reverb = PresetReverb(0, audioSessionId).apply {
+            //         enabled = true
+            //         preset = 5
+            //     }
+            // } catch (e: Exception) {
+            //     Log.e("AudioEffect", "Failed to initialize PresetReverb", e)
+            // }
         }
     }
 

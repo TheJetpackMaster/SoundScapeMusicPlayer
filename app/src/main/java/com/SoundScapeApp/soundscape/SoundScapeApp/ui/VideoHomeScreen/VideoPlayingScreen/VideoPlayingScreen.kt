@@ -311,7 +311,7 @@ fun VideoPlayingScreen(
             viewModel.playBackSpeed(1f)
             viewModel.startTimer(duration = 0, onFinish = { exoPlayer.pause() }, exoPlayer)
             val defaultBrightness = getCurrentBrightness(activity) / 100
-            Log.d("defaultbrit", defaultBrightness.toString())
+
             setScreenBrightness(activity, defaultBrightness)
             viewModel.videoVolume(getDeviceVolume(context))
             viewModel.setBrightness(defaultBrightness)

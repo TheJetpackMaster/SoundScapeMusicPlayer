@@ -28,17 +28,9 @@ fun PermissionDialog(
 ) {
     AlertDialog(
         shape = RectangleShape,
-        onDismissRequest = {
-            onDismiss()
-        },
-        title = {
-            Text(text = "Permission required")
-        },
-        text = {
-            Text(
-                text = permissionTextProvider.getDescription(isPermanentlyDeclined)
-            )
-        },
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = "Permission required") },
+        text = { Text(text = permissionTextProvider.getDescription(isPermanentlyDeclined)) },
         confirmButton = {
             Row(
                 modifier = Modifier
@@ -61,16 +53,15 @@ fun PermissionDialog(
                         } else {
                             "Ok"
                         },
-                        style = SoundScapeThemes.typography.titleMedium,
                         textAlign = TextAlign.Center,
                     )
                 }
             }
-
         },
         modifier = modifier
     )
 }
+
 
 
 interface PermissionTextProvider{

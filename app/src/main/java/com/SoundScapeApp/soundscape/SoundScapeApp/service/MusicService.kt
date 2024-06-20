@@ -34,7 +34,6 @@ class MusicService : MediaSessionService() {
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         if (intent?.action == "STOP_MUSIC_SERVICE") {
             // Stop the service
 

@@ -209,6 +209,7 @@ class MainActivity : ComponentActivity() {
                                     // Both audio and video permissions are granted
                                     audioViewModel.loadAudioData()
                                     videoViewModel.loadVideoData()
+                                    audioViewModel.visiblePermissionDialogQueue.clear()
                                 } else if (audioPermissionGranted) {
                                     // Only audio permission is granted
                                     audioViewModel.loadAudioData()

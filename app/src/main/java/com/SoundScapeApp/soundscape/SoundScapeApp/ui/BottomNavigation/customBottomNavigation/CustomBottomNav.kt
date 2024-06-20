@@ -34,13 +34,14 @@ import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
 
 @Composable
-fun CustomBottomNav(navController: NavController, context: Context,
-                    viewModel: AudioViewModel) {
+fun CustomBottomNav(
+    navController: NavController,
+    context: Context,
+    viewModel: AudioViewModel
+) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
-
-
 
     Row(
         modifier = Modifier
@@ -108,7 +109,7 @@ fun CustomBottomNav(navController: NavController, context: Context,
                 .size(78.dp)
                 .clickable(
                     onClick = {
-                        if(currentDestination != BottomNavScreenRoutes.Settings.route) {
+                        if (currentDestination != BottomNavScreenRoutes.Settings.route) {
                             navController.navigate(BottomNavScreenRoutes.Settings.route) {
                                 popUpTo(BottomNavScreenRoutes.SongsHome.route)
                             }

@@ -181,10 +181,10 @@ fun AudioPlayingScreen2(
 
     val currentIntentMediaItem = viewModel.currentMediaItemAudio.collectAsState()
 
+
     val dominantColor = remember {
         mutableStateOf(BrightGray)
     }
-
 
     LaunchedEffect(player.currentMediaItem) {
         current.longValue = player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1
@@ -622,11 +622,20 @@ fun AudioPlayingScreen2(
                         viewModel.getFavoritesSongs()
                     },
                     onShareClick = {
-                        viewModel.shareAudio(
-                            context,
-                            currentPlayingSong!!.uri,
-                            currentPlayingSong!!.title
-                        )
+                        if(isMainActivity) {
+                            viewModel.shareAudio(
+                                context,
+                                currentPlayingSong!!.uri,
+                                currentPlayingSong!!.title
+                            )
+
+                        }else{
+                            viewModel.shareAudio(
+                                context,
+                                currentIntentMediaItem.value!!.uri,
+                                currentIntentMediaItem.value!!.title
+                            )
+                        }
                     }
                 )
 

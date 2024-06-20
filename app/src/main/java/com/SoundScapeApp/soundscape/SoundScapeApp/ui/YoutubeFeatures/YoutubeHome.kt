@@ -34,7 +34,6 @@ fun YoutubeHome() {
                     settings.domStorageEnabled = true
                     settings.useWideViewPort = true
                     settings.builtInZoomControls = true
-
                     loadUrl(youtubeUrl)
                 }
             }
