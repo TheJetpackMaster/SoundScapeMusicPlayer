@@ -46,7 +46,6 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHo
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.VideosHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.ChooseAudioPlayingScreen
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.YoutubeFeatures.YoutubeHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.splashscreen.OnBoardingScreen
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -302,12 +301,6 @@ fun BottomNavGraph(
         //Onboarding
         composable(ScreenRoute.OnBoardingScreen.route) {
             OnBoardingScreen(navController = navController)
-        }
-
-
-        //YoutubeVideos Home
-        composable("youtube"){
-            YoutubeHome()
         }
     }
 }
