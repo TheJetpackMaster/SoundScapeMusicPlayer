@@ -4,13 +4,16 @@ import android.Manifest.permission
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.AppOpsManager
+import android.app.DownloadManager
 import android.app.NotificationManager
 import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -54,6 +57,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
+import com.SoundScapeApp.soundscape.SoundScapeApp.inAppUpdate.DownloadReceiver
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
@@ -86,7 +90,6 @@ class MainActivity : ComponentActivity() {
     lateinit var audioSharedPreferencesHelper: AudioSharedPreferencesHelper
 
 
-
     //For deleting songs and videos
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
@@ -94,6 +97,11 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val receiver = DownloadReceiver(this)
+        this.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+            RECEIVER_NOT_EXPORTED)
+
 
         installSplashScreen()
         audioViewModel.setIsMainActivity(true)
@@ -466,6 +474,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 
     //
     override fun onPause() {

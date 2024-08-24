@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Handles files in the external downloads directory -->
+    <external-path name="external_files" path="Download/" />
+    <!-- Handles files in the app-specific internal directory -->
+    <files-path name="files" path="." />
+    <!-- Handles files in the cache directory -->
+    <cache-path name="cache" path="." />
+</paths>

@@ -49,6 +49,7 @@ import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
+import com.SoundScapeApp.soundscape.SoundScapeApp.inAppUpdate.CheckForUpdates
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.MainDrawerMenu
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.navGraph.BottomNavGraph
@@ -129,6 +130,9 @@ fun MainScreen(
 //        },
 //        drawerState = drawerState
 //    ) {
+
+//    CheckForUpdates()
+
         Scaffold(
             modifier = Modifier
                 .background(color = NavigationBarColor)

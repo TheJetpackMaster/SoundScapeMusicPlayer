@@ -2,15 +2,23 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel
 
 
 import android.annotation.SuppressLint
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
+import android.media.RingtoneManager
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
 import android.media.audiofx.Virtualizer
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
@@ -42,6 +50,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -80,8 +92,8 @@ class AudioViewModel @Inject constructor(
     private var equalizer: Equalizer? = null
     var bassBoost: BassBoost? = null
     var virtualizer: Virtualizer? = null
-    var loudnessEnhancer:LoudnessEnhancer? = null
-    var reverb:PresetReverb? = null
+    var loudnessEnhancer: LoudnessEnhancer? = null
+    var reverb: PresetReverb? = null
 
     //setting bass
     private val _currentBassLevel = MutableStateFlow(0f)
@@ -96,13 +108,13 @@ class AudioViewModel @Inject constructor(
     val currentLoudnessLevel: StateFlow<Float> = _currentLoudnessLevel
 
     private val _equalizerBandLevels = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f))
-    val equalizerBandLevels: StateFlow<List<Float>>  = _equalizerBandLevels
+    val equalizerBandLevels: StateFlow<List<Float>> = _equalizerBandLevels
 
     private val _customEqualizerBandLevels = MutableStateFlow(listOf(0f, 0f, 0f, 0f, 0f))
-    val customEqualizerBandLevels: StateFlow<List<Float>>  = _customEqualizerBandLevels
+    val customEqualizerBandLevels: StateFlow<List<Float>> = _customEqualizerBandLevels
 
     private val _selectedPreset = MutableStateFlow(Preset.NORMAL)
-    val selectedPreset : StateFlow<Preset> = _selectedPreset
+    val selectedPreset: StateFlow<Preset> = _selectedPreset
 
 
     var duration by audioStateHandle.saveable { mutableStateOf(0L) }
@@ -207,7 +219,6 @@ class AudioViewModel @Inject constructor(
     val currentTheme: StateFlow<Int> = _currentTheme
 
 
-
     //PERMISSIONS
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
 
@@ -308,7 +319,7 @@ class AudioViewModel @Inject constructor(
         getLoudnessLevel()
         getCurrentPreset()
 
-        if(isFirstTime.value){
+        if (isFirstTime.value) {
             getIsFirstTime()
         }
         getAudioScreenDesign()
@@ -596,7 +607,6 @@ class AudioViewModel @Inject constructor(
     }
 
 
-
     //    Shuffle Logic
     private fun isShuffleEnabled(): Boolean {
         return audioSharedPreferencesHelper.isShuffleEnabled()
@@ -758,7 +768,11 @@ class AudioViewModel @Inject constructor(
     fun createAndAddSongToPlaylist(songIds: List<Long>, context: Context) {
         val playlistId = currentCreatedPlaylistId.value
         viewModelScope.launch {
-            audioSharedPreferencesHelper.addSongsToPlaylist(playlistId!!, songIds, context = context)
+            audioSharedPreferencesHelper.addSongsToPlaylist(
+                playlistId!!,
+                songIds,
+                context = context
+            )
         }
 
         val updatedPlaylist = _playlists.value.find { it.id == playlistId }
@@ -1059,12 +1073,12 @@ class AudioViewModel @Inject constructor(
 
     }
 
-    fun setAudioScreenDesign(design:Int){
+    fun setAudioScreenDesign(design: Int) {
         audioSharedPreferencesHelper.setAudioScreenDesign(design)
         _screenDesign.value = design
     }
 
-    fun getAudioScreenDesign(){
+    fun getAudioScreenDesign() {
         _screenDesign.value = audioSharedPreferencesHelper.getAudioScreenDesign()
     }
 //    fun getScreenDesign() {
@@ -1244,6 +1258,305 @@ class AudioViewModel @Inject constructor(
     }
 
 
+    // Set Ringtone
+    fun setRingtone(context: Context, audioUri: Uri) {
+        try {
+            if (Settings.System.canWrite(context)) {
+                RingtoneManager.setActualDefaultRingtoneUri(
+                    context,
+                    RingtoneManager.TYPE_RINGTONE,
+                    audioUri
+                )
+                Toast.makeText(context, "Ringtone set successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Failed to set ringtone", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
+    }
+
+
+//    fun trimAudioFile(context: Context, uri: Uri, fileName: String, startMs: Long, endMs: Long): Uri? {
+//        val inputFilePath = getRealPathFromURI(context, uri)
+//        if (inputFilePath.isNullOrEmpty()) {
+//            Log.e("TrimAudioFile", "Failed to get real path from URI")
+//            return null
+//        }
+//
+//        val outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+//        if (!outputDir.exists()) {
+//            outputDir.mkdirs()
+//        }
+//
+//        val outputFile = File(outputDir, fileName)
+//        val outputFilePath = outputFile.absolutePath
+//
+//        val startSeconds = startMs / 1000.0
+//        val durationSeconds = (endMs - startMs) / 1000.0
+//
+//        val command = arrayOf(
+//            "-y",  // Add the -y flag to overwrite existing output files
+//            "-i", inputFilePath,
+//            "-ss", startSeconds.toString(),
+//            "-t", durationSeconds.toString(),
+//            "-acodec", "copy",
+//            outputFilePath
+//        )
+//
+//        Log.d("TrimAudioFile", "Executing FFmpeg command: ${command.joinToString(" ")}")
+//
+//        val rc = FFmpeg.execute(command)
+//        return if (rc == 0) {
+//            Log.d("TrimAudioFile", "Trim successful")
+//            Uri.fromFile(outputFile)
+//        } else {
+//            Log.e("TrimAudioFile", "Trim failed with return code $rc")
+//            Log.e("TrimAudioFile", "FFmpeg error: ${FFmpeg.listExecutions() }")
+//            null
+//        }
+//    }
+//
+//    fun getRealPathFromURI(context: Context, contentUri: Uri): String? {
+//        val proj = arrayOf(MediaStore.Audio.Media.DATA)
+//        val cursor: Cursor? = context.contentResolver.query(contentUri, proj, null, null, null)
+//        cursor?.moveToFirst()
+//        val columnIndex: Int = cursor?.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA) ?: return null
+//        val path = cursor.getString(columnIndex)
+//        cursor.close()
+//        return path
+//    }
+//
+//    fun trimSetRingtone(context: Context, audioUri: Uri, startMs: Long, endMs: Long) {
+//        try {
+//            // Trim the audio file
+//            val trimmedFile = trimAudioFile(context, audioUri, "trimmed_ringtone.mp3", startMs, endMs)
+//            Log.d("trimmed", trimmedFile.toString())
+//
+//            if (trimmedFile != null) {
+//                // Set trimmed audio file as ringtone
+//                if (Settings.System.canWrite(context)) {
+//                    // Convert file URI to content URI
+//                    val contentUri = convertFileUriToContentUri(context, trimmedFile)
+//                    Log.d("uri", contentUri.toString())
+//                    if (contentUri != null) {
+//                        RingtoneManager.setActualDefaultRingtoneUri(
+//                            context,
+//                            RingtoneManager.TYPE_RINGTONE,
+//                            contentUri
+//                        )
+//                        Toast.makeText(context, "Ringtone set successfully", Toast.LENGTH_SHORT).show()
+//                    } else {
+//                        Toast.makeText(context, "Failed to set ringtone", Toast.LENGTH_SHORT).show()
+//                    }
+//                } else {
+//                    // Request WRITE_SETTINGS permission if not granted
+//                    val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+//                        data = Uri.parse("package:${context.packageName}")
+//                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//                    }
+//                    context.startActivity(intent)
+//                }
+//            } else {
+//                Toast.makeText(context, "Failed to trim audio", Toast.LENGTH_SHORT).show()
+//            }
+//        } catch (e: Exception) {
+//            Toast.makeText(context, "Failed to set ringtone", Toast.LENGTH_SHORT).show()
+//            e.printStackTrace()
+//        }
+//    }
+//
+//    @SuppressLint("Range")
+//    private fun convertFileUriToContentUri(context: Context, fileUri: Uri): Uri? {
+//        val filePath = fileUri.path ?: return null
+//        val file = File(filePath)
+//        val contentValues = ContentValues().apply {
+//            put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+//            put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3") // Adjust MIME type if necessary
+//            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MUSIC) // Set to Music directory explicitly
+//        }
+//
+//        val resolver = context.contentResolver
+//
+//        // Check if the file already exists in MediaStore
+//        val projection = arrayOf(MediaStore.MediaColumns._ID)
+//        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME}=?"
+//        val selectionArgs = arrayOf(file.name)
+//        resolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, null)?.use { cursor ->
+//            if (cursor.moveToFirst()) {
+//                // File already exists, update the content URI
+//                val fileId = cursor.getLong(cursor.getColumnIndex(MediaStore.MediaColumns._ID))
+//                val existingUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, fileId)
+//                try {
+//                    resolver.openOutputStream(existingUri)?.use { outputStream ->
+//                        file.inputStream().use { inputStream ->
+//                            inputStream.copyTo(outputStream)
+//                        }
+//                    }
+//                    return existingUri
+//                } catch (e: IOException) {
+//                    e.printStackTrace()
+//                    return null
+//                }
+//            }
+//        }
+//
+//        // If file does not exist, insert it as new
+//        val contentUri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, contentValues)
+//        contentUri?.let { uri ->
+//            try {
+//                resolver.openOutputStream(uri)?.use { outputStream ->
+//                    file.inputStream().use { inputStream ->
+//                        inputStream.copyTo(outputStream)
+//                    }
+//                }
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//                return null
+//            }
+//        }
+//        return contentUri
+//    }
+
+
+    // SECONDS FUNCTION
+
+
+//
+//
+//    fun trimSetRingtone(context: Context, audioUri: Uri, startMs: Long, endMs: Long) {
+//        try {
+//            // Trim the audio file
+//            val trimmedUri = trimAudioFile(context, audioUri, startMs, endMs)
+//            Log.d("trimmed", trimmedUri.toString())
+//
+//            if (trimmedUri != null) {
+//                // Set trimmed audio file as ringtone
+//                if (Settings.System.canWrite(context)) {
+//                    setRingtones(context, trimmedUri)
+//                } else {
+//                    // Request WRITE_SETTINGS permission if not granted
+//                    val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+//                        data = Uri.parse("package:${context.packageName}")
+//                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//                    }
+//                    context.startActivity(intent)
+//                }
+//            } else {
+//                Toast.makeText(context, "Failed to trim audio", Toast.LENGTH_SHORT).show()
+//            }
+//        } catch (e: Exception) {
+//            Toast.makeText(context, "Failed to set ringtone", Toast.LENGTH_SHORT).show()
+//            e.printStackTrace()
+//        }
+//    }
+//
+//    // Function to trim audio file and return content URI of trimmed file
+//    fun trimAudioFile(context: Context, audioUri: Uri, startMs: Long, endMs: Long): Uri? {
+//        try {
+//            // Prepare output file
+//            val outputDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
+//            if (!outputDir.exists()) {
+//                outputDir.mkdirs()
+//            }
+//            val outputFile = File(outputDir, "trimmed_ringtone.mp3")
+//            val outputFilePath = outputFile.absolutePath
+//
+//            // Calculate start and duration in milliseconds
+//            val startMilliseconds = startMs
+//            val durationMilliseconds = endMs - startMs
+//
+//            // Prepare input and output streams
+//            context.contentResolver.openInputStream(audioUri)?.use { inputStream ->
+//                FileOutputStream(outputFile).use { outputStream ->
+//                    val totalBytes = inputStream.available()
+//                    val startBytes = (startMilliseconds.toDouble() / 1000.0 * totalBytes.toDouble()).toLong()
+//                    val endBytes = (endMs.toDouble() / 1000.0 * totalBytes.toDouble()).toLong()
+//
+//                    // Skip to start position
+//                    inputStream.skip(startBytes)
+//
+//                    // Read and write the trimmed portion
+//                    val buffer = ByteArray(1024)
+//                    var bytesRead: Int
+//                    var bytesWritten: Long = 0
+//                    while (inputStream.read(buffer).also { bytesRead = it } > 0 && bytesWritten < durationMilliseconds) {
+//                        val bytesToWrite = if (bytesWritten + bytesRead > durationMilliseconds) {
+//                            (durationMilliseconds - bytesWritten).toInt()
+//                        } else {
+//                            bytesRead
+//                        }
+//                        outputStream.write(buffer, 0, bytesToWrite)
+//                        bytesWritten += bytesToWrite
+//                    }
+//                }
+//            }
+//
+//            // Add the trimmed file to MediaStore and return content URI
+//            return addFileToMediaStore(context, outputFile)
+//
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//            Toast.makeText(context, "Failed to trim audio", Toast.LENGTH_SHORT).show()
+//        }
+//        return null
+//    }
+//
+//
+//    // Function to get real path from URI
+//    fun getRealPathFromURI(context: Context, contentUri: Uri): String? {
+//        val proj = arrayOf(MediaStore.Audio.Media.DATA)
+//        context.contentResolver.query(contentUri, proj, null, null, null)?.use { cursor ->
+//            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+//            cursor.moveToFirst()
+//            return cursor.getString(columnIndex)
+//        }
+//        return null
+//    }
+//
+//    // Function to add file to MediaStore and return content URI
+//    private fun addFileToMediaStore(context: Context, file: File): Uri? {
+//        val contentValues = ContentValues().apply {
+//            put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+//            put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3")
+//            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
+//        }
+//        val resolver = context.contentResolver
+//        val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, contentValues)
+//        uri?.let { mediaUri ->
+//            try {
+//                resolver.openOutputStream(mediaUri)?.use { outputStream ->
+//                    FileInputStream(file).use { inputStream ->
+//                        inputStream.copyTo(outputStream)
+//                    }
+//                }
+//                return mediaUri
+//            } catch (e: IOException) {
+//                e.printStackTrace()
+//            }
+//        }
+//        return null
+//    }
+//
+//    // Function to set trimmed audio file as ringtone
+//    private fun setRingtones(context: Context, trimmedUri: Uri) {
+//        try {
+//            RingtoneManager.setActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE, trimmedUri)
+//            Toast.makeText(context, "Ringtone set successfully", Toast.LENGTH_SHORT).show()
+//        } catch (e: Exception) {
+//            Toast.makeText(context, "Failed to set ringtone", Toast.LENGTH_SHORT).show()
+//            e.printStackTrace()
+//        }
+//    }
+
+
+
+
     // Equalizers and bass Boosters
 //    @androidx.annotation.OptIn(UnstableApi::class)
 //    fun setupAudioEffects() {
@@ -1304,7 +1617,7 @@ class AudioViewModel @Inject constructor(
         // Ensure the input value is within the range [0, 1]
         val clampedGain = gain.coerceIn(0f, 1f)
 
-        // Define the maximum gain value in millibels
+        // Define the maximum gain value in millibells
         val MAX_GAIN_MILLIBELS = 1000 // Adjust as needed
 
         // Map the float value to the range of gain values (in millibels)
@@ -1355,7 +1668,10 @@ class AudioViewModel @Inject constructor(
     fun setPreset(preset: Preset) {
         Log.d("AudioViewModel", "Setting preset: ${preset.name}")
         val presetLevels = when (preset) {
-            Preset.NORMAL -> {listOf(0.6f, .5f, .5f, .5f, 0.6f)}
+            Preset.NORMAL -> {
+                listOf(0.6f, .5f, .5f, .5f, 0.6f)
+            }
+
             Preset.JAZZ -> listOf(0.4f, 0.6f, 0.8f, 0.6f, 0.4f)
             Preset.POP -> listOf(0.8f, 0.6f, 0.4f, 0.6f, 0.8f)
             Preset.CLASSIC -> listOf(0.4f, 0.1f, 0.3f, 0.2f, 0.2f)
@@ -1414,42 +1730,39 @@ class AudioViewModel @Inject constructor(
 //    }
 
 
-
-
-
     //Saving equalizer data
     //Set bass level
-    private fun setBassLevel(bassLevel:Float){
+    private fun setBassLevel(bassLevel: Float) {
         equalizerSharedPreferencesHelper.setBaseLevel(bassLevel)
     }
 
     //Get bass level
-    private fun getBassLevel(){
+    private fun getBassLevel() {
         val bassLevel = equalizerSharedPreferencesHelper.getBaseLevel()
         adjustBass(bassLevel)
     }
 
-    private fun setVirtualizerLevel(virtualizerLevel:Float){
+    private fun setVirtualizerLevel(virtualizerLevel: Float) {
         equalizerSharedPreferencesHelper.setVirtualizerLevel(virtualizerLevel)
     }
 
     //Get bass level
-    private fun getVirtualizerLevel(){
+    private fun getVirtualizerLevel() {
         val virtualizerLevel = equalizerSharedPreferencesHelper.getVirtualizerLevel()
         adjustVirtualizer(virtualizerLevel)
     }
 
-    private fun setLoudnessLevel(loudnessLevel:Float){
+    private fun setLoudnessLevel(loudnessLevel: Float) {
         equalizerSharedPreferencesHelper.setLoudnessLevel(loudnessLevel)
     }
 
     //Get bass level
-    private fun getLoudnessLevel(){
+    private fun getLoudnessLevel() {
         val loudnessLevel = equalizerSharedPreferencesHelper.getLoudnessLevel()
         adjustLoudnessEnhancer(loudnessLevel)
     }
 
-    fun setCurrentPreset(preset:Preset){
+    fun setCurrentPreset(preset: Preset) {
         setPreset(preset)
         _selectedPreset.value = preset
         equalizerSharedPreferencesHelper.setCurrentPreset(preset)
@@ -1502,16 +1815,16 @@ class AudioViewModel @Inject constructor(
         _isMainActivity.value = isMainActivity
     }
 
-    fun setIsDrawerEnabled(isDrawerEnabled:Boolean){
+    fun setIsDrawerEnabled(isDrawerEnabled: Boolean) {
         _isDrawerEnabled.value = isDrawerEnabled
     }
 
-    fun setIsFirstTime(isFirstTime:Boolean){
+    fun setIsFirstTime(isFirstTime: Boolean) {
         audioSharedPreferencesHelper.setIsFirstTime(isFirstTime)
         _isFirstTime.value = isFirstTime
     }
 
-    fun getIsFirstTime(){
+    fun getIsFirstTime() {
         _isFirstTime.value = audioSharedPreferencesHelper.getIsFirstTime()
     }
 

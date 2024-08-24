@@ -72,6 +72,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.AddSelectedSongsToPlaylist
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ConfirmSetRingtone
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.CreatePlaylistAndAddSong
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ShowSongDetailsDialog
@@ -148,6 +149,12 @@ fun ArtistsDetailScreen(
     val showAddSongsToPlaylistDialog = remember {
         mutableStateOf(false)
     }
+
+    //show set ringtone dialog
+    val showConfirmSetRingtoneDialog = remember {
+        mutableStateOf(false)
+    }
+
 
 
     val showSelectAllDropDown = remember { mutableStateOf(false) }
@@ -530,6 +537,10 @@ fun ArtistsDetailScreen(
                     onShareClick = {
                         showSheet.value = false
                         viewModel.shareAudio(context,selectedSong!!.uri,selectedSong!!.title)
+                    },
+                    onSetAsRingToneClick = {
+                        showConfirmSetRingtoneDialog.value = true
+                        showSheet.value = false
                     }
                 )
             }
@@ -568,6 +579,18 @@ fun ArtistsDetailScreen(
                 ShowSongDetailsDialog(
                     selectedSong = selectedSong!!,
                     showSongDetails = showSongDetailsDialog
+                )
+            }
+
+            if(showConfirmSetRingtoneDialog.value){
+                ConfirmSetRingtone(
+                    onConfirm = {
+                        viewModel.setRingtone(context,selectedSong!!.uri)
+                        showSheet.value = false
+                        showConfirmSetRingtoneDialog.value = false
+                    },
+                    selectedSong = selectedSong!!,
+                    showConfirmSetRingtoneDialog = showConfirmSetRingtoneDialog
                 )
             }
         }

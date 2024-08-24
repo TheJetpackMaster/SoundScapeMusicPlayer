@@ -23,6 +23,8 @@ android {
         }
     }
 
+
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -40,6 +42,8 @@ android {
             isDebuggable = false
         }
     }
+
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -50,6 +54,8 @@ android {
     buildFeatures {
         compose = true
     }
+
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
     }
@@ -98,7 +104,7 @@ dependencies {
 
 
     implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.25.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.34.0")
 
     //   GLIDE
     implementation("com.github.bumptech.glide:glide:4.16.0")
@@ -106,7 +112,7 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
 //    COIL
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
 //    PERMISSIONS MANAGER
     implementation("androidx.appcompat:appcompat:1.7.0")
@@ -117,7 +123,6 @@ dependencies {
 
 //    GSON
     implementation("com.google.code.gson:gson:2.10.1")
-
     implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
 
 
@@ -127,6 +132,7 @@ dependencies {
     //Pager
     implementation("com.google.accompanist:accompanist-pager:0.18.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.18.0")
+
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

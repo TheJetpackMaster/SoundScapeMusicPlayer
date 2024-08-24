@@ -1130,7 +1130,9 @@ fun RequestStoragePermissions(
     val permissionsToRequest = if (isRunningOnAndroid12OrBelow()) {
         arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_SETTINGS,
+            Manifest.permission.MANAGE_EXTERNAL_STORAGE
         )
     } else {
         arrayOf(

@@ -52,6 +52,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.AddSelectedSongsToPlaylist
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.AllSongs.common.AudioListSorting
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.PlayLists.startService
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ConfirmSetRingtone
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.CreatePlaylistAndAddSong
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ShowSongDetailsDialog
@@ -110,6 +111,11 @@ fun AllSongs(
     val showAddPlaylistDialog = remember {
         mutableStateOf(false)
     }
+
+    val showConfirmSetRingtoneDialog = remember {
+        mutableStateOf(false)
+    }
+
 
     val playLists by viewModel.playlists.collectAsState()
     val currentPlayListSongs by viewModel.favoritesSongs.collectAsState()
@@ -336,6 +342,10 @@ fun AllSongs(
                 onShareClick = {
                     showSheet.value = false
                     viewModel.shareAudio(context,selectedSong!!.uri,selectedSong!!.title)
+                },
+                onSetAsRingToneClick = {
+                    showConfirmSetRingtoneDialog.value = true
+                    showSheet.value = false
                 }
             )
         }
@@ -452,6 +462,18 @@ fun AllSongs(
                         )
                     }
                 }
+            )
+        }
+
+        if(showConfirmSetRingtoneDialog.value){
+            ConfirmSetRingtone(
+                onConfirm = {
+                    viewModel.setRingtone(context,selectedSong!!.uri)
+                    showSheet.value = false
+                    showConfirmSetRingtoneDialog.value = false
+                },
+                selectedSong = selectedSong!!,
+                showConfirmSetRingtoneDialog = showConfirmSetRingtoneDialog
             )
         }
     }

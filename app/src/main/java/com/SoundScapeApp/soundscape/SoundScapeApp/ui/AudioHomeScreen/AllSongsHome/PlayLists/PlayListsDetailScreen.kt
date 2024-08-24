@@ -83,6 +83,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.AddSelectedSongsToPlaylist
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ConfirmSetRingtone
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.CreatePlaylistAndAddSong
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.MainBottomSheet
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHome.commmons.ShowSongDetailsDialog
@@ -178,7 +179,14 @@ fun PlayListDetailsScreen(
     val playLists by viewModel.playlists.collectAsState()
     val filteredPlaylists = playLists.filter { it.id != currentPlaylistId }
 
+
+    //Show delete song dialog
     var showDeleteSongDialog by remember {
+        mutableStateOf(false)
+    }
+
+    //Show set ringtone dialog
+    val showConfirmSetRingtoneDialog = remember {
         mutableStateOf(false)
     }
 
@@ -650,6 +658,10 @@ fun PlayListDetailsScreen(
                     onShareClick = {
                         showSheet.value = false
                         viewModel.shareAudio(context, selectedSong!!.uri, selectedSong!!.title)
+                    },
+                    onSetAsRingToneClick = {
+                        showConfirmSetRingtoneDialog.value = true
+                        showSheet.value = false
                     }
                 )
             }
@@ -770,6 +782,18 @@ fun PlayListDetailsScreen(
                 ShowSongDetailsDialog(
                     selectedSong = selectedSong!!,
                     showSongDetails = showSongDetailsDialog
+                )
+            }
+
+            if(showConfirmSetRingtoneDialog.value){
+                ConfirmSetRingtone(
+                    onConfirm = {
+                        viewModel.setRingtone(context,selectedSong!!.uri)
+                        showSheet.value = false
+                        showConfirmSetRingtoneDialog.value = false
+                    },
+                    selectedSong = selectedSong!!,
+                    showConfirmSetRingtoneDialog = showConfirmSetRingtoneDialog
                 )
             }
         }

@@ -2,6 +2,8 @@
 # fields. Proguard removes such information by default, keep it.
 -keepattributes Signature
 
+
+
 # This is also needed for R8 in compat mode since multiple 
 # optimizations will remove the generic signature such as class 
 # merging and argument removal. See: 

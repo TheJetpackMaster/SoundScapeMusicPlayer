@@ -65,6 +65,7 @@ fun MainBottomSheet(
     onFavClick: () -> Unit,
     onPlayClick: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
+    onSetAsRingToneClick: () ->Unit,
     onDetailsClick: () -> Unit,
     onShareClick: () -> Unit = {},
     current: MutableLongState,
@@ -225,6 +226,39 @@ fun MainBottomSheet(
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "Add to Playlist",
+                    color = White90,
+                    style = SoundScapeThemes.typography.bodyLarge
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clickable {
+                      onSetAsRingToneClick()
+                    }
+                    .padding(start = 12.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedIconButton(
+                    border = BorderStroke(1.dp, White90),
+                    modifier = Modifier.size(24.dp),
+                    onClick = {
+                        onSetAsRingToneClick()
+                    })
+                {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = White90,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Set as ring tone",
                     color = White90,
                     style = SoundScapeThemes.typography.bodyLarge
                 )
