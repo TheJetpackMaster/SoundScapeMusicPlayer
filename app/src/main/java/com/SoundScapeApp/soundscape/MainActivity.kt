@@ -1,5 +1,6 @@
 package com.SoundScapeApp.soundscape
 
+import DownloadReceiver
 import android.Manifest.permission
 import android.app.Activity
 import android.app.ActivityManager
@@ -57,7 +58,6 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.UIEvents
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
-import com.SoundScapeApp.soundscape.SoundScapeApp.inAppUpdate.DownloadReceiver
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
@@ -93,12 +93,14 @@ class MainActivity : ComponentActivity() {
     //For deleting songs and videos
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
+    val receiver = DownloadReceiver()
+
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val receiver = DownloadReceiver(this)
+
         this.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
             RECEIVER_NOT_EXPORTED)
 
@@ -503,7 +505,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-//        unregisterReceiver(finishActivityReceiver)
 
         if (player.currentMediaItem != null) {
             audioSharedPreferencesHelper.savePlaybackState(
@@ -512,6 +513,10 @@ class MainActivity : ComponentActivity() {
                 player.isPlaying
             )
         }
+
+        this.unregisterReceiver(receiver)
+
+
     }
 }
 

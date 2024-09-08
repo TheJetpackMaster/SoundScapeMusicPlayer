@@ -1,7 +1,9 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.service
 
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -9,6 +11,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPreferencesHelper
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.concurrent.Executor
 import javax.inject.Inject
 
 
@@ -57,6 +60,8 @@ class MusicService : MediaSessionService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession =
         mediaSession
 
@@ -64,7 +69,6 @@ class MusicService : MediaSessionService() {
     override fun onDestroy() {
         super.onDestroy()
         stopSelf()
-//        mediaSession.release()
         exoPlayer.currentMediaItem?.let { mediaItem ->
             exoPlayer.pause()
             audioSharedPreferencesHelper.savePlaybackState(
@@ -73,17 +77,6 @@ class MusicService : MediaSessionService() {
                 exoPlayer.isPlaying
             )
         }
-
-//        val intent = Intent("com.SoundScapeApp.soundscape.FINISH_ACTIVITY")
-//        sendBroadcast(intent)
-
-//        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-//        activityManager.runningAppProcesses?.forEach { processInfo ->
-//            if (processInfo.processName == context.packageName) {
-//                android.os.Process.killProcess(processInfo.pid)
-//                exitProcess(0)
-//            }
-//        }
     }
 }
 

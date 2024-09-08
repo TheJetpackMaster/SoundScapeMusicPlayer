@@ -131,7 +131,7 @@ fun MainScreen(
 //        drawerState = drawerState
 //    ) {
 
-//    CheckForUpdates()
+    CheckForUpdates()
 
         Scaffold(
             modifier = Modifier

@@ -3,6 +3,7 @@ package com.SoundScapeApp.soundscape.ui.theme
 import android.app.Activity
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ripple
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -278,7 +279,11 @@ fun SoundScapeThemes(
         13 -> Theme13ColorScheme
         else -> throw IllegalArgumentException("Invalid theme choice: $themeChoice")
     }
-    val rippleIndication = rememberRipple()
+    val rippleIndication = ripple(
+        bounded = true,
+        color = SoundScapeThemes.colorScheme.secondary,
+        radius = Dp.Unspecified
+    )
 
     val typography = when (windows.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {

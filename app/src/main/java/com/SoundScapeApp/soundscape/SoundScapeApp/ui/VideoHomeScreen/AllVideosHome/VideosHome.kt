@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
-import androidx.compose.foundation.pager.PagerDefaults.LowVelocityAnimationSpec
 import androidx.compose.foundation.pager.PagerDefaults.flingBehavior
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -263,11 +262,11 @@ fun VideosHome(
                     flingBehavior = flingBehavior(
                         snapPositionalThreshold = .1f,
                         state = pagerState,
-                        lowVelocityAnimationSpec = LowVelocityAnimationSpec,
-                        highVelocityAnimationSpec = rememberSplineBasedDecay(),
+                        //lowVelocityAnimationSpec = LowVelocityAnimationSpec,
+                        //highVelocityAnimationSpec = rememberSplineBasedDecay(),
                         snapAnimationSpec = spring(stiffness = Spring.StiffnessLow)
                     ),
-                    beyondBoundsPageCount = 4,
+                    //beyondBoundsPageCount = 4,
                     state = pagerState,
                     pageSize = PageSize.Fill,
                     modifier = Modifier

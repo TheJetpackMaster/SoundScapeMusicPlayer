@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
     kotlin("kapt")
 
 }
@@ -14,7 +15,7 @@ android {
         applicationId = "com.SoundScapeApp.soundscape"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10
+        versionCode = 1
         versionName = "1.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -83,24 +84,24 @@ dependencies {
 //    Adaptive layouts
 //    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha07")
 
-   implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
+   implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
 
 //    DAGGER-HILT
     implementation("com.google.dagger:hilt-android:2.48")
     kapt("com.google.dagger:hilt-android-compiler:2.48")
 
     implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
-    implementation("androidx.activity:activity-compose:1.9.0")
-    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.5")
+    implementation("androidx.activity:activity-compose:1.9.2")
+    implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3:1.3.0")
 
 
     //NavigationCompose
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
 
 
     implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
@@ -123,7 +124,7 @@ dependencies {
 
 //    GSON
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.3.0")
 
 
     // SPLASH SCREEN API
@@ -133,11 +134,14 @@ dependencies {
     implementation("com.google.accompanist:accompanist-pager:0.18.0")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.18.0")
 
+    //Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

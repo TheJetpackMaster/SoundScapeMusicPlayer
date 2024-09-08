@@ -71,7 +71,7 @@ fun AudioListSorting(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Sort by date added (Descending)",
+                    text = "Sort by date added (Latest)",
                     color =
                     if (currentSortType == SortType.DATE_ADDED_DESC) White50 else White90,
                     style = SoundScapeThemes.typography.bodyLarge
@@ -106,7 +106,7 @@ fun AudioListSorting(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Sort by date added (Ascending)",
+                    text = "Sort by date added (Old)",
                     color =
                     if (currentSortType == SortType.DATE_ADDED_ASC) White50 else White90,
                     style = SoundScapeThemes.typography.bodyLarge
@@ -141,7 +141,7 @@ fun AudioListSorting(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Sort by title (Descending)",
+                    text = "Sort by title (Z-A)",
                     color =
                     if (currentSortType == SortType.TITLE_DESC) White50 else White90,
                     style = SoundScapeThemes.typography.bodyLarge
@@ -176,7 +176,7 @@ fun AudioListSorting(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Sort by title (Ascending)",
+                    text = "Sort by title (A-Z)",
                     color =
                     if (currentSortType == SortType.TITLE_ASC) White50 else White90,
                     style = SoundScapeThemes.typography.bodyLarge

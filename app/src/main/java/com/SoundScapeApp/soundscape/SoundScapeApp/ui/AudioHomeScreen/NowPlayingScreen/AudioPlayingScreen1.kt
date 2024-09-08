@@ -374,7 +374,7 @@ fun AudioPlayingScreen1(
                             animationMode = MarqueeAnimationMode.Immediately,
                             iterations = 1000,
                             initialDelayMillis = 1000,
-                            delayMillis = 2000,
+                            //delayMillis = 2000,
                             velocity = 30.dp
                         )
                 )

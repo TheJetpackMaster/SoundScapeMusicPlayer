@@ -48,7 +48,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerDefaults.LowVelocityAnimationSpec
 import androidx.compose.foundation.pager.PagerDefaults.flingBehavior
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -477,11 +476,9 @@ fun SongsHome(
                     flingBehavior = flingBehavior(
                         snapPositionalThreshold = .1f,
                         state = pagerState,
-                        lowVelocityAnimationSpec = LowVelocityAnimationSpec,
-                        highVelocityAnimationSpec = rememberSplineBasedDecay(),
                         snapAnimationSpec = spring(stiffness = Spring.StiffnessLow)
                     ),
-                    beyondBoundsPageCount = 4,
+
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxSize()
