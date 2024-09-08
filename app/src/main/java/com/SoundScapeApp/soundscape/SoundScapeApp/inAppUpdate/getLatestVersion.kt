@@ -12,7 +12,7 @@ suspend fun getLatestVersionAndUrl(token: String): Pair<String?, String?> {
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
-            connection.setRequestProperty("Authorization", "token $token")
+            //connection.setRequestProperty("Authorization", "token $token")
 
             val inputStream = connection.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(inputStream)

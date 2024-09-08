@@ -204,6 +204,34 @@ fun Settings(navController: NavController,viewModel: VideoViewModel,audioViewMod
                     .fillMaxWidth()
                     .height(48.dp)
                     .clickable {
+                        navController.navigate(ScreenRoute.UpdateApp.route)
+                    }
+                    .padding(start = 16.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.baseline_security_update_24),
+                    contentDescription = null,
+                    tint = White90,
+                    modifier = Modifier.size(26.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "Update App",
+                    color = White90,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clickable {
                         navController.navigate(ScreenRoute.AboutUs.route)
                     }
                     .padding(start = 16.dp, end = 12.dp),

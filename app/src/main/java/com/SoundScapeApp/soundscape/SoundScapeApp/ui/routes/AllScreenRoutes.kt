@@ -31,6 +31,7 @@ sealed class ScreenRoute(val route: String) {
     data object AudioSettings : ScreenRoute(route = "audiomainsettings")
     data object EqualizerSettings : ScreenRoute(route = "equalizersettings")
     data object ThemeSettings : ScreenRoute(route = "thememainsettings")
+    data object UpdateApp :ScreenRoute("appupdatesettings")
     data object AboutUs : ScreenRoute(route = "aboutusscreen")
 
     data object OnBoardingScreen: ScreenRoute(route = "onboardscreen")

@@ -46,6 +46,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHo
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.VideosHome
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.VideoPlayingScreen
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.ChooseAudioPlayingScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AppUpdate.AppUpdateInfo
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.splashscreen.OnBoardingScreen
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -285,10 +286,17 @@ fun BottomNavGraph(
             )
         }
 
+        //App Update settings
+        composable(ScreenRoute.UpdateApp.route){
+            AppUpdateInfo()
+        }
+
         //About us
         composable(ScreenRoute.AboutUs.route) {
             AboutUs(navController = navController)
         }
+
+
 
         // Choose AudioPlaying Screen design
         composable(ScreenRoute.ChooseAudioPlayingScreen.route) {

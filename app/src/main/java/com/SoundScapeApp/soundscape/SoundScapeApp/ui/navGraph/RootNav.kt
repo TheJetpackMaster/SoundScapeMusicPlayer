@@ -1,4 +1,4 @@
-package com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav
+package com.SoundScapeApp.soundscape.SoundScapeApp.ui.navGraph
 
 import android.content.Context
 import android.net.Uri

@@ -14,7 +14,6 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -43,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -60,7 +58,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.AudioSharedPrefe
 import com.SoundScapeApp.soundscape.SoundScapeApp.helperClasses.VideoSharedPreferencesHelper
 import com.SoundScapeApp.soundscape.SoundScapeApp.service.MusicService
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.RootNav.RootNav
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.navGraph.RootNav
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
