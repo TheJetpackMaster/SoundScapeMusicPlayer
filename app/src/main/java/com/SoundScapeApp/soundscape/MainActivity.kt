@@ -92,16 +92,11 @@ class MainActivity : ComponentActivity() {
     //For deleting songs and videos
     private lateinit var intentSenderLauncher: ActivityResultLauncher<IntentSenderRequest>
 
-    val receiver = DownloadReceiver()
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-        this.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            RECEIVER_NOT_EXPORTED)
 
 
         installSplashScreen()
@@ -518,10 +513,6 @@ class MainActivity : ComponentActivity() {
                 player.isPlaying
             )
         }
-
-        this.unregisterReceiver(receiver)
-
-
     }
 }
 
