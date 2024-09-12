@@ -88,7 +88,7 @@ fun MainBottomSheet(
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .padding(top = 12.dp, bottom = 16.dp)
-                .statusBarsPadding()
+
         ) {
             Row(
                 modifier = Modifier

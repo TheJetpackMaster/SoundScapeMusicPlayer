@@ -266,6 +266,12 @@ fun SongsHome(
     }
 
 
+    //Is search bar active
+    val toggleSearchBar = remember {
+        mutableStateOf(false)
+    }
+
+
     //2-ALL SONGLIST
     val isSongSelected by viewModel.isSongSelected.collectAsState()
     val selectedSongs = remember { mutableStateMapOf<Long, Boolean>() }
@@ -312,6 +318,14 @@ fun SongsHome(
                     selectedPlaylists.clear()
                     viewModel.setIsSongSelected(false)
                     viewModel.setIsPlaylistSelected(false)
+
+                } else if (toggleSearchBar.value) {
+                    toggleSearchBar.value = false
+
+                } else if (pagerState.currentPage != 0) {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
 
                 } else {
                     (context as? Activity)?.finish()
@@ -398,9 +412,7 @@ fun SongsHome(
                     selectedSongs.clear()
 
                 },
-                onDrawer = {
-                    viewModel.setIsDrawerEnabled(true)
-                }
+                toggleSearchBar = toggleSearchBar
             )
         },
         bottomBar = {
@@ -1141,7 +1153,7 @@ fun RequestStoragePermissions(
     val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        permissionsToRequest.forEach {perm ->
+        permissionsToRequest.forEach { perm ->
             viewModel.onPermissionResult(
                 permission = perm,
                 isGranted = permissions[perm] == true

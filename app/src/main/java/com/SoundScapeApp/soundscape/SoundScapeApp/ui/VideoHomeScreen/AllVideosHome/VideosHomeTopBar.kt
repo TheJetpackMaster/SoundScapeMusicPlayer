@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,8 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,12 +75,23 @@ fun VideosHomeTopBar(
     onVideoDelete: () -> Unit,
     onVideoShare: () -> Unit,
     selectedVideosCount: MutableState<Int>,
-    navController: NavController
+    navController: NavController,
+    toggleSearchBar: MutableState<Boolean>
 ) {
 
-    var search by remember {
-        mutableStateOf(false)
+
+    //Keyboard controller
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(toggleSearchBar.value) {
+        if (toggleSearchBar.value) {
+            focusRequester.requestFocus()
+        }else{
+            onValueChange("")
+        }
     }
+
 
     val showAllPlaylistsDropDown = remember { mutableStateOf(false) }
     val showAllVideosDropDown = remember { mutableStateOf(false) }
@@ -97,7 +112,7 @@ fun VideosHomeTopBar(
                     verticalAlignment = Alignment.CenterVertically
 
                 ) {
-                    if (!search) {
+                    if (!toggleSearchBar.value) {
                         Text(
                             text = "Video Player",
                             color = White90
@@ -106,7 +121,8 @@ fun VideosHomeTopBar(
                         BasicTextField(
                             modifier = Modifier
                                 .height(40.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
                             keyboardActions = KeyboardActions(
 
                             ),
@@ -164,7 +180,7 @@ fun VideosHomeTopBar(
                     Spacer(modifier = Modifier.weight(1f))
 
                     IconButton(onClick = {
-                        search = !search
+                        toggleSearchBar.value = !toggleSearchBar.value
                     })
                     {
                         Icon(
@@ -176,7 +192,7 @@ fun VideosHomeTopBar(
                 }
             },
             actions = {
-                if (!search) {
+                if (!toggleSearchBar.value) {
                     IconButton(onClick = {
                         showMoreDropDown.value = true
                     })
@@ -227,7 +243,7 @@ fun VideosHomeTopBar(
                     Text(text = "cancel",
                         color = White90,
                         modifier = Modifier.clickable {
-                            search = false
+                            toggleSearchBar.value = false
                             onValueChange("")
                         })
                 }

@@ -113,6 +113,15 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name=".SoundScapeApp.fcmService.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

@@ -97,6 +97,7 @@ import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.CustomSimpleSlider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.AllVideos.formatVideoDuration
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.BottomControls
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.VideoPlayingScreen.commons.CenterControls
@@ -1690,18 +1691,6 @@ private fun UpperControls(
                 )
             }
 
-            /*IconButton(onClick = {
-                onLanguageClick()
-            })
-            {
-                Icon(
-                    painter = painterResource(id = R.drawable.language),
-                    contentDescription = null,
-                    tint = White90,
-                    modifier = Modifier.size(24.dp)
-                )
-            }*/
-
             IconButton(onClick = {
                 onMoreClick()
             })
@@ -1730,134 +1719,39 @@ fun CustomSeekBar(
     val primaryColor = White90
     Log.d("progress", videoProgress.toString())
 
-    Slider(
+//    Slider(
+//        value = videoProgress,
+//        onValueChange = { newPosition ->
+//            onProgress(newPosition)
+//        },
+//        onValueChangeFinished = {
+//            isSeekFinished.value = true
+//        },
+//        valueRange = 0f..100f,
+//        colors = SliderDefaults.colors(
+//            thumbColor = primaryColor,
+//            activeTrackColor = primaryColor,
+//            inactiveTrackColor = primaryColor.copy(alpha = 0.3f)
+//        ),
+//        modifier = modifier
+//    )
+
+    CustomSimpleSlider(
         value = videoProgress,
-        onValueChange = { newPosition ->
-            onProgress(newPosition)
+        onValueChange = {
+            onProgress(it)
         },
         onValueChangeFinished = {
             isSeekFinished.value = true
         },
         valueRange = 0f..100f,
-        colors = SliderDefaults.colors(
-            thumbColor = primaryColor,
-            activeTrackColor = primaryColor,
-            inactiveTrackColor = primaryColor.copy(alpha = 0.3f)
-        ),
+        activeTrackColor = primaryColor,
+        inactiveTrackColor = primaryColor.copy(alpha = 0.3f),
         modifier = modifier
+
     )
 }
 
-//
-//@kotlin.OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun CustomVideoSlider(
-//    videoProgressString: MutableLongState,
-//    videoProgress: MutableFloatState,
-//    onProgress: (Float) -> Unit,
-//    duration: MutableLongState,
-//    player: ExoPlayer,
-//    viewModel: VideoViewModel
-//
-//) {
-//    LaunchedEffect(viewModel.progress) {
-//        duration.longValue = viewModel.duration
-//        videoProgress.floatValue =
-//            (player.currentPosition.toFloat() / player.duration.toFloat()) * 100f
-//        videoProgressString.longValue = player.currentPosition
-////        repeatMode.intValue = player.repeatMode
-////        shuffleMode.value = player.shuffleModeEnabled
-//    }
-//
-//    Row(
-//        modifier = Modifier.fillMaxWidth(),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Text(
-//            text = formatDuration(videoProgressString.longValue),
-//            color = White90,
-//            fontSize = 12.sp
-//        )
-//        Slider(
-//            modifier = Modifier.weight(1f),
-//            value = videoProgress.floatValue,
-//            onValueChange = {
-//                onProgress(it)
-//            },
-//            valueRange = 0f..100f,
-//            colors = SliderDefaults.colors(
-//                inactiveTrackColor = White50,
-//                activeTrackColor = Color.White,
-//            ),
-//            thumb = {
-//
-//            }
-//        )
-//        Text(
-//            text = formatDuration(duration.longValue),
-//            color = White90,
-//            fontSize = 12.sp,
-//        )
-//    }
-//}
-
-//@UnstableApi
-//@Composable
-//fun CustomSeekBar(
-//    player: Player,
-//    isSeekInProgress: (Boolean) -> Unit,
-//    onSeekBarMove: (Long) -> Unit,
-//    currentTime: Long,
-//    totalDuration: Long,
-//    modifier: Modifier = Modifier
-//) {
-//    val primaryColor = MaterialTheme.colorScheme.primary
-//
-//    AndroidView(
-//        factory = { context ->
-//
-//            val listener = object : TimeBar.OnScrubListener {
-//
-//                var previousScrubPosition = 0L
-//
-//                override fun onScrubStart(timeBar: TimeBar, position: Long) {
-//                    isSeekInProgress(true)
-//                    previousScrubPosition = position
-//                }
-//
-//                override fun onScrubMove(timeBar: TimeBar, position: Long) {
-//                    onSeekBarMove(position)
-//                }
-//
-//                override fun onScrubStop(timeBar: TimeBar, position: Long, canceled: Boolean) {
-//                    if (canceled) {
-//                        player.seekTo(previousScrubPosition)
-//                    } else {
-//                        player.seekTo(position)
-//                    }
-//                    isSeekInProgress(false)
-//                }
-//
-//            }
-//
-//            DefaultTimeBar(context).apply {
-//                setScrubberColor(primaryColor.toArgb())
-//                setPlayedColor(primaryColor.toArgb())
-//                setUnplayedColor(primaryColor.copy(0.3f).toArgb())
-//                addListener(listener)
-//                setDuration(totalDuration)
-//                setPosition(player.currentPosition)
-//            }
-//        },
-//        update = {
-//            it.apply {
-//                setPosition(currentTime)
-//            }
-//        },
-//
-//        modifier = modifier
-//    )
-//}
 
 fun getDeviceVolume(context: Context): Float {
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager

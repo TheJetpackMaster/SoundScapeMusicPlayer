@@ -460,18 +460,6 @@ fun AudioPlayingScreen2(
                 )
 
 
-//                Button(onClick = {
-//                    if (currentSetTheme.value == 1) {
-//                        currentSetTheme.value = 2
-//                    } else if (currentSetTheme.value == 2) {
-//                        currentSetTheme.value = 3
-//                    } else {
-//                        currentSetTheme.value = 1
-//                    }
-//                })
-//                {
-//                    Text(text = "Switch")
-//                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -564,26 +552,6 @@ fun AudioPlayingScreen2(
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
-//
-//                Row(
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    IconButton(onClick = {
-//                        viewModel.toggleFavorite(current.longValue)
-//                        viewModel.getFavoritesSongs()
-//                    })
-//                    {
-//                        Icon(
-//                            imageVector = if (current.longValue in currentPlayListSongs) {
-//                                Icons.Default.Favorite // Red heart icon
-//                            } else {
-//                                Icons.Default.FavoriteBorder // White heart icon
-//                            },
-//                            contentDescription = null,
-//                            tint = if (current.longValue in currentPlayListSongs) Color.Red else White90,
-//                        )
-//                    }
-//                }
 
                 DoubleRowSongControlButtons(
                     onShuffleClick = {

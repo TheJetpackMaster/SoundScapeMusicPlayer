@@ -1,6 +1,8 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome.Folders
 
 import Video
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -51,6 +53,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -149,6 +152,27 @@ fun FolderVideosList(
     var showAddVideosToPlaylistDialog by remember {
         mutableStateOf(false)
     }
+
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+//    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    DisposableEffect(backDispatcher) {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+//                val currentNavDestination = navBackStackEntry?.destination?.route
+                if (selectedVideos.isNotEmpty()) {
+                    selectedVideos.clear()
+
+                } else {
+                    navController.popBackStack()
+                }
+            }
+        }
+        backDispatcher?.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
+
 
 
     Scaffold(

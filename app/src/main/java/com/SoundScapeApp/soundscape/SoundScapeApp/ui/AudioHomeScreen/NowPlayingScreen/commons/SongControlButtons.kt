@@ -105,7 +105,7 @@ fun SongControlButtons(
                     else R.drawable.noshuffle
                 ),
                 contentDescription = null,
-                tint = White90,
+                tint = White90.copy(.9f),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -117,7 +117,7 @@ fun SongControlButtons(
             Icon(
                 painterResource(id = R.drawable.skippreviousicon),
                 contentDescription = null,
-                tint = White90,
+                tint = White90.copy(.9f),
                 modifier = Modifier.size(24.dp)
 
             )
@@ -143,7 +143,7 @@ fun SongControlButtons(
             Icon(
                 painterResource(id = if (isPlaying.value) R.drawable.pauseicon else R.drawable.playicon),
                 contentDescription = null,
-                tint = White90,
+                tint = White90.copy(.9f),
                 modifier = Modifier.size(animatedPlayPauseIconSize)
             )
         }
@@ -153,7 +153,7 @@ fun SongControlButtons(
             Icon(
                 painterResource(id = R.drawable.skipnexticon),
                 contentDescription = null,
-                tint = White90,
+                tint = White90.copy(.9f),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -172,7 +172,7 @@ fun SongControlButtons(
                     }
                 ),
                 contentDescription = null,
-                tint = White90,
+                tint = White90.copy(.9f),
                 modifier = Modifier.size(24.dp)
             )
         }

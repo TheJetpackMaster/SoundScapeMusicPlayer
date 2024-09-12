@@ -72,7 +72,7 @@ fun AboutUs(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(White90.copy(.8f))
+                .background(White90.copy(.7f))
                 .padding(16.dp)
                 .padding(it),
             horizontalAlignment = Alignment.CenterHorizontally,

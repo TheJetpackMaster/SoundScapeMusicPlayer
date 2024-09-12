@@ -1,6 +1,8 @@
 package com.SoundScapeApp.soundscape.SoundScapeApp.ui.VideoHomeScreen.AllVideosHome
 
 import android.net.Uri
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -24,6 +26,7 @@ import androidx.compose.material3.TabPosition
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -58,7 +61,7 @@ fun VideosHome(
     navController: NavController,
     viewModel: VideoViewModel,
     onVideoItemClick: (Int, Long) -> Unit,
-    onVideoDelete:(List<Uri>)->Unit
+    onVideoDelete: (List<Uri>) -> Unit
 ) {
 
     val videoList by viewModel.videoList.collectAsState()
@@ -118,6 +121,11 @@ fun VideosHome(
         mutableStateOf(false)
     }
 
+    //is SearchBar Active
+    val toggleSearchBar = remember {
+        mutableStateOf(false)
+    }
+
 //    //2-ALL Videos
     val selectedVideos = remember { mutableStateMapOf<Long, Boolean>() }
     val isVideoSelected = viewModel.isVideoSelected.collectAsState()
@@ -139,6 +147,39 @@ fun VideosHome(
     val selectedVideoIds = remember { mutableStateListOf<Long>() }
     val selectedVideosCount = remember { mutableStateOf(0) }
 
+
+    //Backpress manage
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+//    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    DisposableEffect(backDispatcher) {
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+//                val currentNavDestination = navBackStackEntry?.destination?.route
+                if (selectedVideos.isNotEmpty() || selectedPlaylists.isNotEmpty() || selectedMovies.isNotEmpty()) {
+                    selectedPlaylists.clear()
+                    selectedVideos.clear()
+                    selectedMovies.clear()
+                    viewModel.setIsVideoSelected(false)
+                    viewModel.setIsPlaylistSelected(false)
+
+                } else if (toggleSearchBar.value) {
+                    toggleSearchBar.value = false
+
+                } else if (pagerState.currentPage != 0) {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
+                } else {
+                    navController.popBackStack()
+                }
+            }
+        }
+
+        backDispatcher?.addCallback(callback)
+        onDispose {
+            callback.remove()
+        }
+    }
 
 
     Scaffold(
@@ -203,8 +244,9 @@ fun VideosHome(
                     viewModel.shareVideos(context, selectedVideoURIs, selectedTitle)
                     viewModel.setIsVideoSelected(false)
                     selectedVideos.clear()
-                }
-                )
+                },
+                toggleSearchBar = toggleSearchBar
+            )
         })
     { innerPadding ->
         Column(

@@ -19,6 +19,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.VideoViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Audio
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.MainScreen.MainScreen
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.splashscreen.SplashScreen
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -41,10 +42,15 @@ fun RootNav(
     mediaSession: MediaSession,
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit,
-    onDeleteSong:(List<Uri>)->Unit,
-    onVideoDelete:(List<Uri>)->Unit
+    onDeleteSong: (List<Uri>) -> Unit,
+    onVideoDelete: (List<Uri>) -> Unit,
+    notificationData: String,
 ) {
-    NavHost(navController = navController, startDestination = ScreenRoute.SplashScreen.route,
+
+    val startDestination =
+        if (notificationData == "app_update") ScreenRoute.MainScreen.route else ScreenRoute.SplashScreen.route
+
+    NavHost(navController = navController, startDestination = startDestination,
         popEnterTransition = {
             fadeIn(animationSpec = tween(250))
         },
@@ -66,7 +72,8 @@ fun RootNav(
             }) {
             SplashScreen(
                 navController = navController,
-                viewModel = audioViewModel)
+                viewModel = audioViewModel
+            )
         }
 
         composable(
@@ -74,7 +81,7 @@ fun RootNav(
             enterTransition = {
                 fadeIn(tween(250, easing = LinearEasing))
             }
-            ) {
+        ) {
             MainScreen(
                 context = context,
                 onProgress = onProgress,
@@ -93,7 +100,8 @@ fun RootNav(
                 onPipClick = onPipClick,
                 onVideoItemClick = onVideoItemClick,
                 onDeleteSong = onDeleteSong,
-                onVideoDelete = onVideoDelete
+                onVideoDelete = onVideoDelete,
+                notificationData = notificationData
             )
         }
     }

@@ -93,7 +93,12 @@ fun SplashScreen(
                 strokeCap = StrokeCap.Round,
                 modifier = Modifier.scale(scaleX = 1f, scaleY = 1.2f ),
                 color = SoundScapeThemes.colorScheme.secondary,
-                progress = { progress.value })
+                progress = { progress.value },
+                gapSize = 0.dp,
+                drawStopIndicator = {
+                    this.size
+
+                })
         }
 
         Spacer(modifier = Modifier.height(120.dp))

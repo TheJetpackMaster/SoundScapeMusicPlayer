@@ -38,6 +38,7 @@ import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.AudioViewModel
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.Preset
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.NowPlayingScreen.commons.CustomSimpleSlider
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AudioSettings.commons.CustomCircularSwitchProgressIndicator
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
@@ -228,7 +229,7 @@ fun EqualizerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(0.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -240,42 +241,58 @@ fun EqualizerScreen(
                     contentDescription = "",
                     tint = White50
                 )
+
                 Spacer(modifier = Modifier.width(8.dp))
 
 
-                Slider(
-                    modifier = Modifier.weight(.6f),
-                    colors = SliderDefaults.colors(
-                        inactiveTrackColor = White50,
-                        activeTrackColor = Color.White,
-                    ),
+                CustomSimpleSlider(
+                    modifier = Modifier.fillMaxWidth(.85f),
                     value = loudnessValue,
                     onValueChange = {
                         loudnessValue = it
-
                     },
+                    valueRange = 0f..1f,
                     onValueChangeFinished = {
                         Toast.makeText(
                             context,
                             "WARNING! Increasing loudness may make audio noisy.",
                             Toast.LENGTH_SHORT
                         ).show()
-                    },
-                    thumb = {
-                        Box(
-                            Modifier
-                                .size(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Spacer(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(White90)
-                            )
-                        }
                     }
                 )
+//                Slider(
+//                    modifier = Modifier.weight(.6f),
+//                    colors = SliderDefaults.colors(
+//                        inactiveTrackColor = White50,
+//                        activeTrackColor = Color.White,
+//                    ),
+//                    value = loudnessValue,
+//                    onValueChange = {
+//                        loudnessValue = it
+//
+//                    },
+//                    onValueChangeFinished = {
+//                        Toast.makeText(
+//                            context,
+//                            "WARNING! Increasing loudness may make audio noisy.",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    },
+//                    thumb = {
+//                        Box(
+//                            Modifier
+//                                .size(24.dp),
+//                            contentAlignment = Alignment.Center
+//                        ) {
+//                            Spacer(
+//                                modifier = Modifier
+//                                    .size(10.dp)
+//                                    .clip(CircleShape)
+//                                    .background(White90)
+//                            )
+//                        }
+//                    }
+//                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "${(loudnessValue * 100).toInt()}%",

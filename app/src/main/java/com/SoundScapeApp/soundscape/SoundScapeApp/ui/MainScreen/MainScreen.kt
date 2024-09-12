@@ -54,6 +54,7 @@ import com.SoundScapeApp.soundscape.SoundScapeApp.ui.AudioHomeScreen.AllSongsHom
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.BottomNavigation.customBottomNavigation.CustomBottomNav
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.navGraph.BottomNavGraph
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
+import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.NavigationBarColor
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -81,7 +82,8 @@ fun MainScreen(
     onPipClick: () -> Unit,
     onVideoItemClick: (Int, Long) -> Unit,
     onDeleteSong: (List<Uri>) -> Unit,
-    onVideoDelete: (List<Uri>) -> Unit
+    onVideoDelete: (List<Uri>) -> Unit,
+    notificationData:String
 ) {
 
     val systemUiController = rememberSystemUiController()
@@ -106,30 +108,11 @@ fun MainScreen(
         .currentBackStackEntryAsState().value?.destination?.route in screens.map { it.route }
 
 
-//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-//    val isDrawerEnabled by audioViewModel.isDrawerEnabled.collectAsState()
-//
-//    LaunchedEffect(
-//        drawerState.isClosed
-//    ) {
-//        if (drawerState.isClosed) {
-//            audioViewModel.setIsDrawerEnabled(false)
-//        }
-//    }
-//    LaunchedEffect(isDrawerEnabled) {
-//        if (isDrawerEnabled) {
-//            drawerState.open()
-//        } else {
-//            drawerState.close()
-//        }
-//    }
-
-//    ModalNavigationDrawer(
-//        drawerContent = {
-//            MainDrawerMenu()
-//        },
-//        drawerState = drawerState
-//    ) {
+    LaunchedEffect(notificationData){
+        if(notificationData == "app_update"){
+            navController.navigate(ScreenRoute.UpdateApp.route)
+        }
+    }
 
     CheckForUpdates()
 
@@ -216,7 +199,8 @@ fun MainScreen(
                         onVideoItemClick = onVideoItemClick,
                         mediaSession = mediaSession,
                         onDeleteSong = onDeleteSong,
-                        onVideoDelete = onVideoDelete
+                        onVideoDelete = onVideoDelete,
+
                     )
                 }
             }

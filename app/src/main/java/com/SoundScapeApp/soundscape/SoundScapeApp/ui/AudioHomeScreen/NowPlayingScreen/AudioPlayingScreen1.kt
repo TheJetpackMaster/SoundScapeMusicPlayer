@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -56,6 +57,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -213,8 +215,10 @@ fun AudioPlayingScreen1(
                             {
                                 DropdownMenuItem(
                                     text = {
-                                        Text(text = "Choose Design",
-                                            color = White90)
+                                        Text(
+                                            text = "Choose Design",
+                                            color = White90
+                                        )
                                     },
                                     onClick = {
                                         showMoreVertDropDown = false
@@ -410,7 +414,33 @@ fun AudioPlayingScreen1(
                                 Icons.Default.FavoriteBorder // White heart icon
                             },
                             contentDescription = null,
-                            tint = if (current.longValue in currentPlayListSongs) Color.Red else White90,
+                            tint = if (current.longValue in currentPlayListSongs) Color.Red else White90.copy(.8f),
+                        )
+                    }
+
+                    Spacer(Modifier.weight(1f))
+
+                    IconButton(onClick = {
+                        if (isMainActivity) {
+                            viewModel.shareAudio(
+                                context,
+                                currentPlayingSong!!.uri,
+                                currentPlayingSong!!.title
+                            )
+
+                        } else {
+                            viewModel.shareAudio(
+                                context,
+                                currentIntentMediaItem.value!!.uri,
+                                currentIntentMediaItem.value!!.title
+                            )
+                        }
+                    })
+                    {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = White90.copy(.8f)
                         )
                     }
                 }

@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -166,6 +167,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+
+
+
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
                 Color.TRANSPARENT, Color.TRANSPARENT
@@ -175,6 +179,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val currentTheme by audioViewModel.currentTheme.collectAsState()
             val navController = rememberNavController()
+            // Check the intent for navigation
+            val notificationData = intent?.getStringExtra("updateapp")
 
             SoundScapeThemes(
                 currentTheme,
@@ -319,7 +325,8 @@ class MainActivity : ComponentActivity() {
                             lifecycleScope.launch {
                                 deleteSongFromExternalStorage(videoUri)
                             }
-                        }
+                        },
+                        notificationData = notificationData?:""
                     )
                 }
             }

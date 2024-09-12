@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "707784016332",
+    "project_id": "soundscapeplayer-49a47",
+    "storage_bucket": "soundscapeplayer-49a47.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707784016332:android:172181578c2619c9ec9d69",
+        "android_client_info": {
+          "package_name": "com.SoundScapeApp.soundscape"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeODsb2peEAh6HLQK3iyWXB_N0XQVTvis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

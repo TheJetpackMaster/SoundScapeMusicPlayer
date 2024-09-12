@@ -2,10 +2,9 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.inAppUpdate
 
 import android.app.DownloadManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Environment
-import java.io.File
+
 
 fun downloadApk(context: Context, url: String,version:String) {
     val request = DownloadManager.Request(Uri.parse(url))

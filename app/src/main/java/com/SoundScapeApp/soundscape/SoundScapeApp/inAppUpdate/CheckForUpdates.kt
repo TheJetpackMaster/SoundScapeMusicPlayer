@@ -32,7 +32,7 @@ fun CheckForUpdates() {
     var latestVersion by remember { mutableStateOf<String?>(null) }
     var latestUrl by remember { mutableStateOf<String?>(null) }
     val currentVersion = getAppVersion(context)
-    Log.d("current version",currentVersion)
+    Log.d("current version", currentVersion)
 
     var isDismissed by remember { mutableStateOf(false) }
     var isDownloading by remember { mutableStateOf(false) }
@@ -40,7 +40,10 @@ fun CheckForUpdates() {
 
 
     LaunchedEffect(Unit) {
-        val (version, url) = getLatestVersionAndUrl("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")
+        val (version, url) = getLatestVersionAndUrl("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"
+        ) {
+
+        }
         latestVersion = version
         latestUrl = url
         Log.d("UpdateInfo version", "Version: $latestVersion, URL: $latestUrl")
@@ -78,7 +81,6 @@ fun getAppVersion(context: Context): String {
         "Unknown"
     }
 }
-
 
 
 //REPO ACCESS TOKEN

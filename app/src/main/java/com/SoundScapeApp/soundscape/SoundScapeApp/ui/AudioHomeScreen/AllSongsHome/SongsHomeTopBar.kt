@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
@@ -32,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,17 +41,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import com.SoundScapeApp.soundscape.R
-import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.BottomNavScreenRoutes
 import com.SoundScapeApp.soundscape.SoundScapeApp.ui.routes.ScreenRoute
 import com.SoundScapeApp.soundscape.ui.theme.SoundScapeThemes
 import com.SoundScapeApp.soundscape.ui.theme.White50
@@ -75,17 +76,26 @@ fun SongsHomeTopAppBar(
     navController: NavController,
     selectedSongsCount: MutableState<Int>,
     onShareClick: () -> Unit,
-    onDrawer:()->Unit
-) {
+    toggleSearchBar:MutableState<Boolean>
 
-    var search by remember {
-        mutableStateOf(false)
-    }
+) {
 
     val showAllSongDropDown = remember { mutableStateOf(false) }
     val showMoreDropDown = remember { mutableStateOf(false) }
     val showAllPlaylistDropDown = remember { mutableStateOf(false) }
 
+
+    //Keyboard controller
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(toggleSearchBar.value){
+        if(toggleSearchBar.value){
+            focusRequester.requestFocus()
+        }else{
+            onValueChange("")
+        }
+    }
 
     Box {
         TopAppBar(
@@ -114,7 +124,7 @@ fun SongsHomeTopAppBar(
                     verticalAlignment = Alignment.CenterVertically
 
                 ) {
-                    if (!search) {
+                    if (!toggleSearchBar.value) {
                         Text(
                             text = "SoundScape",
                             color = White90,
@@ -125,7 +135,8 @@ fun SongsHomeTopAppBar(
                         BasicTextField(
                             modifier = Modifier
                                 .height(40.dp)
-                                .fillMaxWidth(.85f),
+                                .fillMaxWidth(.85f)
+                                .focusRequester(focusRequester),
                             keyboardActions = KeyboardActions(
 
                             ),
@@ -165,12 +176,11 @@ fun SongsHomeTopAppBar(
                                         )
 
                                         IconButton(onClick = {
-                                            search = false
                                             onValueChange("")
                                         })
                                         {
                                             Icon(
-                                                imageVector = Icons.Default.Search,
+                                                imageVector = Icons.Default.Clear,
                                                 contentDescription = stringResource(id = R.string.songearch_icon),
                                                 tint = White90
                                             )
@@ -185,7 +195,7 @@ fun SongsHomeTopAppBar(
                             color = White90,
                             style = SoundScapeThemes.typography.bodyLarge,
                             modifier = Modifier.clickable {
-                                search = false
+                                toggleSearchBar.value = false
                                 onValueChange("")
                             }
                         )
@@ -193,9 +203,9 @@ fun SongsHomeTopAppBar(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    if (!search) {
+                    if (!toggleSearchBar.value) {
                         IconButton(onClick = {
-                            search = !search
+                            toggleSearchBar.value = !toggleSearchBar.value
                         })
                         {
                             Icon(
@@ -208,7 +218,7 @@ fun SongsHomeTopAppBar(
                 }
             },
             actions = {
-                if (!search) {
+                if (!toggleSearchBar.value) {
                     IconButton(onClick = {
                         showMoreDropDown.value = true
                     })

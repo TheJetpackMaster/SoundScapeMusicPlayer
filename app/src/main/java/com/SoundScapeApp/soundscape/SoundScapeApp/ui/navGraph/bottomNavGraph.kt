@@ -68,7 +68,7 @@ fun BottomNavGraph(
     onVideoItemClick: (Int, Long) -> Unit,
     mediaSession: MediaSession,
     onDeleteSong: (List<Uri>) -> Unit,
-    onVideoDelete: (List<Uri>) -> Unit
+    onVideoDelete: (List<Uri>) -> Unit,
 ) {
     val isFirstTime by audioViewModel.isFirstTime.collectAsState()
     val startDestination =
@@ -288,7 +288,7 @@ fun BottomNavGraph(
 
         //App Update settings
         composable(ScreenRoute.UpdateApp.route){
-            AppUpdateInfo()
+            AppUpdateInfo(navController = navController)
         }
 
         //About us
