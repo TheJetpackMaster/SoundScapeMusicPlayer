@@ -115,15 +115,15 @@ fun CheckForUpdates() {
     if (shouldShowUpdateDialog) {
         AlertDialog(
             onDismissRequest = {
-                isDismissed = true
-                saveUpdateDismissed(context, true) // Save the dismissal
-                val newDismissCount = dismissCount + 1
-                saveDismissCount(context, newDismissCount) // Increment the dismissal count
-
-                // Show a toast message if the dismissal count is 2
-                if (newDismissCount == 2) {
-                    Toast.makeText(context, "You can update the app from Settings.", Toast.LENGTH_LONG).show()
-                }
+//                isDismissed = true
+//                saveUpdateDismissed(context, true) // Save the dismissal
+//                val newDismissCount = dismissCount + 1
+//                saveDismissCount(context, newDismissCount) // Increment the dismissal count
+//
+//                // Show a toast message if the dismissal count is 2
+//                if (newDismissCount == 2) {
+//                    Toast.makeText(context, "You can update the app from Settings.", Toast.LENGTH_LONG).show()
+//                }
             },
             title = { Text("Update Available") },
             text = { Text("A new version of the app is available. Would you like to update? Version $latestVersion") },

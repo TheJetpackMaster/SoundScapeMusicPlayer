@@ -109,7 +109,7 @@ fun MainScreen(
 
 
     LaunchedEffect(notificationData){
-        if(notificationData == "app_update"){
+        if(notificationData == "update"){
             navController.navigate(ScreenRoute.UpdateApp.route)
         }
     }

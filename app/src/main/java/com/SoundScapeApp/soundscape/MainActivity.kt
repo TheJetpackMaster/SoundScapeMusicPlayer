@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
             val currentTheme by audioViewModel.currentTheme.collectAsState()
             val navController = rememberNavController()
             // Check the intent for navigation
-            val notificationData = intent?.getStringExtra("updateapp")
+            val notificationData = intent?.getStringExtra("update")
 
             SoundScapeThemes(
                 currentTheme,

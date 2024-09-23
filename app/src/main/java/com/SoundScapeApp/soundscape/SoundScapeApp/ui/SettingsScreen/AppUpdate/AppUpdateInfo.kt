@@ -2,6 +2,8 @@ package com.SoundScapeApp.soundscape.SoundScapeApp.ui.SettingsScreen.AppUpdate
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,6 +33,7 @@ import com.SoundScapeApp.soundscape.ui.theme.White90
 import kotlinx.coroutines.launch
 import getLatestVersionAndUrl
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppUpdateInfo(navController: NavController) {
@@ -98,7 +101,7 @@ fun AppUpdateInfo(navController: NavController) {
                             latestUrl = url
                         }
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = SoundScapeThemes.colorScheme.primary)
+                    colors = ButtonDefaults.textButtonColors(Color.Black.copy(.1f))
                 ) {
                     Text(
                         "Check for updates", fontSize = 16.sp,

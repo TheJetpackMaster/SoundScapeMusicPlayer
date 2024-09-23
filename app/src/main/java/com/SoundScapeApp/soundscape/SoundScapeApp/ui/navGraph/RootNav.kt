@@ -48,7 +48,7 @@ fun RootNav(
 ) {
 
     val startDestination =
-        if (notificationData == "app_update") ScreenRoute.MainScreen.route else ScreenRoute.SplashScreen.route
+        if (notificationData == "update") ScreenRoute.MainScreen.route else ScreenRoute.SplashScreen.route
 
     NavHost(navController = navController, startDestination = startDestination,
         popEnterTransition = {
