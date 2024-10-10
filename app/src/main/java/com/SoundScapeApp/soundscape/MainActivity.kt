@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
                         val songs = audioViewModel.scannedAudioList.value
                         val selectedSongs = audioViewModel.selectedSongs.value
                         val sortedSelectedSongs = selectedSongs.sortedDescending()
-                        Log.d("seled", selectedSongs.toString())
+
 
                         sortedSelectedSongs.asReversed().forEach { deletedSongId ->
                             val index = songs.indexOfFirst { it.id == deletedSongId }

@@ -85,7 +85,7 @@ dependencies {
 //    Adaptive layouts
 //    implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.0.0-alpha07")
 
-   implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
 
 //    DAGGER-HILT
     implementation("com.google.dagger:hilt-android:2.48")
