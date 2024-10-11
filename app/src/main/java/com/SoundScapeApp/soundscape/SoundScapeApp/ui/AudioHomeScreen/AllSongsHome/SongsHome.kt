@@ -341,19 +341,19 @@ fun SongsHome(
 
 
 
-    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
-        if (!isPermissionGranted(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            RequestStoragePermissions(context = context, viewModel = viewModel)
-        }
-    } else {
-        if (!isPermissionGranted(
-                context,
-                Manifest.permission.READ_MEDIA_AUDIO
-            ) && !isPermissionGranted(context, Manifest.permission.READ_MEDIA_VIDEO)
-        ) {
-            RequestStoragePermissions(context = context, viewModel = viewModel)
-        }
-    }
+//    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S) {
+//        if (!isPermissionGranted(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//            RequestStoragePermissions(context = context, viewModel = viewModel)
+//        }
+//    } else {
+//        if (!isPermissionGranted(
+//                context,
+//                Manifest.permission.READ_MEDIA_AUDIO
+//            ) && !isPermissionGranted(context, Manifest.permission.READ_MEDIA_VIDEO)
+//        ) {
+//            RequestStoragePermissions(context = context, viewModel = viewModel)
+//        }
+//    }
 
 
     Scaffold(
@@ -1107,88 +1107,88 @@ fun isPermissionGranted(context: Context, permission: String): Boolean {
         permission
     ) == PackageManager.PERMISSION_GRANTED
 }
-
-fun isRunningOnAndroid12OrBelow(): Boolean {
-    return Build.VERSION.SDK_INT <= Build.VERSION_CODES.S
-}
-
-fun isPermissionPermanentlyDeclined(activity: Activity, permission: String): Boolean {
-    return !ActivityCompat.shouldShowRequestPermissionRationale(activity, permission) &&
-            ContextCompat.checkSelfPermission(
-                activity,
-                permission
-            ) != PackageManager.PERMISSION_GRANTED
-}
-
-fun hasPermissions(context: Context, permissions: Array<String>): Boolean {
-    return permissions.all { permission ->
-        isPermissionGranted(context, permission)
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@Composable
-fun RequestStoragePermissions(
-    context: Context,
-    viewModel: AudioViewModel
-) {
-    val componentActivity = context as? ComponentActivity
-    val activity = context as Activity
-
-    val permissionsToRequest = if (isRunningOnAndroid12OrBelow()) {
-        arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_SETTINGS,
-            Manifest.permission.MANAGE_EXTERNAL_STORAGE
-        )
-    } else {
-        arrayOf(
-            Manifest.permission.READ_MEDIA_AUDIO,
-            Manifest.permission.READ_MEDIA_VIDEO
-        )
-    }
-
-    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        permissionsToRequest.forEach { perm ->
-            viewModel.onPermissionResult(
-                permission = perm,
-                isGranted = permissions[perm] == true
-            )
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (!hasPermissions(context, permissionsToRequest)) {
-            multiplePermissionResultLauncher.launch(permissionsToRequest)
-        }
-    }
-
-    val dialogQueue = viewModel.visiblePermissionDialogQueue
-
-    dialogQueue.forEach { permission ->
-        PermissionDialog(
-            permissionTextProvider = when (permission) {
-                Manifest.permission.READ_MEDIA_AUDIO -> AudioPermissionTextProvider()
-                Manifest.permission.READ_MEDIA_VIDEO -> VideoPermissionTextProvider()
-                Manifest.permission.READ_EXTERNAL_STORAGE -> ExternalStoragePermissionTextProvider()
-                else -> return@forEach
-            },
-            isPermanentlyDeclined = isPermissionPermanentlyDeclined(activity, permission),
-            onDismiss = viewModel::dismissDialog,
-            onOkClick = {
-                if (!isPermissionPermanentlyDeclined(activity, permission)) {
-                    multiplePermissionResultLauncher.launch(arrayOf(permission))
-                }
-                viewModel.dismissDialog()
-            },
-            onGoToAppSettingsClick = {
-                componentActivity?.openAppSettings()
-                viewModel.dismissDialog()
-            }
-        )
-    }
-}
+//
+//fun isRunningOnAndroid12OrBelow(): Boolean {
+//    return Build.VERSION.SDK_INT <= Build.VERSION_CODES.S
+//}
+//
+//fun isPermissionPermanentlyDeclined(activity: Activity, permission: String): Boolean {
+//    return !ActivityCompat.shouldShowRequestPermissionRationale(activity, permission) &&
+//            ContextCompat.checkSelfPermission(
+//                activity,
+//                permission
+//            ) != PackageManager.PERMISSION_GRANTED
+//}
+//
+//fun hasPermissions(context: Context, permissions: Array<String>): Boolean {
+//    return permissions.all { permission ->
+//        isPermissionGranted(context, permission)
+//    }
+//}
+//
+//
+//@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+//@Composable
+//fun RequestStoragePermissions(
+//    context: Context,
+//    viewModel: AudioViewModel
+//) {
+//    val componentActivity = context as? ComponentActivity
+//    val activity = context as Activity
+//
+//    val permissionsToRequest = if (isRunningOnAndroid12OrBelow()) {
+//        arrayOf(
+//            Manifest.permission.READ_EXTERNAL_STORAGE,
+//            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//            Manifest.permission.WRITE_SETTINGS,
+//            Manifest.permission.MANAGE_EXTERNAL_STORAGE
+//        )
+//    } else {
+//        arrayOf(
+//            Manifest.permission.READ_MEDIA_AUDIO,
+//            Manifest.permission.READ_MEDIA_VIDEO
+//        )
+//    }
+//
+//    val multiplePermissionResultLauncher = rememberLauncherForActivityResult(
+//        ActivityResultContracts.RequestMultiplePermissions()
+//    ) { permissions ->
+//        permissionsToRequest.forEach { perm ->
+//            viewModel.onPermissionResult(
+//                permission = perm,
+//                isGranted = permissions[perm] == true
+//            )
+//        }
+//    }
+//
+//    LaunchedEffect(Unit) {
+//        if (!hasPermissions(context, permissionsToRequest)) {
+//            multiplePermissionResultLauncher.launch(permissionsToRequest)
+//        }
+//    }
+//
+//    val dialogQueue = viewModel.visiblePermissionDialogQueue
+//
+//    dialogQueue.forEach { permission ->
+//        PermissionDialog(
+//            permissionTextProvider = when (permission) {
+//                Manifest.permission.READ_MEDIA_AUDIO -> AudioPermissionTextProvider()
+//                Manifest.permission.READ_MEDIA_VIDEO -> VideoPermissionTextProvider()
+//                Manifest.permission.READ_EXTERNAL_STORAGE -> ExternalStoragePermissionTextProvider()
+//                else -> return@forEach
+//            },
+//            isPermanentlyDeclined = isPermissionPermanentlyDeclined(activity, permission),
+//            onDismiss = viewModel::dismissDialog,
+//            onOkClick = {
+//                if (!isPermissionPermanentlyDeclined(activity, permission)) {
+//                    multiplePermissionResultLauncher.launch(arrayOf(permission))
+//                }
+//                viewModel.dismissDialog()
+//            },
+//            onGoToAppSettingsClick = {
+//                componentActivity?.openAppSettings()
+//                viewModel.dismissDialog()
+//            }
+//        )
+//    }
+//}

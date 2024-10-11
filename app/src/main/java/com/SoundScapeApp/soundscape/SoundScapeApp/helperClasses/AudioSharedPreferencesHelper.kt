@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.core.content.edit
+import androidx.media3.exoplayer.ExoPlayer
 import com.SoundScapeApp.soundscape.SoundScapeApp.MainViewModel.SortType
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.PlaybackState
 import com.SoundScapeApp.soundscape.SoundScapeApp.data.Playlist
@@ -25,6 +26,8 @@ class AudioSharedPreferencesHelper @Inject constructor(
 //    private val PLAYING_FROM_ALL_KEY = "playing_from_all_key"
 
     private val SHUFFLE_KEY = "shuffle_key"
+    private val KEY_REPEAT_MODE = "repeat_mode"
+
     private val SORT_TYPE_KEY = "sort_type_key"
 //    private val PLAYBACK_SPEED_KEY = "playback_speed_key"
 //    private val DEFAULT_PLAYBACK_SPEED = 1f
@@ -407,5 +410,17 @@ class AudioSharedPreferencesHelper @Inject constructor(
 //    fun getIsFirstTimeScreenSetting():Boolean{
 //        return sharedPreferences.getBoolean(IS_FIRST_TIME_KEY,true)
 //    }
+
+
+    //Repeat mode
+
+    fun saveRepeatMode(repeatMode: Int) {
+        sharedPreferences.edit().putInt(KEY_REPEAT_MODE, repeatMode).apply()
+    }
+
+    fun getRepeatMode(): Int {
+        return sharedPreferences.getInt(KEY_REPEAT_MODE, ExoPlayer.REPEAT_MODE_OFF) // Default to OFF
+    }
+
 }
 

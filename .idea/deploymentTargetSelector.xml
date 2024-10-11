@@ -7,11 +7,14 @@
       </SelectionState>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-06-17T11:14:08.520977400Z">
+        <DropdownSelection timestamp="2024-10-11T06:23:45.298199Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Parvez Baloch\.android\avd\Pixel_8_Pro_API_33.avd" />
+              <DeviceId pluginId="FirebaseDirectAccess" identifier="reservation=projects/soundscapeplayer-49a47/deviceSessions/session-39yjj84o68ckc" />
             </handle>
+            <template>
+              <DeviceId pluginId="FirebaseDirectAccess" type="TEMPLATE" identifier="model_id=husky/34" />
+            </template>
           </Target>
         </DropdownSelection>
         <DialogSelection />

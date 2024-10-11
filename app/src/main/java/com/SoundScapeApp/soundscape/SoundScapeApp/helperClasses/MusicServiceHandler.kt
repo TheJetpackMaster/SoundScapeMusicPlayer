@@ -192,16 +192,17 @@ class MusicServiceHandler @Inject constructor(
             ExoPlayer.REPEAT_MODE_OFF -> {
                 exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_ONE
             }
-
             ExoPlayer.REPEAT_MODE_ONE -> {
                 exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_ALL
             }
-
             ExoPlayer.REPEAT_MODE_ALL -> {
                 exoPlayer.repeatMode = ExoPlayer.REPEAT_MODE_OFF
             }
         }
+        // Save the updated repeat mode in SharedPreferences
+        audioSharedPreferencesHelper.saveRepeatMode(exoPlayer.repeatMode)
     }
+
 
 }
 

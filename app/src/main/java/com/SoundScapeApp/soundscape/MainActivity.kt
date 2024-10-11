@@ -269,7 +269,7 @@ class MainActivity : ComponentActivity() {
                                         audioViewModel.setMediaItems(audioList, this)
                                         audioViewModel.play(audioList.indexOf(selectedAudio))
                                         audioViewModel.setMediaItemFlag(true)
-                                        player.repeatMode = Player.REPEAT_MODE_ALL
+//                                        player.repeatMode = Player.REPEAT_MODE_ALL
 
                                     } else if (audioViewModel.currentSelectedAudio != id) {
                                         audioViewModel.play(audioList.indexOf(selectedAudio))
@@ -277,7 +277,7 @@ class MainActivity : ComponentActivity() {
                                 } else {
                                     audioViewModel.setCurrentPlayingSection(0)
                                     audioViewModel.setSingleMediaItem(selectedAudio)
-                                    player.repeatMode = Player.REPEAT_MODE_ALL
+//                                    player.repeatMode = Player.REPEAT_MODE_ALL
                                     audioViewModel.setMediaItemFlag(false)
                                 }
                             }

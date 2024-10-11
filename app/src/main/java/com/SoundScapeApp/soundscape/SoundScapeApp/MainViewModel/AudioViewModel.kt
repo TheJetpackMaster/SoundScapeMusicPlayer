@@ -323,6 +323,10 @@ class AudioViewModel @Inject constructor(
             getIsFirstTime()
         }
         getAudioScreenDesign()
+
+        // Set repeat mode from SharedPreferences
+        val savedRepeatMode = audioSharedPreferencesHelper.getRepeatMode()
+        player.repeatMode = savedRepeatMode  // Set repeat mode from saved value
     }
 
 //    private val _audioData = MutableStateFlow<PagingData<Audio>>(PagingData.empty())
@@ -629,7 +633,6 @@ class AudioViewModel @Inject constructor(
     //    Repeat Logic
     fun toggleRepeat() {
         audioServiceHandler.toggleRepeat()
-
     }
 
     //    PLAYLISTS LOGICS
@@ -1141,8 +1144,7 @@ class AudioViewModel @Inject constructor(
                                 }
 
                             setMediaItems(playListSongs, context)
-                            Log.d("song", song.id.toString())
-                            Log.d("playlistSongs", playListSongs.toString())
+
                             play(playListSongs.indexOf(song))
                             player.seekTo(playbackState.lastPlaybackPosition)
 
@@ -1177,7 +1179,9 @@ class AudioViewModel @Inject constructor(
                         }
                     }
 
-                    else -> {}
+                    else -> {
+
+                    }
                 }
             }
         }
